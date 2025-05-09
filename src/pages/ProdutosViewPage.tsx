@@ -46,11 +46,11 @@ export function ProdutosViewPage() {
       )
       .order("produto_id", { ascending: false });
 
-    setProdutos(data);    
+    setProdutos(data);
   }
 
   const handleEdit = (produto: Produto) => {
-    setProdutoEditando(produto);    
+    setProdutoEditando(produto);
   };
 
   const handleNew = async () => {
@@ -93,14 +93,11 @@ export function ProdutosViewPage() {
 
       return;
     }
-    
-    toast.success("Produto apagado com sucesso!");    
+
+    toast.success("Produto apagado com sucesso!");
 
     getProdutos();
   };
-
-  const [mostrarAviso, setMostrarAviso] = useState(false);
-  const [mensagemAviso, setMensagemAviso] = useState("");
 
   return (
     <div className="p-6">

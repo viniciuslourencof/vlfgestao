@@ -38,6 +38,53 @@ type ProdutoFormProps = {
 };
 
 export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
+  const [form, setForm] = useState(produto);
+  const [abrirModalBuscaCategoria, setAbrirModalBuscaCategoria] =
+    useState(false);
+
+  const [mostrarAviso, setMostrarAviso] = useState(false);
+  const [mensagemAviso, setMensagemAviso] = useState("");
+  const [abrirModalBusca, setAbrirModalBusca] = useState(false);
+
+  const [formComposicao, setFormComposicao] = useState({
+    produto_composicao_id: "",
+    produtopai_id: "",
+    produtofilho_id: "",
+    dsc_produto: "",
+    preco_custo: "",
+  });
+
+  type ProdutoComposicao = {
+    produto_composicao_id: number;
+    produtofilho_id: number;
+    produtopai_id: number;
+    produtos: {
+      valor_dose: number;
+      dsc_produto: string;
+    };
+    vr_custo: number;
+  };
+
+  const [produtosComposicao, setProdutosComposicao] = useState<
+    ProdutoComposicao[]
+  >([]);
+
+  type ComposicaoTemp = {
+    produtofilho_id: number;
+    preco_custo: number;
+    dsc_produto: string;
+  };
+
+  const [composicoesTemp, setComposicoesTemp] = useState<ComposicaoTemp[]>([]);
+
+  useEffect(() => {
+    carregarComposicao();
+  }, []); // O array vazio significa que isso só vai ser chamado uma vez, ao montar o componente
+
+  const somaCusto = produtosComposicao
+    .reduce((acc, produto) => acc + parseFloat(produto.vr_custo), 0)
+    .toFixed(2);
+
   const calcularMargem = (precoCusto: string, precoVenda: string) => {
     const custo = parseFloat(precoCusto.replace(",", "."));
     const venda = parseFloat(precoVenda.replace(",", "."));
@@ -68,8 +115,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       }));
     }
   };
-
-  const [form, setForm] = useState(produto);  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -124,7 +169,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     ];
 
     const formToSave = { ...form };
-    let campoNaoNumericoVazio = false;
 
     if (!formToSave.produto_id || formToSave.produto_id === "0") {
       delete formToSave.produto_id;
@@ -138,13 +182,13 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       delete formToSave.dsc_categoria;
     }
 
-    delete formToSave.categorias;    
+    delete formToSave.categorias;
 
     for (const [campo, valor] of Object.entries(formToSave)) {
       if (valor === null || valor === "" || valor === undefined) {
         if (camposNumericos.includes(campo)) {
-          formToSave[campo] = "0.00"; // ou "0" se preferir      
-        }  
+          formToSave[campo] = "0.00"; // ou "0" se preferir
+        }
       }
     }
 
@@ -153,7 +197,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       setMostrarAviso(true);
 
       return;
-    }    
+    }
 
     const { error } = await supabase
       .from("produtos")
@@ -172,17 +216,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     onClose?.();
   };
 
-  const [formComposicao, setFormComposicao] = useState({
-    produto_composicao_id: "",
-    produtopai_id: "",
-    produtofilho_id: "",
-    dsc_produto: "",
-    preco_custo: "",
-  });
-
-  const [abrirModalBusca, setAbrirModalBusca] = useState(false);
-
-  const handleSelecionarProduto = (produtoSelecionado) => {
+  const selecionarProdutoComposicao = (produtoSelecionado) => {
     const precoUnitario = parseFloat(
       produtoSelecionado.valor_dose > 0
         ? produtoSelecionado.valor_dose
@@ -202,11 +236,11 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     setAbrirModalBusca(false);
   };
 
-  const [produtosComposicao, setProdutosComposicao] = useState([]);
-
   const carregarComposicao = async () => {
-
-    if (produto.produto_id == 0) return;    
+    if (produto.produto_id == 0) {
+      setProdutosComposicao(composicoesTemp);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("produtos_composicao")
@@ -222,38 +256,46 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
         )
       `
       )
-      .eq("produtopai_id", produto.produto_id); //    
+      .eq("produtopai_id", produto.produto_id); //
 
     if (error) {
       setMensagemAviso("Erro ao carregar produtos: " + error.message);
       setMostrarAviso(true);
     } else {
+      console.log(data);
       setProdutosComposicao(data); // Atualiza o estado com os produtos carregados
     }
   };
-
-  useEffect(() => {
-    carregarComposicao();
-  }, []); // O array vazio significa que isso só vai ser chamado uma vez, ao montar o componente
 
   const adicionarProdutoNaComposicao = async () => {
     const produtopai_id = form?.produto_id;
 
     const { produtofilho_id, preco_custo } = formComposicao;
 
-    if (!produtopai_id || !preco_custo || !produtofilho_id) return; // Verifique se todos os campos estão presentes
+    if (produtopai_id != 0) {
+      // Inserir produto na tabela produtos_composicao
+      const { error } = await supabase
+        .from("produtos_composicao")
+        .insert([{ produtopai_id, produtofilho_id, vr_custo: preco_custo }]);
 
-    // Inserir produto na tabela produtos_composicao
-    const { error } = await supabase
-      .from("produtos_composicao")
-      .insert([{ produtopai_id, produtofilho_id, vr_custo: preco_custo }]);
-
-    if (error) {
-      setMensagemAviso("Erro ao adicionar produto: " + error.message);
-      setMostrarAviso(true);
+      if (error) {
+        setMensagemAviso("Erro ao adicionar produto: " + error.message);
+        setMostrarAviso(true);
+      }
     } else {
-      carregarComposicao();
+      // Armazena em memória se o produto ainda não foi salvo
+
+      setComposicoesTemp((prev) => [
+        ...prev,
+        {
+          produtofilho_id: Number(produtofilho_id),
+          preco_custo: Number(preco_custo),
+          dsc_produto: String(dsc_produto),
+        },
+      ]);
     }
+
+    carregarComposicao();
 
     setFormComposicao({
       produto_composicao_id: "",
@@ -263,10 +305,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       dsc_produto: "",
     });
   };
-
-  const somaCusto = produtosComposicao
-    .reduce((acc, produto) => acc + parseFloat(produto.vr_custo), 0)
-    .toFixed(2);
 
   const removerProdutoDaComposicao = async (produto_composicao_id) => {
     const { error } = await supabase
@@ -285,12 +323,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
 
     carregarComposicao();
   };
-
-  const [abrirModalBuscaCategoria, setAbrirModalBuscaCategoria] =
-    useState(false);
-
-  const [mostrarAviso, setMostrarAviso] = useState(false);
-  const [mensagemAviso, setMensagemAviso] = useState("");
 
   return (
     <Tabs defaultValue="geral" className="w-full h-full max-w-none mx-auto">
@@ -743,7 +775,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       <ModalBuscaProduto
         open={abrirModalBusca}
         onClose={() => setAbrirModalBusca(false)}
-        onSelect={handleSelecionarProduto}
+        onSelect={selecionarProdutoComposicao}
       />
       <ModalBuscaCategoria
         open={abrirModalBuscaCategoria}
