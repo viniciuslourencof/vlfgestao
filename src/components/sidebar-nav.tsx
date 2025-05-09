@@ -1,10 +1,11 @@
-import { Cuboid, LogOut, Home } from "lucide-react"
+import { Cuboid, LogOut, Home, Group } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Link, useLocation } from "react-router-dom"
 
 const navItems = [
   { icon: Home, label: "Inicio", color: "text-green-600", path: "/" },
   { icon: Cuboid, label: "Produtos", color: "text-green-600", path: "/produtos" },
+  { icon: Group, label: "Categorias", color: "text-green-600", path: "/categorias" },
 ]
 
 export function SidebarNav() {

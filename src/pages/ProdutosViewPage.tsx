@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Confirmation } from "@/components/confirmation";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ProdutosPage } from "./ProdutosPage";
 import { supabase } from "../lib/subabase";
+import { Confirmation } from "@/components/confirmation";
+import { toast } from "sonner";
 
 type Produto = {
   produto_id: string;
@@ -17,6 +18,7 @@ type Produto = {
   unidade_fardo: string;
   mililitros: string;
   doses: string;
+  dsc_categoria: string;
 };
 
 export function ProdutosViewPage() {
@@ -34,14 +36,21 @@ export function ProdutosViewPage() {
   async function getProdutos() {
     const { data } = await supabase
       .from("produtos")
-      .select(`*`)
-      .order("dsc_produto", { ascending: true });
+      .select(
+        `
+      *,
+      categorias:categoria_id (
+        dsc_categoria
+      )
+    `
+      )
+      .order("produto_id", { ascending: false });
 
-    setProdutos(data);
+    setProdutos(data);    
   }
 
   const handleEdit = (produto: Produto) => {
-    setProdutoEditando(produto);
+    setProdutoEditando(produto);    
   };
 
   const handleNew = async () => {
@@ -79,14 +88,19 @@ export function ProdutosViewPage() {
       .eq("produto_id", produtoIdToDelete);
 
     if (error) {
-      alert("Erro ao apagar produto:", error);
+      setMensagemAviso("Erro ao apagar produto: " + error.message);
+      setMostrarAviso(true);
+
       return;
     }
-
-    alert("Produto apagado com sucesso!");
+    
+    toast.success("Produto apagado com sucesso!");    
 
     getProdutos();
   };
+
+  const [mostrarAviso, setMostrarAviso] = useState(false);
+  const [mensagemAviso, setMensagemAviso] = useState("");
 
   return (
     <div className="p-6">
@@ -147,7 +161,12 @@ export function ProdutosViewPage() {
               <Button className="cursor-pointer" onClick={handleNew}>
                 <Plus className="w-4 h-4 mr-2" /> Novo Produto
               </Button>
-              <Button className="cursor-pointer">
+              <Button
+                className="cursor-pointer"
+                onClick={() => {
+                  getProdutos();
+                }}
+              >
                 <RefreshCcw className="w-4 h-4 mr-2" /> Atualizar
               </Button>
             </div>
@@ -164,11 +183,17 @@ export function ProdutosViewPage() {
                     {produto.dsc_produto}
                   </h2>
                   <p className="text-sm text-gray-600">
-                    ID: {produto.produto_id}
+                    Código: {produto.produto_id}
                   </p>
                   <p className="text-sm mt-1">Estoque: {produto.estoque}</p>
                   <p className="text-sm">
-                    Preço: R$ {produto.preco_venda1.toFixed(2)}
+                    Preço de Venda: R$ {produto.preco_venda1.toFixed(2)}
+                  </p>
+                  <p className="text-sm">
+                    Preço de Custo: R$ {produto.preco_custo1.toFixed(2)}
+                  </p>
+                  <p className="text-sm">
+                    Margem de Lucro: {produto.margem1.toFixed(2)} %
                   </p>
                 </div>
                 <div className="flex gap-2 mt-4">

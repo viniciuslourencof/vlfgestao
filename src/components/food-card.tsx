@@ -14,7 +14,7 @@ export function FoodCard({dsc_produto, preco_venda1, desconto }: FoodCardProps) 
   return (
     <Card className="overflow-hidden">
       <div className="relative">
-        <img src={"https://images.tcdn.com.br/img/img_prod/1199398/gin_eternity_melancia_900ml_235_1_9ac42bfafed2ca597c3bd3a27999feaa.jpeg"} alt={dsc_produto} className="w-full h-40 object-cover" />
+        {/* <img src={"https://images.tcdn.com.br/img/img_prod/1199398/gin_eternity_melancia_900ml_235_1_9ac42bfafed2ca597c3bd3a27999feaa.jpeg"} alt={dsc_produto} className="w-full h-40 object-cover" /> */}
         {(desconto > 0) && (
           <div className="absolute top-2 left-2 bg-yellow-400 text-black px-2 py-1 rounded-md text-xs font-medium">
             {desconto}% Off
