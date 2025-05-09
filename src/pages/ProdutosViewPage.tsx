@@ -1,0 +1,204 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Confirmation } from "@/components/confirmation";
+import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
+import { ProdutosPage } from "./ProdutosPage";
+import { supabase } from "../lib/subabase";
+
+type Produto = {
+  produto_id: string;
+  dsc_produto: string;
+  estoque: string;
+  preco_venda1: string;
+  preco_custo1: string;
+  desconto: string;
+  categoria_id: string;
+  unidade_fardo: string;
+  mililitros: string;
+  doses: string;
+};
+
+export function ProdutosViewPage() {
+  const [produtos, setProdutos] = useState([]);
+  const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [produtoIdToDelete, setProdutoIdToDelete] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    getProdutos();
+  }, []);
+
+  async function getProdutos() {
+    const { data } = await supabase
+      .from("produtos")
+      .select(`*`)
+      .order("dsc_produto", { ascending: true });
+
+    setProdutos(data);
+  }
+
+  const handleEdit = (produto: Produto) => {
+    setProdutoEditando(produto);
+  };
+
+  const handleNew = async () => {
+    setProdutoEditando({
+      produto_id: "0",
+      dsc_produto: "",
+      estoque: "0.00",
+      preco_venda1: "0.00",
+      preco_custo1: "0.00",
+      desconto: "0.00",
+      categoria_id: "",
+      unidade_fardo: "0",
+      mililitros: "0.00",
+      doses: "0.00",
+    });
+  };
+
+  const handleCloseForm = () => {
+    setProdutoEditando(null);
+  };
+
+  const handleDeleteClick = (produto_id: string) => {
+    setProdutoIdToDelete(produto_id);
+    setShowConfirmation(true);
+  };
+
+  const handleDelete = async (produto_id: string) => {
+    setShowConfirmation(false);
+
+    if (!produtoIdToDelete) return;
+
+    const { error } = await supabase
+      .from("produtos")
+      .delete()
+      .eq("produto_id", produtoIdToDelete);
+
+    if (error) {
+      alert("Erro ao apagar produto:", error);
+      return;
+    }
+
+    alert("Produto apagado com sucesso!");
+
+    getProdutos();
+  };
+
+  return (
+    <div className="p-6">
+      {produtoEditando ? (
+        <ProdutosPage
+          produto={{
+            ...produtoEditando,
+            preco_custo1: !isNaN(parseFloat(produtoEditando.preco_custo1))
+              ? parseFloat(produtoEditando.preco_custo1).toFixed(2)
+              : "0.00",
+
+            desconto: !isNaN(parseFloat(produtoEditando.desconto))
+              ? parseFloat(produtoEditando.desconto).toFixed(2)
+              : "0.00",
+
+            categoria_id: produtoEditando.categoria_id
+              ? produtoEditando.categoria_id.toString()
+              : "0",
+
+            unidade_fardo: produtoEditando.unidade_fardo,
+
+            mililitros: !isNaN(parseFloat(produtoEditando.mililitros))
+              ? parseFloat(produtoEditando.mililitros).toFixed(2)
+              : "0.00",
+
+            doses: !isNaN(parseFloat(produtoEditando.doses))
+              ? parseFloat(produtoEditando.doses).toFixed(2)
+              : "0.00",
+
+            estoque: !isNaN(parseFloat(produtoEditando.estoque))
+              ? parseFloat(produtoEditando.estoque).toFixed(2)
+              : "0.00",
+
+            preco_venda1: !isNaN(parseFloat(produtoEditando.preco_venda1))
+              ? parseFloat(produtoEditando.preco_venda1).toFixed(2)
+              : "0.00",
+
+            margem1: !isNaN(parseFloat(produtoEditando.margem1))
+              ? parseFloat(produtoEditando.margem1).toFixed(2)
+              : "0.00",
+
+            valor_dose: !isNaN(parseFloat(produtoEditando.valor_dose))
+              ? parseFloat(produtoEditando.valor_dose).toFixed(2)
+              : "0.00",
+          }}
+          onClose={handleCloseForm}
+          onSave={() => {
+            getProdutos(); // <- atualiza os produtos
+            handleCloseForm(); // <- fecha o formulário
+          }}
+        />
+      ) : (
+        <>
+          <div className="flex items-center mb-4">
+            <h1 className="text-2xl font-bold">Produtos</h1>
+
+            <div className="flex gap-2 ml-auto">
+              <Button className="cursor-pointer" onClick={handleNew}>
+                <Plus className="w-4 h-4 mr-2" /> Novo Produto
+              </Button>
+              <Button className="cursor-pointer">
+                <RefreshCcw className="w-4 h-4 mr-2" /> Atualizar
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {produtos.map((produto) => (
+              <Card
+                key={produto.produto_id}
+                className="p-4 flex flex-col justify-between"
+              >
+                <div>
+                  <h2 className="font-semibold text-lg">
+                    {produto.dsc_produto}
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    ID: {produto.produto_id}
+                  </p>
+                  <p className="text-sm mt-1">Estoque: {produto.estoque}</p>
+                  <p className="text-sm">
+                    Preço: R$ {produto.preco_venda1.toFixed(2)}
+                  </p>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    className="cursor-pointer"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(produto)}
+                  >
+                    <Pencil className="w-4 h-4 mr-1" /> Editar
+                  </Button>
+                  <Button
+                    className="cursor-pointer"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteClick(produto.produto_id)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" /> Apagar
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+      <Confirmation
+        open={showConfirmation}
+        onCancel={() => setShowConfirmation(false)}
+        onConfirm={handleDelete}
+      />
+    </div>
+  );
+}
