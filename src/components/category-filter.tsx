@@ -1,6 +1,14 @@
-import { Grid } from "lucide-react";
+type CategoryFilterProps = {
+  categorias: Categoria[];
+  categoriaSelecionada: number;
+  onSelectCategoria: (categoria_id: number) => void;
+};
 
-export function CategoryFilter({ categorias, categoriaSelecionada, onSelectCategoria }) {
+export function CategoryFilter({
+  categorias,
+  categoriaSelecionada,
+  onSelectCategoria,
+}: CategoryFilterProps) {
   return (
     <div className="flex gap-3 mb-4 overflow-x-auto pb-2">
       {categorias.map((categoria) => (
@@ -11,7 +19,6 @@ export function CategoryFilter({ categorias, categoriaSelecionada, onSelectCateg
           } border cursor-pointer hover:bg-green-50`}
           onClick={() => onSelectCategoria(categoria.categoria_id)}
         >
-          {/* <Grid className="h-6 w-6 mb-1" /> */}
           <span className="text-sm font-medium">{categoria.label || categoria.dsc_categoria}</span>
         </div>
       ))}
