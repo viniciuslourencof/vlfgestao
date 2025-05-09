@@ -3,22 +3,40 @@ import { CategoryFilter } from "../components/category-filter";
 import { FoodGrid } from "../components/food-grid";
 import { supabase } from "../lib/subabase";
 
+// Definindo o tipo para as categorias
+interface Categoria {
+  categoria_id: number | null;
+  dsc_categoria: string;
+}
+
+// Definindo o tipo para os produtos
+interface Produto {
+  produto_id: number;
+  dsc_produto: string;
+  preco_venda1: number;
+  desconto: number;
+}
+
 export function HomePage() {
-  const [categorias, setCategorias] = useState([]);
-  const [produtos, setProdutos] = useState([]);
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchCategorias() {
-      const { data } = await supabase.from("categorias").select("*");
-      setCategorias([{ categoria_id: null, dsc_categoria: "Todos" }, ...data]);
+      const { data, error } = await supabase.from("categorias").select("*");
+      if (data) {
+        setCategorias([{ categoria_id: null, dsc_categoria: "Todos" }, ...data]);
+      } else {
+        console.error("Erro ao carregar categorias:", error);
+      }
     }
 
     fetchCategorias();
-    buscarProdutos(); // busca inicial com todos
+    buscarProdutos(); // busca inicial com todos os produtos
   }, []);
 
-  async function buscarProdutos(categoria_id = null) {
+  async function buscarProdutos(categoria_id: number | null = null) {
     let query = supabase
       .from("produtos")
       .select("produto_id, dsc_produto, preco_venda1, desconto");
@@ -28,13 +46,14 @@ export function HomePage() {
     }
 
     const { data } = await query;
-    setProdutos(data);
+    // Verificando se 'data' não é null
+    if (data) {
+      setProdutos(data);
+    } else {
+      console.error("Erro ao carregar produtos");
+    }
     setCategoriaSelecionada(categoria_id);
-
-    console.log(categoria_id);
   }
-
-  
 
   return (
     <>

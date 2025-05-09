@@ -8,13 +8,28 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/subabase";
 
-export default function ModalBuscaCategoria({ open, onClose, onSelect }) {
+interface Categoria {
+  categoria_id: number;
+  dsc_categoria: string;
+}
+
+interface ModalBuscaCategoriaProps {
+  open: boolean;
+  onClose: (open: boolean) => void;
+  onSelect: (categoria: Categoria) => void;
+}
+
+export default function ModalBuscaCategoria({
+  open,
+  onClose,
+  onSelect,
+}: ModalBuscaCategoriaProps) {
   const [termo, setTermo] = useState("");
-  const [resultados, setResultados] = useState([]);
+  const [resultados, setResultados] = useState<Categoria[]>([]);
   const [focoIndex, setFocoIndex] = useState(0);
 
   useEffect(() => {
-    const fetchCategorias = async (termo) => {
+    const fetchCategorias = async (termo: string) => {
       const query = supabase
         .from("categorias")
         .select("categoria_id, dsc_categoria")
@@ -33,21 +48,21 @@ export default function ModalBuscaCategoria({ open, onClose, onSelect }) {
     };
 
     if (open) {
-      fetchCategorias(); // busca inicial
+      fetchCategorias(""); // busca inicial
     }
 
     const delayDebounce = setTimeout(() => {
       if (termo.length > 1) {
         fetchCategorias(termo);
       } else {
-        fetchCategorias();
+        fetchCategorias("");
       }
     }, 400);
 
     return () => clearTimeout(delayDebounce);
   }, [termo, open]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       setFocoIndex((prev) => Math.min(prev + 1, resultados.length - 1));
     } else if (e.key === "ArrowUp") {

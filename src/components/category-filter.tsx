@@ -1,15 +1,13 @@
-// Defina o tipo 'Categoria' antes do componente
-type Categoria = {
-  categoria_id: number;
-  label?: string;
-  dsc_categoria?: string;
-};
+interface Categoria {
+  categoria_id: number | null;
+  dsc_categoria: string;
+}
 
-type CategoryFilterProps = {
+interface CategoryFilterProps {
   categorias: Categoria[];
-  categoriaSelecionada: number;
-  onSelectCategoria: (categoria_id: number) => void;
-};
+  categoriaSelecionada: number | null;
+  onSelectCategoria: (categoria_id: number | null) => void;
+}
 
 export function CategoryFilter({
   categorias,
@@ -17,17 +15,18 @@ export function CategoryFilter({
   onSelectCategoria,
 }: CategoryFilterProps) {
   return (
-    <div className="flex gap-3 mb-4 overflow-x-auto pb-2">
+    <div className="space-x-2 space-y-2">
       {categorias.map((categoria) => (
-        <div
-          key={categoria.categoria_id ?? "all"}
-          className={`flex flex-col items-center p-3 rounded-xl min-w-[100px] ${
-            categoriaSelecionada === categoria.categoria_id ? "bg-green-50 text-gray-600" : "bg-white"
-          } border cursor-pointer hover:bg-green-50`}
+        <button
+          key={categoria.categoria_id}
           onClick={() => onSelectCategoria(categoria.categoria_id)}
+          className={`px-4 py-2 rounded-md text-sm font-medium cursor-pointer 
+            ${categoria.categoria_id === categoriaSelecionada 
+              ? "bg-primary text-white" 
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
         >
-          <span className="text-sm font-medium">{categoria.label || categoria.dsc_categoria}</span>
-        </div>
+          {categoria.dsc_categoria}
+        </button>
       ))}
     </div>
   );

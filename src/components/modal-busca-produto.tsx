@@ -8,13 +8,30 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/subabase";
 
-export default function ModalBuscaProduto({ open, onClose, onSelect }) {
+interface Produto {
+  produto_id: number;
+  dsc_produto: string;
+  preco_custo1: number;
+  valor_dose: number;
+}
+
+interface ModalBuscaProdutoProps {
+  open: boolean;
+  onClose: (open: boolean) => void;
+  onSelect: (produto: Produto) => void;
+}
+
+export default function ModalBuscaProduto({
+  open,
+  onClose,
+  onSelect,
+}: ModalBuscaProdutoProps) {
   const [termo, setTermo] = useState("");
-  const [resultados, setResultados] = useState([]);
+  const [resultados, setResultados] = useState<Produto[]>([]);
   const [focoIndex, setFocoIndex] = useState(0);
 
   useEffect(() => {
-    const fetchProdutos = async (termo) => {
+    const fetchProdutos = async (termo: string) => {
       const query = supabase
         .from("produtos")
         .select("produto_id, dsc_produto, preco_custo1, valor_dose")
@@ -34,21 +51,21 @@ export default function ModalBuscaProduto({ open, onClose, onSelect }) {
 
     if (open) {
       // Quando o modal for aberto, faça a busca inicial com todos os produtos
-      fetchProdutos();
+      fetchProdutos("");
     }
 
     const delayDebounce = setTimeout(async () => {
       if (termo.length > 1) {
         fetchProdutos(termo);
       } else {
-        fetchProdutos(); // Exibe todos os produtos se o termo for apagado
+        fetchProdutos(""); // Exibe todos os produtos se o termo for apagado
       }
     }, 400);
 
     return () => clearTimeout(delayDebounce);
   }, [termo, open]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       setFocoIndex((prev) => Math.min(prev + 1, resultados.length - 1));
     } else if (e.key === "ArrowUp") {
@@ -93,10 +110,9 @@ export default function ModalBuscaProduto({ open, onClose, onSelect }) {
                 <div className="font-semibold">{produto.dsc_produto}</div>
                 <div className="text-sm text-muted-foreground">
                   Código: {produto.produto_id} · Custo: R${" "}
-                  {parseFloat(
-                    produto.valor_dose > 0
-                      ? produto.valor_dose
-                      : produto.preco_custo1
+                  {(produto.valor_dose > 0
+                    ? produto.valor_dose
+                    : produto.preco_custo1
                   ).toFixed(2)}
                 </div>
               </div>
