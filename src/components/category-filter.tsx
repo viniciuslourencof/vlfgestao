@@ -1,3 +1,10 @@
+// Defina o tipo 'Categoria' antes do componente
+type Categoria = {
+  categoria_id: number;
+  label?: string;
+  dsc_categoria?: string;
+};
+
 type CategoryFilterProps = {
   categorias: Categoria[];
   categoriaSelecionada: number;
