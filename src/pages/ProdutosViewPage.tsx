@@ -6,6 +6,7 @@ import { ProdutosPage } from "./ProdutosPage";
 import { supabase } from "../lib/subabase";
 import { Confirmation } from "@/components/confirmation";
 import { toast } from "sonner";
+import ModalAviso from "@/components/modal-aviso";
 
 type Produto = {
   produto_id: string;
@@ -19,15 +20,19 @@ type Produto = {
   mililitros: string;
   doses: string;
   dsc_categoria: string;
+  margem1: string;
+  valor_dose: string;
 };
 
 export function ProdutosViewPage() {
-  const [produtos, setProdutos] = useState([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [produtoIdToDelete, setProdutoIdToDelete] = useState<string | null>(
     null
   );
+  const [mostrarAviso, setMostrarAviso] = useState(false);
+  const [mensagemAviso, setMensagemAviso] = useState("");
 
   useEffect(() => {
     getProdutos();
@@ -46,7 +51,9 @@ export function ProdutosViewPage() {
       )
       .order("produto_id", { ascending: false });
 
-    setProdutos(data);
+    if (data) {
+      setProdutos(data);
+    }
   }
 
   const handleEdit = (produto: Produto) => {
@@ -65,6 +72,9 @@ export function ProdutosViewPage() {
       unidade_fardo: "0",
       mililitros: "0.00",
       doses: "0.00",
+      dsc_categoria: "",
+      margem1: "0.00",
+      valor_dose: "0.00"
     });
   };
 
@@ -77,7 +87,7 @@ export function ProdutosViewPage() {
     setShowConfirmation(true);
   };
 
-  const handleDelete = async (produto_id: string) => {
+  const handleDelete = async () => {
     setShowConfirmation(false);
 
     if (!produtoIdToDelete) return;
@@ -184,13 +194,13 @@ export function ProdutosViewPage() {
                   </p>
                   <p className="text-sm mt-1">Estoque: {produto.estoque}</p>
                   <p className="text-sm">
-                    Preço de Venda: R$ {produto.preco_venda1.toFixed(2)}
+                    Preço de Venda: R$ {parseFloat(produto.preco_venda1).toFixed(2)}
                   </p>
                   <p className="text-sm">
-                    Preço de Custo: R$ {produto.preco_custo1.toFixed(2)}
+                    Preço de Custo: R$ {parseFloat(produto.preco_custo1).toFixed(2)}
                   </p>
                   <p className="text-sm">
-                    Margem de Lucro: {produto.margem1.toFixed(2)} %
+                    Margem de Lucro: {parseFloat(produto.margem1).toFixed(2)} %
                   </p>
                 </div>
                 <div className="flex gap-2 mt-4">
@@ -220,6 +230,11 @@ export function ProdutosViewPage() {
         open={showConfirmation}
         onCancel={() => setShowConfirmation(false)}
         onConfirm={handleDelete}
+      />
+      <ModalAviso
+        open={mostrarAviso}
+        onClose={setMostrarAviso}
+        mensagem={mensagemAviso}
       />
     </div>
   );

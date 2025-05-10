@@ -18,27 +18,99 @@ import ModalBuscaCategoria from "@/components/modal-busca-categoria";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 
+type Produto = {
+  produto_id: number;
+  dsc_produto: string;
+  valor_dose: number | string;
+  preco_custo1: number | string;
+};
+
+type ProdutoRelacionado = {
+  dsc_produto: string;
+  valor_dose: number;
+};
+
+type FormType = {
+  produto_id?: string | number;
+  categoria_id?: string | number;
+  dsc_categoria?: string;
+  categorias?: {
+    dsc_categoria: string;
+  };
+  dsc_produto: string;
+  estoque: string | number;
+  preco_venda1: string | number;
+  preco_custo1: string | number;
+  desconto: string | number;
+  unidade_fardo: string;
+  mililitros: string | number;
+  doses: string | number;
+  margem1: string | number;
+  valor_dose: string | number;
+};
+
+type ProdutoComposicao = {
+  produto_composicao_id: number;
+  produtofilho_id: number;
+  produtopai_id: number;
+  produtos: {
+    valor_dose: number;
+    dsc_produto: string;
+  };
+  vr_custo: number;
+};
+
+type FormComposicaoType = {
+  produto_composicao_id: string;
+  produtopai_id: string;
+  produtofilho_id: string;
+  dsc_produto: string;
+  preco_custo: string;
+  quantidade: number;
+  preco_unitario?: string;
+};
+
 type ProdutoFormProps = {
   produto?: {
-    produto_id: string;
+    produto_id: string | number; // Permite tanto string quanto número
     dsc_produto: string;
-    estoque: string;
-    preco_venda1: string;
-    preco_custo1: string;
-    desconto: string;
-    categoria_id: string;
+    estoque: string | number; // Pode ser string ou número
+    preco_venda1: string | number; // Pode ser string ou número
+    preco_custo1: string | number; // Pode ser string ou número
+    desconto: string | number; // Pode ser string ou número
+    categoria_id: string | number; // Pode ser string ou número
     unidade_fardo: string;
-    mililitros: string;
-    doses: string;
-    margem1: string;
-    valor_dose: string;
+    mililitros: string | number; // Pode ser string ou número
+    doses: string | number; // Pode ser string ou número
+    margem1: string | number; // Pode ser string ou número
+    valor_dose: string | number; // Pode ser string ou número
   };
   onClose?: () => void;
   onSave?: () => void;
 };
 
 export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
-  const [form, setForm] = useState(produto);
+  const [form, setForm] = useState<FormType>(
+    produto ?? {
+      produto_id: "",
+      dsc_produto: "",
+      estoque: "",
+      preco_venda1: "",
+      preco_custo1: "",
+      desconto: "",
+      categoria_id: "",
+      margem1: "",
+      valor_dose: "",
+      dsc_categoria: "",
+      categorias: {
+        dsc_categoria: "",
+      },
+      unidade_fardo: "",
+      mililitros: "",
+      doses: "",
+    }
+  );
+
   const [abrirModalBuscaCategoria, setAbrirModalBuscaCategoria] =
     useState(false);
 
@@ -46,50 +118,47 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
   const [mensagemAviso, setMensagemAviso] = useState("");
   const [abrirModalBusca, setAbrirModalBusca] = useState(false);
 
-  const [formComposicao, setFormComposicao] = useState({
+  const [formComposicao, setFormComposicao] = useState<FormComposicaoType>({
     produto_composicao_id: "",
     produtopai_id: "",
     produtofilho_id: "",
     dsc_produto: "",
     preco_custo: "",
+    quantidade: 1,
   });
-
-  type ProdutoComposicao = {
-    produto_composicao_id: number;
-    produtofilho_id: number;
-    produtopai_id: number;
-    produtos: {
-      valor_dose: number;
-      dsc_produto: string;
-    };
-    vr_custo: number;
-  };
 
   const [produtosComposicao, setProdutosComposicao] = useState<
     ProdutoComposicao[]
   >([]);
 
-  type ComposicaoTemp = {
-    produtofilho_id: number;
-    preco_custo: number;
-    dsc_produto: string;
-  };
+  // type ComposicaoTemp = {
+  //   produtofilho_id: number;
+  //   preco_custo: number;
+  //   dsc_produto: string;
+  // };
 
-  const [composicoesTemp, setComposicoesTemp] = useState<ComposicaoTemp[]>([]);
+  // const [composicoesTemp, setComposicoesTemp] = useState<ComposicaoTemp[]>([]);
 
   useEffect(() => {
     carregarComposicao();
   }, []); // O array vazio significa que isso só vai ser chamado uma vez, ao montar o componente
 
   const somaCusto = produtosComposicao
-    .reduce((acc, produto) => acc + parseFloat(produto.vr_custo), 0)
+    .reduce(
+      (acc, produto) =>
+        acc +
+        (typeof produto.vr_custo === "string"
+          ? parseFloat(produto.vr_custo)
+          : produto.vr_custo),
+      0
+    )
     .toFixed(2);
 
   const calcularMargem = (precoCusto: string, precoVenda: string) => {
     const custo = parseFloat(precoCusto.replace(",", "."));
     const venda = parseFloat(precoVenda.replace(",", "."));
 
-    var margem;
+    let margem = 0;
 
     if (venda == 0 || custo == 0 || isNaN(venda) || isNaN(custo)) {
       margem = 0;
@@ -99,7 +168,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
 
     setForm((prev) => ({
       ...prev,
-      margem1: parseFloat(margem).toFixed(2),
+      margem1: parseFloat(String(margem)).toFixed(2),
     }));
   };
 
@@ -111,7 +180,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       setForm((prev) => ({
         ...prev,
         doses: dosesCalculadas,
-        valor_dose: parseFloat(precoCusto / dosesCalculadas).toFixed(2),
+        valor_dose: (parseFloat(precoCusto) / dosesCalculadas).toFixed(2),
       }));
     }
   };
@@ -129,7 +198,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       "valor_dose",
     ];
 
-    var sanitizedValue = numericFields.includes(name)
+    let sanitizedValue = numericFields.includes(name)
       ? value.replace(",", ".")
       : value;
 
@@ -142,12 +211,19 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       const updated = { ...prev, [name]: sanitizedValue };
 
       if (name === "preco_custo1" || name === "preco_venda1") {
-        calcularMargem(updated.preco_custo1, updated.preco_venda1);
-        calcularDoses(updated.preco_custo1, updated.mililitros);
+        calcularMargem(
+          String(updated.preco_custo1),
+          String(updated.preco_venda1)
+        );
+        if ("mililitros" in updated)
+          calcularDoses(
+            String(updated.preco_custo1),
+            String(updated.mililitros)
+          );
       }
 
-      if (name === "mililitros") {
-        calcularDoses(updated.preco_custo1, updated.mililitros);
+      if (name === "mililitros" && "mililitros" in updated) {
+        calcularDoses(String(updated.preco_custo1), String(updated.mililitros));
       }
 
       return updated;
@@ -157,40 +233,40 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const camposNumericos = [
-      "preco_custo1",
-      "preco_venda1",
-      "desconto",
-      "unidade_fardo",
-      "mililitros",
-      "doses",
-      "estoque",
-      "margem1",
-    ];
+    // const camposNumericos: (keyof FormType)[] = [
+    //   "produto_id",
+    //   "categoria_id",
+    //   "estoque",
+    //   "preco_venda1",
+    //   "preco_custo1",
+    //   "desconto",
+    //   "mililitros",
+    //   "doses",
+    //   "margem1",
+    //   "valor_dose",
+    // ];
+    // Desestruturando form e preservando o tipo correto
 
-    const formToSave = { ...form };
+    const { produto_id, categoria_id, dsc_categoria, ...rest } =
+      form as FormType;
 
-    if (!formToSave.produto_id || formToSave.produto_id === "0") {
-      delete formToSave.produto_id;
-    }
+    // Inicializa o formToSave com o rest e adiciona as propriedades opcionalmente
+    const formToSave: FormType = {
+      ...rest,
+      produto_id: produto_id && produto_id !== "0" ? produto_id : undefined,
+      categoria_id:
+        categoria_id && categoria_id !== "0" ? categoria_id : undefined,
+      dsc_categoria: dsc_categoria || undefined,
+      categorias: undefined,
+    };
 
-    if (!formToSave.categoria_id || formToSave.categoria_id === "0") {
-      delete formToSave.categoria_id;
-    }
-
-    if (formToSave.dsc_categoria) {
-      delete formToSave.dsc_categoria;
-    }
-
-    delete formToSave.categorias;
-
-    for (const [campo, valor] of Object.entries(formToSave)) {
-      if (valor === null || valor === "" || valor === undefined) {
-        if (camposNumericos.includes(campo)) {
-          formToSave[campo] = "0.00"; // ou "0" se preferir
-        }
-      }
-    }
+    // for (const [campo, valor] of Object.entries(formToSave)) {
+    //   if (valor === null || valor === "" || valor === undefined) {
+    //     if (camposNumericos.includes(campo)) {
+    //       formToSave[campo] = "0.00";
+    //     }
+    //   }
+    // }
 
     if (!formToSave.dsc_produto.trim()) {
       setMensagemAviso("Descrição não pode estar vazia.");
@@ -216,17 +292,17 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     onClose?.();
   };
 
-  const selecionarProdutoComposicao = (produtoSelecionado) => {
+  const selecionarProdutoComposicao = (produtoSelecionado: Produto) => {
     const precoUnitario = parseFloat(
-      produtoSelecionado.valor_dose > 0
-        ? produtoSelecionado.valor_dose
-        : produtoSelecionado.preco_custo1
+      +produtoSelecionado.valor_dose > 0
+        ? String(produtoSelecionado.valor_dose)
+        : String(produtoSelecionado.preco_custo1)
     );
 
     setFormComposicao((prev) => ({
       ...prev,
-      produtopai_id: form.produto_id,
-      produtofilho_id: produtoSelecionado.produto_id,
+      produtopai_id: String(form.produto_id),
+      produtofilho_id: String(produtoSelecionado.produto_id),
       dsc_produto: produtoSelecionado.dsc_produto,
       preco_unitario: precoUnitario.toFixed(2),
       quantidade: 1,
@@ -237,33 +313,62 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
   };
 
   const carregarComposicao = async () => {
-    if (produto.produto_id == 0) {
-      setProdutosComposicao(composicoesTemp);
-      return;
-    }
+    // const composicoesConvertidas: ProdutoComposicao[] = composicoesTemp.map(
+    //   (item) => ({
+    //     produto_composicao_id: 0, // valor temporário ou real se houver
+    //     produtopai_id: Number(form.produto_id), // <== conversão aqui
+    //     produtofilho_id: item.produtofilho_id,
+    //     produtos: {
+    //       valor_dose: item.preco_custo,
+    //       dsc_produto: item.dsc_produto,
+    //     },
+    //     vr_custo: item.preco_custo,
+    //   })
+    // );
 
-    const { data, error } = await supabase
-      .from("produtos_composicao")
-      .select(
+    // setProdutosComposicao(composicoesConvertidas);
+    if (produto) {
+      const { data, error } = await supabase
+        .from("produtos_composicao")
+        .select(
+          `
+          produto_composicao_id,
+          produtopai_id,
+          produtofilho_id,
+          vr_custo,
+          produtos (
+            dsc_produto,
+            valor_dose
+          )
         `
-        produto_composicao_id,
-        produtopai_id,
-        produtofilho_id,
-        vr_custo,
-        produtos (
-          dsc_produto,
-          valor_dose
         )
-      `
-      )
-      .eq("produtopai_id", produto.produto_id); //
+        .eq("produtopai_id", produto.produto_id);
 
-    if (error) {
-      setMensagemAviso("Erro ao carregar produtos: " + error.message);
-      setMostrarAviso(true);
-    } else {
-      console.log(data);
-      setProdutosComposicao(data); // Atualiza o estado com os produtos carregados
+      if (error) {
+        setMensagemAviso("Erro ao carregar produtos: " + error.message);
+        setMostrarAviso(true);
+      } else {
+        // console.log(data);
+
+        const composicoesCorrigidas: ProdutoComposicao[] = (data || []).map(
+          (item) => {
+            const produto = item.produtos as unknown as ProdutoRelacionado;
+
+            return {
+              produto_composicao_id: item.produto_composicao_id,
+              produtopai_id: Number(item.produtopai_id),
+              produtofilho_id: Number(item.produtofilho_id),
+              vr_custo: Number(item.vr_custo),
+              produtos: {
+                dsc_produto: produto?.dsc_produto ?? "",
+                valor_dose: produto?.valor_dose ?? 0,
+              },
+            };
+          }
+        );
+
+        setProdutosComposicao(composicoesCorrigidas);
+      }
     }
   };
 
@@ -272,7 +377,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
 
     const { produtofilho_id, preco_custo } = formComposicao;
 
-    if (produtopai_id != 0) {
+    if (Number(produtopai_id) !== 0 && Number(produtofilho_id) !== 0) {
       // Inserir produto na tabela produtos_composicao
       const { error } = await supabase
         .from("produtos_composicao")
@@ -282,18 +387,19 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
         setMensagemAviso("Erro ao adicionar produto: " + error.message);
         setMostrarAviso(true);
       }
-    } else {
-      // Armazena em memória se o produto ainda não foi salvo
-
-      setComposicoesTemp((prev) => [
-        ...prev,
-        {
-          produtofilho_id: Number(produtofilho_id),
-          preco_custo: Number(preco_custo),
-          dsc_produto: String(dsc_produto),
-        },
-      ]);
     }
+    // else {
+    //   // Armazena em memória se o produto ainda não foi salvo
+
+    //   setComposicoesTemp((prev) => [
+    //     ...prev,
+    //     {
+    //       produtofilho_id: Number(produtofilho_id),
+    //       preco_custo: Number(preco_custo),
+    //       dsc_produto: String(dsc_produto),
+    //     },
+    //   ]);
+    // }
 
     carregarComposicao();
 
@@ -303,10 +409,11 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       produtofilho_id: "",
       preco_custo: "",
       dsc_produto: "",
+      quantidade: 1,
     });
   };
 
-  const removerProdutoDaComposicao = async (produto_composicao_id) => {
+  const removerProdutoDaComposicao = async (produto_composicao_id: number) => {
     const { error } = await supabase
       .from("produtos_composicao")
       .delete()
@@ -493,7 +600,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                   <Input
                     id="dsc_categoria"
                     name="dsc_categoria"
-                    // value={form.dsc_categoria || ""}
                     value={
                       form.categorias?.dsc_categoria || form.dsc_categoria || ""
                     }
@@ -631,7 +737,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
 
                 {/* Quantidade */}
                 <div className="space-y-2 w-24">
-                  <Label htmlFor="quantidade">Qtd.</Label>
+                  <Label htmlFor="quantidade">Qtd. Doses</Label>
                   <Input
                     id="quantidade"
                     name="quantidade"
@@ -641,7 +747,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                     onChange={(e) => {
                       const quantidade = parseFloat(e.target.value) || 1;
                       const precoUnitario = parseFloat(
-                        formComposicao.preco_unitario || 0
+                        formComposicao.preco_unitario || "0"
                       );
 
                       setFormComposicao((prev) => ({
@@ -670,9 +776,9 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                     onBlur={(e) => {
                       const preco =
                         parseFloat(e.target.value.replace(",", ".")) || 0;
-                      const quantidade = parseFloat(
-                        formComposicao.quantidade || 1
-                      );
+
+                      const quantidade = formComposicao.quantidade || 1;
+
                       setFormComposicao((prev) => ({
                         ...prev,
                         preco_custo: preco.toFixed(2),
@@ -688,7 +794,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                   <button
                     type="button"
                     onClick={adicionarProdutoNaComposicao}
-                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent"
+                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -744,10 +850,10 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
 
                     calcularMargem(
                       parseFloat(somaCusto).toFixed(2),
-                      form.preco_venda1
+                      String(form.preco_venda1)
                     );
                   }}
-                  className="text-sm px-2 py-1 border rounded hover:bg-accent"
+                  className="text-sm px-2 py-1 border rounded hover:bg-accent cursor-pointer"
                 >
                   Usar no Custo Final
                 </button>

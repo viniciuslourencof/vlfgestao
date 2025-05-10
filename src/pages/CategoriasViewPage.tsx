@@ -99,6 +99,7 @@ export function CategoriasViewPage() {
             />
             <div className="flex gap-2">
               <Button
+                className="cursor-pointer"
                 onClick={async () => {
                   if (!categoriaEditando.dsc_categoria.trim()) {
                     setMensagemAviso("Descrição não pode estar vazia.");
@@ -131,10 +132,11 @@ export function CategoriasViewPage() {
                       .eq("categoria_id", categoriaEditando.categoria_id);
 
                     if (error) {
-
-                      setMensagemAviso("Erro ao atualizar categoria: " + error.message);
+                      setMensagemAviso(
+                        "Erro ao atualizar categoria: " + error.message
+                      );
                       setMostrarAviso(true);
-                      
+
                       return;
                     }
                   }
@@ -142,12 +144,16 @@ export function CategoriasViewPage() {
                   getCategorias();
                   handleCloseForm();
 
-                  toast.success("Categoria salva com sucesso!")
+                  toast.success("Categoria salva com sucesso!");
                 }}
               >
                 Salvar
               </Button>
-              <Button variant="outline" onClick={handleCloseForm}>
+              <Button
+                variant="outline"
+                onClick={handleCloseForm}
+                className="cursor-pointer"
+              >
                 Cancelar
               </Button>
             </div>
@@ -158,10 +164,10 @@ export function CategoriasViewPage() {
           <div className="flex items-center mb-4">
             <h1 className="text-2xl font-bold">Categorias</h1>
             <div className="flex gap-2 ml-auto">
-              <Button onClick={handleNew}>
+              <Button onClick={handleNew} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Nova Categoria
               </Button>
-              <Button onClick={getCategorias}>
+              <Button onClick={getCategorias} className="cursor-pointer">
                 <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" /> Atualizar
               </Button>
             </div>
@@ -193,6 +199,7 @@ export function CategoriasViewPage() {
                     variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteClick(categoria.categoria_id)}
+                    className="cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4 mr-1" /> Apagar
                   </Button>
