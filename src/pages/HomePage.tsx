@@ -1,6 +1,9 @@
+// HomePage.tsx
 import { useEffect, useState } from "react";
 import { CategoryFilter } from "../components/category-filter";
-import { FoodGrid } from "../components/food-grid";
+// import { FoodGrid } from "../components/food-grid";
+import { Cart } from "../components/cart"; // Importando o componente Cart
+
 import { supabase } from "../lib/subabase";
 
 // Definindo o tipo para as categorias
@@ -17,23 +20,37 @@ interface Produto {
   desconto: number;
 }
 
+interface CarrinhoItem {
+  produto_id: number;
+  dsc_produto: string;
+  preco_venda1: number;
+  quantidade: number;
+}
+
 export function HomePage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState<number | null>(null);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<
+    number | null
+  >(null);
+  const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]); // Inicialização correta
+  const [minimized, setMinimized] = useState(true);
 
   useEffect(() => {
     async function fetchCategorias() {
       const { data, error } = await supabase.from("categorias").select("*");
       if (data) {
-        setCategorias([{ categoria_id: null, dsc_categoria: "Todos" }, ...data]);
+        setCategorias([
+          { categoria_id: null, dsc_categoria: "Todos" },
+          ...data,
+        ]);
       } else {
         console.error("Erro ao carregar categorias:", error);
       }
     }
 
     fetchCategorias();
-    buscarProdutos(); // busca inicial com todos os produtos
+    buscarProdutos(); // Busca inicial com todos os produtos
   }, []);
 
   async function buscarProdutos(categoria_id: number | null = null) {
@@ -46,13 +63,37 @@ export function HomePage() {
     }
 
     const { data } = await query;
-    // Verificando se 'data' não é null
     if (data) {
       setProdutos(data);
     } else {
       console.error("Erro ao carregar produtos");
     }
     setCategoriaSelecionada(categoria_id);
+  }
+
+  function adicionarAoCarrinho(produto: Produto) {
+    setCarrinho((prevCarrinho) => {
+      const produtoExistente = prevCarrinho.find(
+        (item) => item.produto_id === produto.produto_id
+      );
+
+      if (produtoExistente) {
+        return prevCarrinho.map((item) =>
+          item.produto_id === produto.produto_id
+            ? { ...item, quantidade: item.quantidade + 1 }
+            : item
+        );
+      } else {
+        return [...prevCarrinho, { ...produto, quantidade: 1 }];
+      }
+    });
+    setMinimized(false); // <-- abre o carrinho
+  }
+
+  function removerDoCarrinho(produtoId: number) {
+    setCarrinho((prevCarrinho) =>
+      prevCarrinho.filter((item) => item.produto_id !== produtoId)
+    );
   }
 
   return (
@@ -62,7 +103,57 @@ export function HomePage() {
         categoriaSelecionada={categoriaSelecionada}
         onSelectCategoria={buscarProdutos}
       />
-      <FoodGrid produtos={produtos} />
+      <div
+        className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${
+          !minimized ? "xl:pr-[400px]" : ""
+        }`}
+      >
+        {produtos.map((produto) => (
+          <div
+            key={produto.produto_id}
+            className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer"
+            onClick={() => adicionarAoCarrinho(produto)}
+          >
+            {/* <img
+              src="https://via.placeholder.com/300" // Substitua com a URL da imagem do produto
+              alt={produto.dsc_produto}
+              className="w-full h-48 object-cover rounded-t-lg"
+            /> */}
+            <div className="p-4">
+              <h3 className="text-lg font-semibold">{produto.dsc_produto}</h3>
+              <p className="text-gray-500 text-sm">
+                Preço: ${produto.preco_venda1.toFixed(2)}
+              </p>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-gray-600 font-bold">
+                  ${produto.preco_venda1.toFixed(2)}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {produto.desconto}% OFF
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="fixed top-0 right-0 h-full z-50">
+        <Cart
+          carrinho={carrinho}
+          onRemoveItem={removerDoCarrinho}
+          minimized={minimized}
+          setMinimized={setMinimized}
+        />
+      </div>
+
+      {minimized && (
+        <button
+          onClick={() => setMinimized(false)}
+          className="fixed top-20 right-4 z-50 bg-gray-600 text-white rounded-full w-14 h-14 shadow-lg hover:bg-gray-700 cursor-pointer"
+        >
+          🛒
+        </button>
+      )}
     </>
   );
 }

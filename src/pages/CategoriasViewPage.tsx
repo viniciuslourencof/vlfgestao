@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { supabase } from "../lib/subabase";
 import { Confirmation } from "@/components/confirmation";
@@ -79,51 +81,58 @@ export function CategoriasViewPage() {
   return (
     <div className="p-6">
       {categoriaEditando ? (
-        <div>
-          <h2 className="text-xl font-bold mb-4">
-            {categoriaEditando.categoria_id === "0"
-              ? "Nova Categoria"
-              : "Editar Categoria"}
-          </h2>
-          <div className="space-y-4">
-            <input
-              type="text"
-              value={categoriaEditando.dsc_categoria}
-              onChange={(e) =>
-                setCategoriaEditando((prev) =>
-                  prev ? { ...prev, dsc_categoria: e.target.value } : prev
-                )
-              }
-              placeholder="Descrição da categoria"
-              className="border p-2 w-full rounded-md"
-            />
-            <div className="flex gap-2">
+        <Card className=" w-full h-full mx-auto p-6">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">
+              {categoriaEditando.categoria_id === "0"
+                ? "Nova Categoria"
+                : "Editar Categoria"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição da categoria</Label>
+              <Input
+                id="descricao"
+                value={categoriaEditando.dsc_categoria}
+                onChange={(e) =>
+                  setCategoriaEditando((prev) =>
+                    prev ? { ...prev, dsc_categoria: e.target.value } : prev
+                  )
+                }
+                placeholder="Ex: Bebidas, Alimentos, etc."
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={handleCloseForm}
+                className="cursor-pointer"
+              >
+                Cancelar
+              </Button>
               <Button
                 className="cursor-pointer"
                 onClick={async () => {
                   if (!categoriaEditando.dsc_categoria.trim()) {
                     setMensagemAviso("Descrição não pode estar vazia.");
                     setMostrarAviso(true);
-
                     return;
                   }
 
                   if (categoriaEditando.categoria_id === "0") {
-                    // Nova
                     const { error } = await supabase.from("categorias").insert({
                       dsc_categoria: categoriaEditando.dsc_categoria,
                     });
 
                     if (error) {
                       setMensagemAviso(
-                        "Erro ao apagar categoria: " + error.message
+                        "Erro ao criar categoria: " + error.message
                       );
                       setMostrarAviso(true);
-
                       return;
                     }
                   } else {
-                    // Atualizar
                     const { error } = await supabase
                       .from("categorias")
                       .update({
@@ -136,29 +145,20 @@ export function CategoriasViewPage() {
                         "Erro ao atualizar categoria: " + error.message
                       );
                       setMostrarAviso(true);
-
                       return;
                     }
                   }
 
+                  toast.success("Categoria salva com sucesso!");
                   getCategorias();
                   handleCloseForm();
-
-                  toast.success("Categoria salva com sucesso!");
                 }}
               >
                 Salvar
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleCloseForm}
-                className="cursor-pointer"
-              >
-                Cancelar
-              </Button>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ) : (
         <>
           <div className="flex items-center mb-4">
@@ -192,6 +192,7 @@ export function CategoriasViewPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleEdit(categoria)}
+                    className="cursor-pointer"
                   >
                     <Pencil className="w-4 h-4 mr-1" /> Editar
                   </Button>

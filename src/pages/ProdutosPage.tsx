@@ -377,6 +377,11 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
 
     const { produtofilho_id, preco_custo } = formComposicao;
 
+    if (Number(produtofilho_id) == 0) {
+      setMensagemAviso("Nenhum produto selecionado, verifique.");
+      setMostrarAviso(true);
+    }
+
     if (Number(produtopai_id) !== 0 && Number(produtofilho_id) !== 0) {
       // Inserir produto na tabela produtos_composicao
       const { error } = await supabase
