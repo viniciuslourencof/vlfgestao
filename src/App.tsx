@@ -1,14 +1,27 @@
+import { useState } from "react"
 import { SidebarNav } from "./components/sidebar-nav"
 import { Header } from "./components/header"
 import { Cart } from "./components/cart"
-// import { Footer } from "./components/footer"
 import { Routes, Route } from "react-router-dom"
 import { HomePage } from "./pages/HomePage"
 import { ProdutosViewPage } from "./pages/ProdutosViewPage"
 import { CategoriasViewPage } from "./pages/CategoriasViewPage"
 
+interface CarrinhoItem {
+  produto_id: number;
+  dsc_produto: string;
+  preco_venda1: number;
+  quantidade: number;
+}
 
 export function App() {
+  const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]); // Inicialização correta
+  const [minimized, setMinimized] = useState(true)
+
+  const handleRemoveItem = (index: number) => {
+    setCarrinho(prev => prev.filter((_, i) => i !== index))
+  }
+
   return (
     <div className="flex h-screen bg-gray-100">
       <SidebarNav />
@@ -22,12 +35,16 @@ export function App() {
               <Route path="/categorias" element={<CategoriasViewPage />} />
             </Routes>
           </main>
-          <Cart />
+          <Cart
+            carrinho={carrinho}
+            onRemoveItem={handleRemoveItem}
+            minimized={minimized}
+            setMinimized={setMinimized}
+          />
         </div>
-        {/* <Footer /> */}
       </div>
     </div>
   )
 }
 
-export default App;
+export default App

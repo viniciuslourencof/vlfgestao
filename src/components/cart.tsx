@@ -36,8 +36,10 @@ export function Cart({
     (acc, item) => acc + item.preco_venda1 * item.quantidade,
     0
   );
-  const tax = subtotal * 0.05;
-  const total = subtotal + tax;
+  // const tax = subtotal * 0.05;
+  // const total = subtotal + tax;
+
+  const total = subtotal;
 
   return (
     <div
@@ -131,10 +133,10 @@ export function Cart({
                 <span className="text-gray-600">Subtotal</span>
                 <span>R$ {subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-600">Taxa (5%)</span>
                 <span>R$ {tax.toFixed(2)}</span>
-              </div>
+              </div> */}
               <div className="flex justify-between font-bold">
                 <span>Total</span>
                 <span>R$ {total.toFixed(2)}</span>
@@ -144,21 +146,21 @@ export function Cart({
             <div className="grid grid-cols-3 gap-2 mb-4">
               <Button
                 variant="outline"
-                className="flex flex-col items-center gap-0"
+                className="flex flex-col items-center gap-0 cursor-pointer"
               >
                 <Banknote className="h-5 w-5 mb-1" />
                 <span className="text-xs">Dinheiro</span>
               </Button>
               <Button
                 variant="outline"
-                className="flex flex-col items-center gap-0"
+                className="flex flex-col items-center gap-0 cursor-pointer"
               >
                 <CreditCard className="h-5 w-5 mb-1" />
                 <span className="text-xs">Cartão</span>
               </Button>
               <Button
                 variant="outline"
-                className="flex flex-col items-center gap-0"
+                className="flex flex-col items-center gap-0 cursor-pointer"
               >
                 <QrCode className="h-5 w-5 mb-1" />
                 <span className="text-xs">Pix</span>
