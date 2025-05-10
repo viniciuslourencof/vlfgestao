@@ -1,7 +1,6 @@
 // HomePage.tsx
 import { useEffect, useState } from "react";
 import { CategoryFilter } from "../components/category-filter";
-// import { FoodGrid } from "../components/food-grid";
 import { Cart } from "../components/cart"; // Importando o componente Cart
 
 import { supabase } from "../lib/subabase";
@@ -27,7 +26,11 @@ interface CarrinhoItem {
   quantidade: number;
 }
 
-export function HomePage() {
+interface HomePageProps {
+  searchQuery: string;
+}
+
+export function HomePage({ searchQuery }: HomePageProps) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<
@@ -50,13 +53,17 @@ export function HomePage() {
     }
 
     fetchCategorias();
-    buscarProdutos(); // Busca inicial com todos os produtos
-  }, []);
+    selecionarCategoria(categoriaSelecionada); // Filtro inicial
+  }, [categoriaSelecionada, searchQuery]); // Dependendo da categoria e busca
 
-  async function buscarProdutos(categoria_id: number | null = null) {
+  async function selecionarCategoria(categoria_id: number | null) {
     let query = supabase
       .from("produtos")
       .select("produto_id, dsc_produto, preco_venda1, desconto");
+
+    if (searchQuery.trim() !== "") {
+      query = query.ilike("dsc_produto", `%${searchQuery}%`); // Filtro condicional
+    }
 
     if (categoria_id) {
       query = query.eq("categoria_id", categoria_id);
@@ -68,7 +75,6 @@ export function HomePage() {
     } else {
       console.error("Erro ao carregar produtos");
     }
-    setCategoriaSelecionada(categoria_id);
   }
 
   function adicionarAoCarrinho(produto: Produto) {
@@ -101,7 +107,7 @@ export function HomePage() {
       <CategoryFilter
         categorias={categorias}
         categoriaSelecionada={categoriaSelecionada}
-        onSelectCategoria={buscarProdutos}
+        onSelectCategoria={setCategoriaSelecionada} // Passa a função para atualizar categoria
       />
       <div
         className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${
@@ -157,3 +163,4 @@ export function HomePage() {
     </>
   );
 }
+

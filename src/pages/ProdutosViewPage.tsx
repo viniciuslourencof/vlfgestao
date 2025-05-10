@@ -22,6 +22,9 @@ type Produto = {
   dsc_categoria: string;
   margem1: string;
   valor_dose: string;
+  categorias?: {
+    dsc_categoria: string;
+  };
 };
 
 export function ProdutosViewPage() {
@@ -201,6 +204,9 @@ export function ProdutosViewPage() {
                   </p>
                   <p className="text-sm">
                     Margem de Lucro: {parseFloat(produto.margem1).toFixed(2)} %
+                  </p>
+                  <p className="text-sm">
+                    Categoria: {produto.categorias?.dsc_categoria} 
                   </p>
                 </div>
                 <div className="flex gap-2 mt-4">

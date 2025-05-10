@@ -2,12 +2,25 @@ import { Search, Share2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
-export function Header() {
+interface HeaderProps {
+  onSearch: (query: string) => void;
+}
+
+export function Header({ onSearch }: HeaderProps) {
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onSearch(event.target.value); // Chama a função para atualizar o estado de pesquisa
+  };
+
   return (
     <div className="bg-white p-4 flex items-center gap-4 border-b">
       <div className="flex-1 relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <Input type="text" placeholder="Pesquisar..." className="pl-10 w-full" />
+        <Input 
+          type="text" 
+          placeholder="Pesquisar..." 
+          className="pl-10 w-full" 
+          onChange={handleSearchChange} // Atualiza a pesquisa enquanto o usuário digita
+        />
       </div>
       <div className="flex items-center gap-2">
         <span className="font-semibold">Table 4</span>
@@ -17,5 +30,5 @@ export function Header() {
         <Share2 className="h-5 w-5" />
       </Button>
     </div>
-  )
+  );
 }
