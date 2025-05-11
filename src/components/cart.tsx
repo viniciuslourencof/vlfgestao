@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   CreditCard,
   QrCode,
-  Banknote,
-  Edit2,
+  Banknote,  
   ChevronsRight,
   ChevronsLeft,
   Trash2,
@@ -55,14 +54,12 @@ export function Cart({
               <h2 className="text-xl font-bold">Pedido</h2>
               <p className="text-sm text-gray-500">Cliente atual</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
-                <Edit2 className="h-5 w-5" />
-              </Button>
+            <div className="flex items-center gap-2">              
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setMinimized(true)}
+                className="cursor-pointer"
               >
                 <ChevronsRight className="h-5 w-5" />
               </Button>

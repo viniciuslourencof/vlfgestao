@@ -79,18 +79,18 @@ type ComposicaoTempType = {
 
 type ProdutoFormPropsType = {
   produto?: {
-    produto_id: string | number; 
+    produto_id: string | number;
     dsc_produto: string;
-    estoque: string | number; 
+    estoque: string | number;
     preco_venda1: string | number;
     preco_custo1: string | number;
-    desconto: string | number; 
-    categoria_id: string | number; 
+    desconto: string | number;
+    categoria_id: string | number;
     unidade_fardo: string | number;
-    mililitros: string | number; 
-    doses: string | number; 
-    margem1: string | number; 
-    valor_dose: string | number; 
+    mililitros: string | number;
+    doses: string | number;
+    margem1: string | number;
+    valor_dose: string | number;
   };
   onClose?: () => void;
   onSave?: () => void;
@@ -240,14 +240,16 @@ export function ProdutosPage({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();    
+    e.preventDefault();
 
     const formToSave = { ...form };
 
-    delete formToSave.categorias; 
+    delete formToSave.categorias;
     delete formToSave.categoria_id;
-    delete formToSave.dsc_categoria;    
-    delete formToSave.produto_id; 
+    delete formToSave.dsc_categoria;
+
+    if (formToSave.produto_id === "" || formToSave.produto_id === "0")
+      delete formToSave.produto_id;
 
     if (!(form.dsc_produto ?? "").trim()) {
       setMensagemAviso("Descrição não pode estar vazia.");
@@ -260,9 +262,7 @@ export function ProdutosPage({
       if (valor === "" || valor === "0" || valor === "0.00") {
         formToSave[campo as keyof FormType] = "0.00";
       }
-    }    
-
-    console.log(formToSave)
+    }
 
     const { data, error } = await supabase
       .from("produtos")
@@ -277,7 +277,7 @@ export function ProdutosPage({
     }
 
     if (composicoesTemp && composicoesTemp.length > 0) {
-      const produtopai_id = data[0].produtopai_id;
+      const produtopai_id = data[0].produto_id;
       const produtofilho_id = composicoesTemp[0].produtofilho_id;
       const preco_custo = composicoesTemp[0].preco_custo;
 
@@ -331,8 +331,7 @@ export function ProdutosPage({
         vr_custo: parseFloat(item.preco_custo),
       })
     );
-
-    if (composicoesEmMemoria && composicoesEmMemoria.length > 0) {
+   if (composicoesEmMemoria && composicoesEmMemoria.length > 0) {      
       setProdutosComposicao(composicoesEmMemoria);
     } else if (produto) {
       const { data, error } = await supabase
@@ -385,7 +384,8 @@ export function ProdutosPage({
     if (Number(produtofilho_id) == 0) {
       setMensagemAviso("Nenhum produto selecionado, verifique.");
       setMostrarAviso(true);
-    }
+      return;
+    }    
 
     if (Number(produtopai_id) !== 0 && Number(produtofilho_id) !== 0) {
       // Inserir produto na tabela produtos_composicao
@@ -409,7 +409,7 @@ export function ProdutosPage({
           dsc_produto: dsc_produto,
         },
       ]);
-    }
+    }    
 
     carregarComposicao();
 
