@@ -1,4 +1,5 @@
 {
   "buildCommand": "npm run build || echo 'Ignoring TypeScript errors'",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }] 
 }
