@@ -42,7 +42,7 @@ type FormType = {
   preco_venda1: string | number;
   preco_custo1: string | number;
   desconto: string | number;
-  unidade_fardo: string;
+  unidade_fardo: string | number;
   mililitros: string | number;
   doses: string | number;
   margem1: string | number;
@@ -79,18 +79,18 @@ type ComposicaoTempType = {
 
 type ProdutoFormPropsType = {
   produto?: {
-    produto_id: string | number; // Permite tanto string quanto número
+    produto_id: string | number; 
     dsc_produto: string;
-    estoque: string | number; // Pode ser string ou número
-    preco_venda1: string | number; // Pode ser string ou número
-    preco_custo1: string | number; // Pode ser string ou número
-    desconto: string | number; // Pode ser string ou número
-    categoria_id: string | number; // Pode ser string ou número
-    unidade_fardo: string;
-    mililitros: string | number; // Pode ser string ou número
-    doses: string | number; // Pode ser string ou número
-    margem1: string | number; // Pode ser string ou número
-    valor_dose: string | number; // Pode ser string ou número
+    estoque: string | number; 
+    preco_venda1: string | number;
+    preco_custo1: string | number;
+    desconto: string | number; 
+    categoria_id: string | number; 
+    unidade_fardo: string | number;
+    mililitros: string | number; 
+    doses: string | number; 
+    margem1: string | number; 
+    valor_dose: string | number; 
   };
   onClose?: () => void;
   onSave?: () => void;
@@ -240,21 +240,16 @@ export function ProdutosPage({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault();    
 
-    const { produto_id, categoria_id, dsc_categoria, ...rest } =
-      form as FormType;
+    const formToSave = { ...form };
 
-    const formToSave: Partial<FormType> = {
-      ...rest,
-      produto_id: produto_id && produto_id !== "0" ? produto_id : undefined,
-      categoria_id:
-        categoria_id && categoria_id !== "0" ? categoria_id : undefined,
-      dsc_categoria: dsc_categoria || undefined,
-      categorias: undefined,
-    };
+    delete formToSave.categorias; 
+    delete formToSave.categoria_id;
+    delete formToSave.dsc_categoria;    
+    delete formToSave.produto_id; 
 
-    if (!(formToSave.dsc_produto ?? "").trim()) {
+    if (!(form.dsc_produto ?? "").trim()) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
 
@@ -263,13 +258,16 @@ export function ProdutosPage({
 
     for (const [campo, valor] of Object.entries(formToSave)) {
       if (valor === "" || valor === "0" || valor === "0.00") {
-        formToSave[campo as keyof FormType] = undefined;
+        formToSave[campo as keyof FormType] = "0.00";
       }
-    }
+    }    
 
-    const { error } = await supabase
+    console.log(formToSave)
+
+    const { data, error } = await supabase
       .from("produtos")
-      .upsert(formToSave, { onConflict: "produto_id" });
+      .upsert([formToSave], { onConflict: "produto_id" })
+      .select();
 
     if (error) {
       setMensagemAviso("Erro ao salvar produto: " + error.message);
@@ -279,7 +277,7 @@ export function ProdutosPage({
     }
 
     if (composicoesTemp && composicoesTemp.length > 0) {
-      const produtopai_id = composicoesTemp[0].produtopai_id;
+      const produtopai_id = data[0].produtopai_id;
       const produtofilho_id = composicoesTemp[0].produtofilho_id;
       const preco_custo = composicoesTemp[0].preco_custo;
 
@@ -405,7 +403,7 @@ export function ProdutosPage({
       setComposicoesTemp((prev) => [
         ...prev,
         {
-          produtopai_id: produtofilho_id,
+          produtopai_id: "0",
           produtofilho_id: produtofilho_id,
           preco_custo: preco_custo,
           dsc_produto: dsc_produto,
@@ -622,8 +620,8 @@ export function ProdutosPage({
                 </div>
               </div>
 
-              <div className="border rounded-md p-4 bg-white shadow-md">
-                <h3 className="text-sm font-semibold mb-3 border-b pb-1 text-black-700 tracking-wide">
+              <Card className="p-4">
+                <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
                   Unidade
                 </h3>
 
@@ -690,7 +688,7 @@ export function ProdutosPage({
                     />
                   </div>
                 </div>
-              </div>
+              </Card>
 
               <div className="flex justify-end gap-2 mt-4">
                 {onClose && (
@@ -822,14 +820,14 @@ export function ProdutosPage({
                 </div>
               </div>
 
-              <div className="border rounded-md p-4 bg-white shadow-md">
-                <h3 className="text-sm font-semibold mb-3 border-b pb-1 text-black tracking-wide">
+              <Card className="p-4">
+                <h3 className="text-sm font-semibold border-b pb-1 text-black tracking-wide">
                   Composições
                 </h3>
 
                 {/* Conteúdo do grid ou tabela aqui */}
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="p-2 border rounded-md bg-gray-50">
                     <TableRow>
                       <TableCell className="font-semibold text-left px-4 py-2 text-gray-800">
                         Código
@@ -876,7 +874,7 @@ export function ProdutosPage({
                     ))}
                   </TableBody>
                 </Table>
-                <div className="mt-6 p-4 border rounded-md flex flex-wrap items-center gap-4 justify-between bg-gray-50">
+                <div className="mt-6 p-2 border rounded-md flex flex-wrap items-center gap-4 justify-between bg-gray-50">
                   <div className="text-sm font-medium">
                     Somatória do Custo:{" "}
                     <span className="text-base font-bold text-gray-800">
@@ -902,7 +900,7 @@ export function ProdutosPage({
                     Usar no Custo Final
                   </Button>
                 </div>
-              </div>
+              </Card>
 
               <div className="flex justify-end gap-2 mt-4">
                 {onClose && (

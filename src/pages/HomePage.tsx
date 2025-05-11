@@ -5,6 +5,7 @@ import { Cart } from "../components/cart"; // Importando o componente Cart
 import { ShoppingCart } from "lucide-react";
 import { supabase } from "../lib/subabase";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 // Definindo o tipo para as categorias
 interface Categoria {
@@ -116,9 +117,9 @@ export function HomePage({ searchQuery }: HomePageProps) {
         }`}
       >
         {produtos.map((produto) => (
-          <div
+          <Card
             key={produto.produto_id}
-            className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer"
+            className="bg-white rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer"
             onClick={() => adicionarAoCarrinho(produto)}
           >
             {/* <img
@@ -143,7 +144,7 @@ export function HomePage({ searchQuery }: HomePageProps) {
                 )}
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
