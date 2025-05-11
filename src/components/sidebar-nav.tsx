@@ -19,7 +19,7 @@ export function SidebarNav() {
           alt="eBar Logo"
           className="w-8 h-8"
         />
-        <span className="font-semibold">VLF Sys</span>
+        <span className="font-semibold">VLF Sistemas</span>
       </div>
       <nav className="space-y-2">
         {navItems.map((item, index) => {
