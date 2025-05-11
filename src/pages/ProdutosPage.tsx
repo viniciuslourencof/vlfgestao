@@ -278,15 +278,14 @@ export function ProdutosPage({
       return;
     }
 
-    if (composicoesTemp && composicoesTemp.length > 0) {      
-
+    if (composicoesTemp && composicoesTemp.length > 0) {
       const produtopai_id = composicoesTemp[0].produtopai_id;
       const produtofilho_id = composicoesTemp[0].produtofilho_id;
       const preco_custo = composicoesTemp[0].preco_custo;
 
       const { error } = await supabase
         .from("produtos_composicao")
-        .insert([{  produtopai_id, produtofilho_id, vr_custo: preco_custo }]);      
+        .insert([{ produtopai_id, produtofilho_id, vr_custo: preco_custo }]);
 
       if (error) {
         setMensagemAviso("Erro ao adicionar produto: " + error.message);
@@ -295,7 +294,7 @@ export function ProdutosPage({
     }
 
     toast.success("Produto salvo com sucesso!");
-    setComposicoesTemp([]);    
+    setComposicoesTemp([]);
 
     onSave?.();
     onClose?.();
@@ -446,7 +445,7 @@ export function ProdutosPage({
 
   return (
     <Tabs defaultValue="geral" className="w-full h-full max-w-none mx-auto">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="flex space-x-2 bg-muted p-1 rounded-xl shadow-inner border">
         <TabsTrigger value="geral">Geral</TabsTrigger>
         <TabsTrigger value="composicao">Composição</TabsTrigger>
       </TabsList>
@@ -715,7 +714,10 @@ export function ProdutosPage({
       <TabsContent value="composicao">
         <Card className="w-full h-full max-w-none mx-auto">
           <CardHeader>
-            <CardTitle>Composição do Produto {produto?.dsc_produto}</CardTitle>
+            <CardTitle>
+              Composição do Produto
+              {produto?.dsc_produto ? ` - ${produto.dsc_produto}` : ""}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
