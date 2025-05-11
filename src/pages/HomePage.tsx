@@ -128,15 +128,18 @@ export function HomePage({ searchQuery }: HomePageProps) {
             <div className="p-4">
               <h3 className="text-lg font-semibold">{produto.dsc_produto}</h3>
               <p className="text-gray-500 text-sm">
-                Preço: ${produto.preco_venda1.toFixed(2)}
+                Preço: R${produto.preco_venda1.toFixed(2)}
               </p>
               <div className="flex justify-between items-center mt-2">
                 <span className="text-gray-600 font-bold">
                   ${produto.preco_venda1.toFixed(2)}
                 </span>
-                <span className="text-sm text-gray-500">
-                  {produto.desconto}% OFF
-                </span>
+
+                {produto.desconto > 0 && (
+                  <span className="text-sm text-gray-500">
+                    {produto.desconto}% DESC.
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -163,4 +166,3 @@ export function HomePage({ searchQuery }: HomePageProps) {
     </>
   );
 }
-
