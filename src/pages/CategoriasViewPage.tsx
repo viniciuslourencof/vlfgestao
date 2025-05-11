@@ -165,7 +165,7 @@ export function CategoriasViewPage() {
             <h1 className="text-2xl font-bold">Categorias</h1>
             <div className="flex gap-2 ml-auto">
               <Button onClick={handleNew} className="cursor-pointer">
-                <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Nova Categoria
+                <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
               </Button>
               <Button onClick={getCategorias} className="cursor-pointer">
                 <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" /> Atualizar

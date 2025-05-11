@@ -15,11 +15,11 @@ export function SidebarNav() {
     <div className="w-64 p-4 border-r h-screen">
       <div className="flex items-center gap-2 mb-8">
         <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-01-12%20at%2012.32.42%20PM-QicgA83ZI0TfZlOynDOqlhOGnbwzEv.jpeg"
+          src="vlf.png"
           alt="eBar Logo"
           className="w-8 h-8"
         />
-        <span className="font-semibold">eBar</span>
+        <span className="font-semibold">VLF Sys</span>
       </div>
       <nav className="space-y-2">
         {navItems.map((item, index) => {

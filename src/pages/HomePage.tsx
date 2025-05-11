@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import { CategoryFilter } from "../components/category-filter";
 import { Cart } from "../components/cart"; // Importando o componente Cart
-
+import { ShoppingCart } from "lucide-react";
 import { supabase } from "../lib/subabase";
+import { Button } from "@/components/ui/button";
 
 // Definindo o tipo para as categorias
 interface Categoria {
@@ -127,12 +128,12 @@ export function HomePage({ searchQuery }: HomePageProps) {
             /> */}
             <div className="p-4">
               <h3 className="text-lg font-semibold">{produto.dsc_produto}</h3>
-              <p className="text-gray-500 text-sm">
+              {/* <p className="text-gray-500 text-sm">
                 Preço: R${produto.preco_venda1.toFixed(2)}
-              </p>
+              </p> */}
               <div className="flex justify-between items-center mt-2">
                 <span className="text-gray-600 font-bold">
-                  ${produto.preco_venda1.toFixed(2)}
+                  R$ {produto.preco_venda1.toFixed(2)}
                 </span>
 
                 {produto.desconto > 0 && (
@@ -156,12 +157,14 @@ export function HomePage({ searchQuery }: HomePageProps) {
       </div>
 
       {minimized && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setMinimized(false)}
-          className="fixed top-20 right-4 z-50 bg-gray-600 text-white rounded-full w-14 h-14 shadow-lg hover:bg-gray-700 cursor-pointer"
+          className="fixed top-20 right-4 z-50 bg-gray-500 text-white w-14 h-14 shadow-lg hover:bg-gray-600 cursor-pointer flex items-center justify-center"
         >
-          🛒
-        </button>
+          <ShoppingCart className="w-8 h-8 text-white" />
+        </Button>
       )}
     </>
   );

@@ -1,4 +1,4 @@
-import { Search, Share2 } from "lucide-react"
+import { User, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
@@ -22,12 +22,12 @@ export function Header({ onSearch }: HeaderProps) {
           onChange={handleSearchChange} // Atualiza a pesquisa enquanto o usuário digita
         />
       </div>
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         <span className="font-semibold">Table 4</span>
         <span className="text-gray-500 text-sm">Floyd Miles</span>
-      </div>
-      <Button variant="ghost" size="icon">
-        <Share2 className="h-5 w-5" />
+      </div> */}
+      <Button variant="ghost" size="icon" className="cursor-pointer">
+        <User className="h-5 w-5" />
       </Button>
     </div>
   );

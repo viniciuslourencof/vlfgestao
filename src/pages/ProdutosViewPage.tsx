@@ -169,7 +169,7 @@ export function ProdutosViewPage() {
 
             <div className="flex gap-2 ml-auto">
               <Button className="cursor-pointer" onClick={handleNew}>
-                <Plus className="w-4 h-4 mr-2" /> Novo Produto
+                <Plus className="w-4 h-4 mr-2" /> Novo
               </Button>
               <Button
                 className="cursor-pointer"
