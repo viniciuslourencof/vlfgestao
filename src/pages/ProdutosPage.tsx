@@ -234,8 +234,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     e.preventDefault();
 
     // const camposNumericos: (keyof FormType)[] = [
-    //   "produto_id",
-    //   "categoria_id",
     //   "estoque",
     //   "preco_venda1",
     //   "preco_custo1",
@@ -245,13 +243,11 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     //   "margem1",
     //   "valor_dose",
     // ];
-    // Desestruturando form e preservando o tipo correto
 
     const { produto_id, categoria_id, dsc_categoria, ...rest } =
       form as FormType;
 
-    // Inicializa o formToSave com o rest e adiciona as propriedades opcionalmente
-    const formToSave: FormType = {
+    const formToSave: Partial<FormType> = {
       ...rest,
       produto_id: produto_id && produto_id !== "0" ? produto_id : undefined,
       categoria_id:
@@ -261,19 +257,30 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     };
 
     // for (const [campo, valor] of Object.entries(formToSave)) {
+    //   const key = campo as keyof typeof formToSave; // 👈 converte para chave válida
+
     //   if (valor === null || valor === "" || valor === undefined) {
-    //     if (camposNumericos.includes(campo)) {
-    //       formToSave[campo] = "0.00";
+    //     if (camposNumericos.includes(key)) {
+    //       formToSave[key] = "0.00";
     //     }
     //   }
     // }
-
-    if (!formToSave.dsc_produto.trim()) {
+    if (!(formToSave.dsc_produto ?? "").trim()) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
 
       return;
     }
+
+    console.log(formToSave);
+
+    for (const [campo, valor] of Object.entries(formToSave)) {
+      if (valor === "" || valor === "0" || valor === "0.00") {
+        formToSave[campo as keyof FormType] = undefined;
+      }
+    }
+
+    console.log(formToSave);
 
     const { error } = await supabase
       .from("produtos")
