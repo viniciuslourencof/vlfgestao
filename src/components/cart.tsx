@@ -81,7 +81,7 @@ export function Cart({
 
       {!minimized && (
         <>
-          <div className="p-4 border-b">
+          {/* <div className="p-4 border-b">
             <div className="flex gap-2 mb-4">
               <Button variant="secondary" className="flex-1 rounded-full">
                 Local
@@ -93,7 +93,7 @@ export function Cart({
                 Entrega
               </Button>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex-1 overflow-auto p-4">
             {carrinho.length === 0 ? (
@@ -116,12 +116,12 @@ export function Cart({
                       </span>
                     </div>
                   </div>
-                  <button
+                  <Button 
                     onClick={() => onRemoveItem(item.produto_id)}
-                    className="text-red-500 hover:text-red-700 cursor-pointer"
+                    className="text-red-500 hover:bg-red-700 hover:text-white cursor-pointer bg-red-500 text-white"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               ))
             )}

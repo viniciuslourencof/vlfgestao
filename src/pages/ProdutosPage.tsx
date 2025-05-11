@@ -18,14 +18,14 @@ import ModalBuscaCategoria from "@/components/modal-busca-categoria";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 
-type Produto = {
+type ProdutoType = {
   produto_id: number;
   dsc_produto: string;
   valor_dose: number | string;
   preco_custo1: number | string;
 };
 
-type ProdutoRelacionado = {
+type ProdutoRelacionadoType = {
   dsc_produto: string;
   valor_dose: number;
 };
@@ -70,7 +70,14 @@ type FormComposicaoType = {
   preco_unitario?: string;
 };
 
-type ProdutoFormProps = {
+type ComposicaoTempType = {
+  produtopai_id: string;
+  produtofilho_id: string;
+  preco_custo: string;
+  dsc_produto: string;
+};
+
+type ProdutoFormPropsType = {
   produto?: {
     produto_id: string | number; // Permite tanto string quanto número
     dsc_produto: string;
@@ -89,7 +96,11 @@ type ProdutoFormProps = {
   onSave?: () => void;
 };
 
-export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
+export function ProdutosPage({
+  produto,
+  onClose,
+  onSave,
+}: ProdutoFormPropsType) {
   const [form, setForm] = useState<FormType>(
     produto ?? {
       produto_id: "",
@@ -131,17 +142,15 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
     ProdutoComposicao[]
   >([]);
 
-  // type ComposicaoTemp = {
-  //   produtofilho_id: number;
-  //   preco_custo: number;
-  //   dsc_produto: string;
-  // };
-
-  // const [composicoesTemp, setComposicoesTemp] = useState<ComposicaoTemp[]>([]);
+  const [composicoesTemp, setComposicoesTemp] = useState<ComposicaoTempType[]>(
+    []
+  );
 
   useEffect(() => {
-    carregarComposicao();
-  }, []); // O array vazio significa que isso só vai ser chamado uma vez, ao montar o componente
+    setTimeout(() => {
+      carregarComposicao();
+    }, 500); // 100ms de delay
+  }, [composicoesTemp]); // dispara no mount também porque composicoesTemp já existe no estado
 
   const somaCusto = produtosComposicao
     .reduce(
@@ -233,17 +242,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // const camposNumericos: (keyof FormType)[] = [
-    //   "estoque",
-    //   "preco_venda1",
-    //   "preco_custo1",
-    //   "desconto",
-    //   "mililitros",
-    //   "doses",
-    //   "margem1",
-    //   "valor_dose",
-    // ];
-
     const { produto_id, categoria_id, dsc_categoria, ...rest } =
       form as FormType;
 
@@ -256,15 +254,6 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       categorias: undefined,
     };
 
-    // for (const [campo, valor] of Object.entries(formToSave)) {
-    //   const key = campo as keyof typeof formToSave; // 👈 converte para chave válida
-
-    //   if (valor === null || valor === "" || valor === undefined) {
-    //     if (camposNumericos.includes(key)) {
-    //       formToSave[key] = "0.00";
-    //     }
-    //   }
-    // }
     if (!(formToSave.dsc_produto ?? "").trim()) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
@@ -272,15 +261,11 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       return;
     }
 
-    console.log(formToSave);
-
     for (const [campo, valor] of Object.entries(formToSave)) {
       if (valor === "" || valor === "0" || valor === "0.00") {
         formToSave[campo as keyof FormType] = undefined;
       }
     }
-
-    console.log(formToSave);
 
     const { error } = await supabase
       .from("produtos")
@@ -293,13 +278,30 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       return;
     }
 
+    if (composicoesTemp && composicoesTemp.length > 0) {      
+
+      const produtopai_id = composicoesTemp[0].produtopai_id;
+      const produtofilho_id = composicoesTemp[0].produtofilho_id;
+      const preco_custo = composicoesTemp[0].preco_custo;
+
+      const { error } = await supabase
+        .from("produtos_composicao")
+        .insert([{  produtopai_id, produtofilho_id, vr_custo: preco_custo }]);      
+
+      if (error) {
+        setMensagemAviso("Erro ao adicionar produto: " + error.message);
+        setMostrarAviso(true);
+      }
+    }
+
     toast.success("Produto salvo com sucesso!");
+    setComposicoesTemp([]);    
 
     onSave?.();
     onClose?.();
   };
 
-  const selecionarProdutoComposicao = (produtoSelecionado: Produto) => {
+  const selecionarProdutoComposicao = (produtoSelecionado: ProdutoType) => {
     const precoUnitario = parseFloat(
       +produtoSelecionado.valor_dose > 0
         ? String(produtoSelecionado.valor_dose)
@@ -320,21 +322,22 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
   };
 
   const carregarComposicao = async () => {
-    // const composicoesConvertidas: ProdutoComposicao[] = composicoesTemp.map(
-    //   (item) => ({
-    //     produto_composicao_id: 0, // valor temporário ou real se houver
-    //     produtopai_id: Number(form.produto_id), // <== conversão aqui
-    //     produtofilho_id: item.produtofilho_id,
-    //     produtos: {
-    //       valor_dose: item.preco_custo,
-    //       dsc_produto: item.dsc_produto,
-    //     },
-    //     vr_custo: item.preco_custo,
-    //   })
-    // );
+    const composicoesEmMemoria: ProdutoComposicao[] = composicoesTemp.map(
+      (item) => ({
+        produto_composicao_id: 0,
+        produtopai_id: Number(form.produto_id),
+        produtofilho_id: parseFloat(item.produtofilho_id),
+        produtos: {
+          valor_dose: parseFloat(item.preco_custo),
+          dsc_produto: item.dsc_produto,
+        },
+        vr_custo: parseFloat(item.preco_custo),
+      })
+    );
 
-    // setProdutosComposicao(composicoesConvertidas);
-    if (produto) {
+    if (composicoesEmMemoria && composicoesEmMemoria.length > 0) {
+      setProdutosComposicao(composicoesEmMemoria);
+    } else if (produto) {
       const { data, error } = await supabase
         .from("produtos_composicao")
         .select(
@@ -355,11 +358,9 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
         setMensagemAviso("Erro ao carregar produtos: " + error.message);
         setMostrarAviso(true);
       } else {
-        // console.log(data);
-
         const composicoesCorrigidas: ProdutoComposicao[] = (data || []).map(
           (item) => {
-            const produto = item.produtos as unknown as ProdutoRelacionado;
+            const produto = item.produtos as unknown as ProdutoRelacionadoType;
 
             return {
               produto_composicao_id: item.produto_composicao_id,
@@ -382,7 +383,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
   const adicionarProdutoNaComposicao = async () => {
     const produtopai_id = form?.produto_id;
 
-    const { produtofilho_id, preco_custo } = formComposicao;
+    const { produtofilho_id, preco_custo, dsc_produto } = formComposicao;
 
     if (Number(produtofilho_id) == 0) {
       setMensagemAviso("Nenhum produto selecionado, verifique.");
@@ -399,19 +400,19 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
         setMensagemAviso("Erro ao adicionar produto: " + error.message);
         setMostrarAviso(true);
       }
-    }
-    // else {
-    //   // Armazena em memória se o produto ainda não foi salvo
+    } else {
+      // Armazena em memória se o produto ainda não foi salvo
 
-    //   setComposicoesTemp((prev) => [
-    //     ...prev,
-    //     {
-    //       produtofilho_id: Number(produtofilho_id),
-    //       preco_custo: Number(preco_custo),
-    //       dsc_produto: String(dsc_produto),
-    //     },
-    //   ]);
-    // }
+      setComposicoesTemp((prev) => [
+        ...prev,
+        {
+          produtopai_id: produtofilho_id,
+          produtofilho_id: produtofilho_id,
+          preco_custo: preco_custo,
+          dsc_produto: dsc_produto,
+        },
+      ]);
+    }
 
     carregarComposicao();
 
@@ -452,7 +453,9 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       <TabsContent value="geral">
         <Card className="w-full h-full max-w-none mx-auto">
           <CardHeader>
-            <CardTitle>{produto ? "Editar Produto" : "Novo Produto"}</CardTitle>
+            <CardTitle>
+              {produto?.produto_id != 0 ? "Editar Produto" : "Novo Produto"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -601,7 +604,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                   <button
                     onClick={() => setAbrirModalBuscaCategoria(true)}
                     type="button"
-                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent"
+                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
                   >
                     <Search className="w-4 h-4" />
                   </button>
@@ -620,67 +623,73 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="unidade_fardo">Unidade/Fardo</Label>
-                  <Input
-                    id="unidade_fardo"
-                    name="unidade_fardo"
-                    value={form.unidade_fardo}
-                    onChange={handleChange}
-                  />
-                </div>
+              <div className="border rounded-md p-4 bg-white shadow-md">
+                <h3 className="text-sm font-semibold mb-3 border-b pb-1 text-black-700 tracking-wide">
+                  Unidade
+                </h3>
 
-                <div className="space-y-2">
-                  <Label htmlFor="mililitros">Mililitros</Label>
-                  <Input
-                    id="mililitros"
-                    name="mililitros"
-                    value={form.mililitros}
-                    onChange={handleChange}
-                    onBlur={(e) => {
-                      const valor = parseFloat(
-                        e.target.value.replace(",", ".")
-                      );
-                      if (!isNaN(valor)) {
-                        setForm((prev) => ({
-                          ...prev,
-                          mililitros: valor.toFixed(2),
-                        }));
-                      }
-                    }}
-                  />
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="unidade_fardo">Unidade/Fardo</Label>
+                    <Input
+                      id="unidade_fardo"
+                      name="unidade_fardo"
+                      value={form.unidade_fardo}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="doses">Doses</Label>
-                  <Input
-                    id="doses"
-                    name="doses"
-                    value={form.doses}
-                    onChange={handleChange}
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mililitros">Mililitros</Label>
+                    <Input
+                      id="mililitros"
+                      name="mililitros"
+                      value={form.mililitros}
+                      onChange={handleChange}
+                      onBlur={(e) => {
+                        const valor = parseFloat(
+                          e.target.value.replace(",", ".")
+                        );
+                        if (!isNaN(valor)) {
+                          setForm((prev) => ({
+                            ...prev,
+                            mililitros: valor.toFixed(2),
+                          }));
+                        }
+                      }}
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="valor_dose">Preço de Custo da Dose</Label>
-                  <Input
-                    id="valor_dose"
-                    name="valor_dose"
-                    value={form.valor_dose}
-                    onChange={handleChange}
-                    onBlur={(e) => {
-                      const valor = parseFloat(
-                        e.target.value.replace(",", ".")
-                      );
-                      if (!isNaN(valor)) {
-                        setForm((prev) => ({
-                          ...prev,
-                          valor_dose: valor.toFixed(2),
-                        }));
-                      }
-                    }}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="doses">Doses</Label>
+                    <Input
+                      id="doses"
+                      name="doses"
+                      value={form.doses}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="valor_dose">Preço de Custo da Dose</Label>
+                    <Input
+                      id="valor_dose"
+                      name="valor_dose"
+                      value={form.valor_dose}
+                      onChange={handleChange}
+                      onBlur={(e) => {
+                        const valor = parseFloat(
+                          e.target.value.replace(",", ".")
+                        );
+                        if (!isNaN(valor)) {
+                          setForm((prev) => ({
+                            ...prev,
+                            valor_dose: valor.toFixed(2),
+                          }));
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -706,9 +715,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
       <TabsContent value="composicao">
         <Card className="w-full h-full max-w-none mx-auto">
           <CardHeader>
-            <CardTitle>
-              Composição do Produto - {produto?.dsc_produto}
-            </CardTitle>
+            <CardTitle>Composição do Produto {produto?.dsc_produto}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -730,7 +737,7 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                   <button
                     onClick={() => setAbrirModalBusca(true)}
                     type="button"
-                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent"
+                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
                   >
                     <Search className="w-4 h-4" />
                   </button>
@@ -813,62 +820,86 @@ export function ProdutosPage({ produto, onClose, onSave }: ProdutoFormProps) {
                 </div>
               </div>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableCell>Código</TableCell>
-                    <TableCell>Descrição</TableCell>
-                    <TableCell>Custo</TableCell>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {produtosComposicao.map((produto, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{produto.produtofilho_id}</TableCell>
-                      <TableCell>{produto.produtos.dsc_produto}</TableCell>
-                      <TableCell>
-                        {Number(produto.vr_custo).toFixed(2)}
+              <div className="border rounded-md p-4 bg-white shadow-md">
+                <h3 className="text-sm font-semibold mb-3 border-b pb-1 text-black tracking-wide">
+                  Composições
+                </h3>
+
+                {/* Conteúdo do grid ou tabela aqui */}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableCell className="font-semibold text-left px-4 py-2 text-gray-800">
+                        Código
                       </TableCell>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          className="cursor-pointer"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() =>
-                            removerProdutoDaComposicao(
-                              produto.produto_composicao_id
-                            )
-                          }
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" /> Apagar
-                        </Button>
+                      <TableCell className="font-semibold text-left px-4 py-2 text-gray-800">
+                        Descrição
+                      </TableCell>
+                      <TableCell className="font-semibold text-left px-4 py-2 text-gray-800">
+                        Custo
+                      </TableCell>
+                      <TableCell className="font-semibold text-left px-4 py-2 text-gray-800">
+                        Ações
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {produtosComposicao.map((produto, index) => (
+                      <TableRow key={index} className="hover:bg-gray-50">
+                        <TableCell className="px-4 py-2">
+                          {produto.produtofilho_id}
+                        </TableCell>
+                        <TableCell className="px-4 py-2">
+                          {produto.produtos.dsc_produto}
+                        </TableCell>
+                        <TableCell className="px-4 py-2">
+                          R$ {Number(produto.vr_custo).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="px-4 py-2">
+                          <Button
+                            type="button"
+                            className="flex items-center gap-1 cursor-pointer"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() =>
+                              removerProdutoDaComposicao(
+                                produto.produto_composicao_id
+                              )
+                            }
+                          >
+                            <Trash2 className="w-4 h-4" /> Apagar
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="mt-6 p-4 border rounded-md flex flex-wrap items-center gap-4 justify-between bg-gray-50">
+                  <div className="text-sm font-medium">
+                    Somatória do Custo:{" "}
+                    <span className="text-base font-bold text-gray-800">
+                      R$ {parseFloat(somaCusto).toFixed(2)}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setForm((prev) => ({
+                        ...prev,
+                        preco_custo1: parseFloat(somaCusto).toFixed(2),
+                      }));
 
-              <div className="mt-4 flex items-center gap-2">
-                <strong>Somatória do Custo:</strong>
-                <span>R$ {parseFloat(somaCusto).toFixed(2)}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForm((prev) => ({
-                      ...prev,
-                      preco_custo1: parseFloat(somaCusto).toFixed(2),
-                    }));
-
-                    calcularMargem(
-                      parseFloat(somaCusto).toFixed(2),
-                      String(form.preco_venda1)
-                    );
-                  }}
-                  className="text-sm px-2 py-1 border rounded hover:bg-accent cursor-pointer"
-                >
-                  Usar no Custo Final
-                </button>
+                      calcularMargem(
+                        parseFloat(somaCusto).toFixed(2),
+                        String(form.preco_venda1)
+                      );
+                    }}
+                    className="text-sm px-3 py-2 border rounded hover:bg-accent cursor-pointer"
+                  >
+                    Usar no Custo Final
+                  </Button>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 mt-4">

@@ -132,7 +132,7 @@ export function HomePage({ searchQuery }: HomePageProps) {
                 Preço: R${produto.preco_venda1.toFixed(2)}
               </p> */}
               <div className="flex justify-between items-center mt-2">
-                <span className="text-gray-600 font-bold">
+                <span className="text-gray-600 font-semibold">
                   R$ {produto.preco_venda1.toFixed(2)}
                 </span>
 
@@ -161,9 +161,9 @@ export function HomePage({ searchQuery }: HomePageProps) {
           variant="ghost"
           size="icon"
           onClick={() => setMinimized(false)}
-          className="fixed top-20 right-4 z-50 bg-gray-500 text-white w-14 h-14 shadow-lg hover:bg-gray-600 cursor-pointer flex items-center justify-center"
+          className="fixed top-20 right-4 z-50 bg-gray-300 w-14 h-14 shadow-lg hover:bg-gray-400 cursor-pointer flex items-center justify-center"
         >
-          <ShoppingCart className="w-8 h-8 text-white" />
+          <ShoppingCart className="w-8 h-8 text-gray-600" />
         </Button>
       )}
     </>
