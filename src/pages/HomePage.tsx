@@ -119,7 +119,7 @@ export function HomePage({ searchQuery }: HomePageProps) {
         {produtos.map((produto) => (
           <Card
             key={produto.produto_id}
-            className="bg-white rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer"
+            className="bg-white rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer p-0"
             onClick={() => adicionarAoCarrinho(produto)}
           >
             {/* <img
