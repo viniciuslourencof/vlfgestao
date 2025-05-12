@@ -245,8 +245,10 @@ export function ProdutosPage({
     const formToSave = { ...form };
 
     delete formToSave.categorias;
-    delete formToSave.categoria_id;
     delete formToSave.dsc_categoria;
+
+    if (formToSave.categoria_id === "" || formToSave.categoria_id === "0")
+      delete formToSave.categoria_id;
 
     if (formToSave.produto_id === "" || formToSave.produto_id === "0")
       delete formToSave.produto_id;
@@ -293,7 +295,7 @@ export function ProdutosPage({
       }));
 
       console.log(composicoesTempInsert);
-      
+
       const { error } = await supabase
         .from("produtos_composicao")
         .insert(composicoesTempInsert);
@@ -782,7 +784,7 @@ export function ProdutosPage({
                       const quantidade = parseFloat(e.target.value) || 1;
                       const precoUnitario = parseFloat(
                         formComposicao.preco_unitario || "0"
-                      );                      
+                      );
 
                       setFormComposicao((prev) => ({
                         ...prev,
