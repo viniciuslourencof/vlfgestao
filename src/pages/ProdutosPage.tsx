@@ -242,33 +242,39 @@ export function ProdutosPage({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formToSave = { ...form };
+    const dadosForm = { ...form };
 
-    delete formToSave.categorias;
-    delete formToSave.dsc_categoria;
+    const dadosFormLimpo: FormType = {
+      ...dadosForm,
+      estoque: dadosForm.estoque || "0.00",
+      preco_venda1: dadosForm.preco_venda1 || "0.00",
+      preco_custo1: dadosForm.preco_custo1 || "0.00",
+      desconto: dadosForm.desconto || "0.00",
+      mililitros: dadosForm.mililitros || "0.00",
+      doses: dadosForm.doses || "0.00",
+      margem1: dadosForm.margem1 || "0.00",
+      valor_dose: dadosForm.valor_dose || "0.00",
+    };
 
-    if (formToSave.categoria_id === "" || formToSave.categoria_id === "0")
-      delete formToSave.categoria_id;
+    delete dadosFormLimpo.categorias;
+    delete dadosFormLimpo.dsc_categoria;
 
-    if (formToSave.produto_id === "" || formToSave.produto_id === "0")
-      delete formToSave.produto_id;
+    if (dadosFormLimpo.categoria_id === "" || dadosFormLimpo.categoria_id === "0")
+      delete dadosFormLimpo.categoria_id;
 
-    if (!(form.dsc_produto ?? "").trim()) {
+    if (dadosFormLimpo.produto_id === "" || dadosFormLimpo.produto_id === "0")
+      delete dadosFormLimpo.produto_id;
+
+    if (!(dadosFormLimpo.dsc_produto ?? "").trim()) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
 
       return;
     }
 
-    // for (const [campo, valor] of Object.entries(formToSave)) {
-    //   if (valor === "" || valor === "0" || valor === "0.00") {
-    //     formToSave[campo as keyof FormType] = "0.00";
-    //   }
-    // }
-
     const { data, error } = await supabase
       .from("produtos")
-      .upsert([formToSave], { onConflict: "produto_id" })
+      .upsert([dadosFormLimpo], { onConflict: "produto_id" })
       .select();
 
     if (error) {
@@ -284,21 +290,17 @@ export function ProdutosPage({
       const composicoesTempComID = composicoesTemp.map((item) => ({
         ...item,
         produtopai_id: produtopai_id,
-      }));
+      }));            
 
-      // setComposicoesTemp(composicoesTempComID);
-
-      const composicoesTempInsert = composicoesTempComID.map((item) => ({
+      const composicoesTempLimpo = composicoesTempComID.map((item) => ({
         produtopai_id: Number(item.produtopai_id),
         produtofilho_id: Number(item.produtofilho_id),
         vr_custo: item.vr_custo === "" ? "0.00" : item.vr_custo,
-      }));
-
-      console.log(composicoesTempInsert);
+      }));      
 
       const { error } = await supabase
         .from("produtos_composicao")
-        .insert(composicoesTempInsert);
+        .insert(composicoesTempLimpo);
 
       if (error) {
         setMensagemAviso(
@@ -441,6 +443,10 @@ export function ProdutosPage({
   };
 
   const removerProdutoDaComposicao = async (produto_composicao_id: number) => {
+    // if (composicoesTemp && composicoesTemp.length > 0) {
+
+    // }
+
     const { error } = await supabase
       .from("produtos_composicao")
       .delete()

@@ -92,7 +92,7 @@ export default function ModalBuscaProduto({
           onKeyDown={handleKeyDown}
         />
 
-        <div className="space-y-2 mt-4 max-h-[420px] overflow-y-auto">
+        <div className="space-y-2 mt-4 max-h-[420px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-rounded-md scrollbar-thumb-gray-400 scrollbar-track-gray-200">
           {resultados.length > 0 ? (
             resultados.map((produto, index) => (
               <div
