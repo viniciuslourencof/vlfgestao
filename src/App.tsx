@@ -21,7 +21,7 @@ export function App() {
   const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]);
   const [minimized, setMinimized] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // 👈 novo estado
+  const [sidebarOpen, setSidebarOpen] = useState(false); 
 
   const navigate = useNavigate();
 

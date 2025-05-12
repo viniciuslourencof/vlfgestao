@@ -7,6 +7,9 @@ import {
   ChevronsLeft,
   Trash2,
 } from "lucide-react";
+import { supabase } from "../lib/subabase";
+import ModalAviso from "@/components/modal-aviso";
+import { useState } from "react";
 
 interface CarrinhoItem {
   produto_id: number;
@@ -20,6 +23,7 @@ interface CartProps {
   onRemoveItem: (produtoId: number) => void;
   minimized: boolean;
   setMinimized: (minimized: boolean) => void;
+  resetCarrinho: () => void; // <- nova prop
 }
 
 export function Cart({
@@ -27,7 +31,12 @@ export function Cart({
   onRemoveItem,
   minimized,
   setMinimized,
+  resetCarrinho,
 }: CartProps) {
+
+  const [mostrarAviso, setMostrarAviso] = useState(false);
+  const [mensagemAviso, setMensagemAviso] = useState("");
+
   if (!carrinho) return;
 
   const subtotal = carrinho.reduce(
@@ -38,6 +47,53 @@ export function Cart({
   // const total = subtotal + tax;
 
   const total = subtotal;
+
+  async function finalizarPedido() {
+    const subtotal = carrinho.reduce(
+      (acc, item) => acc + item.preco_venda1 * item.quantidade,
+      0
+    );
+
+    // 1. Insere o pedido
+    const { data: pedido, error: pedidoError } = await supabase
+      .from("pedidos")
+      .insert([{ vr_liquido: subtotal }])
+      .select()
+      .single();
+
+    if (pedidoError) {      
+
+      setMensagemAviso("Erro ao inserir pedido: " + pedidoError);
+      setMostrarAviso(true);    
+
+      return;
+    }
+
+    // 2. Insere os itens do pedido
+    const itens = carrinho.map((item) => ({
+      pedido_id: pedido.pedido_id,
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      vr_unit: item.preco_venda1,
+      vr_item: item.preco_venda1 * item.quantidade,
+    }));
+
+    const { error: itensError } = await supabase
+      .from("pedidos_itens")
+      .insert(itens);
+
+    if (itensError) {
+      setMensagemAviso("Erro ao inserir itens: " + itensError);
+      setMostrarAviso(true);    
+
+      return;
+    }    
+
+    setMensagemAviso("Pedido finalizado com sucesso!");
+    setMostrarAviso(true);    
+
+    resetCarrinho();
+  }
 
   return (
     <div
@@ -163,12 +219,20 @@ export function Cart({
               </Button>
             </div>
 
-            <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white h-12 cursor-pointer">
+            <Button
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white h-12 cursor-pointer"
+              onClick={finalizarPedido}
+            >
               Finalizar Pedido
             </Button>
           </div>
         </>
       )}
+      <ModalAviso
+        open={mostrarAviso}
+        onClose={setMostrarAviso}
+        mensagem={mensagemAviso}
+      />
     </div>
   );
 }

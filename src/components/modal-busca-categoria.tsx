@@ -32,8 +32,8 @@ export default function ModalBuscaCategoria({
     const fetchCategorias = async (termo: string) => {
       const query = supabase
         .from("categorias")
-        .select("categoria_id, dsc_categoria")
-        .limit(20);
+        .select("categoria_id, dsc_categoria")        
+        .order("dsc_categoria", { ascending: true });
 
       if (termo) {
         query.ilike("dsc_categoria", `%${termo}%`);

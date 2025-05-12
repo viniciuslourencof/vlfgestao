@@ -1,4 +1,3 @@
-// HomePage.tsx
 import { useEffect, useState } from "react";
 import { CategoryFilter } from "../components/category-filter";
 import { Cart } from "../components/cart"; // Importando o componente Cart
@@ -39,6 +38,10 @@ export function HomePage() {
   const { searchQuery } = useSearch(); // Agora você usa o valor global
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
+
+  function resetCarrinho() {
+    setCarrinho([]);
+  }
 
   useEffect(() => {
     async function fetchCategorias() {
@@ -157,6 +160,7 @@ export function HomePage() {
           onRemoveItem={removerDoCarrinho}
           minimized={minimized}
           setMinimized={setMinimized}
+          resetCarrinho={resetCarrinho}
         />
       </div>
 

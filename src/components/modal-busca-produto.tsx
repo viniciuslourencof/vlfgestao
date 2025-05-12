@@ -34,8 +34,8 @@ export default function ModalBuscaProduto({
     const fetchProdutos = async (termo: string) => {
       const query = supabase
         .from("produtos")
-        .select("produto_id, dsc_produto, preco_custo1, valor_dose")
-        .limit(20);
+        .select("produto_id, dsc_produto, preco_custo1, valor_dose")        
+        .order("dsc_produto", { ascending: true });
 
       if (termo) {
         query.ilike("dsc_produto", `%${termo}%`);
