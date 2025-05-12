@@ -782,12 +782,12 @@ export function ProdutosPage({
                       const quantidade = parseFloat(e.target.value) || 1;
                       const precoUnitario = parseFloat(
                         formComposicao.preco_unitario || "0"
-                      );
+                      );                      
 
                       setFormComposicao((prev) => ({
                         ...prev,
                         quantidade,
-                        preco_custo: (quantidade * precoUnitario).toFixed(2),
+                        vr_custo: (quantidade * precoUnitario).toFixed(2),
                       }));
                     }}
                   />
@@ -795,16 +795,16 @@ export function ProdutosPage({
 
                 {/* Preço de Custo */}
                 <div className="space-y-2 w-28">
-                  <Label htmlFor="preco_custo">Custo</Label>
+                  <Label htmlFor="vr_custo">Custo</Label>
                   <Input
-                    id="preco_custo"
-                    name="preco_custo"
+                    id="vr_custo"
+                    name="vr_custo"
                     value={formComposicao.vr_custo}
                     onChange={(e) => {
                       const preco = e.target.value.replace(",", ".");
                       setFormComposicao((prev) => ({
                         ...prev,
-                        preco_custo: preco,
+                        vr_custo: preco,
                       }));
                     }}
                     onBlur={(e) => {
@@ -815,7 +815,7 @@ export function ProdutosPage({
 
                       setFormComposicao((prev) => ({
                         ...prev,
-                        preco_custo: preco.toFixed(2),
+                        vr_custo: preco.toFixed(2),
                         preco_unitario: (preco / quantidade).toFixed(4),
                       }));
                     }}
