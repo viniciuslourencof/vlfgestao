@@ -89,8 +89,8 @@ export function CategoriasViewPage() {
           <CardHeader>
             <CardTitle className="text-xl font-semibold">
               {categoriaEditando.categoria_id === "0"
-                ? "Nova Categoria"
-                : "Editar Categoria"}
+                ? "Novo Registro"
+                : "Editar Registro"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -174,7 +174,7 @@ export function CategoriasViewPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <div className="flex items-center mb-4">
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2">
               <Button onClick={handleNew} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
               </Button>

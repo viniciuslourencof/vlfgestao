@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { supabase } from "../lib/subabase";
@@ -99,17 +99,17 @@ export function PedidosViewPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              {/* <Label htmlFor="descricao">Descrição da categoria</Label>
+              <Label htmlFor="pedido_id">Código do Pedido</Label>
               <Input
-                id="descricao"
-                value={pedidoEditando.dsc_categoria}
+                id="pedido_id"
+                value={pedidoEditando.pedido_id}
                 onChange={(e) =>
                   setPedidoEditando((prev) =>
-                    prev ? { ...prev, dsc_categoria: e.target.value } : prev
+                    prev ? { ...prev, pedido_id: e.target.value } : prev
                   )
-                }
-                placeholder="Ex: Bebidas, Alimentos, etc."
-              /> */}
+                }                
+                readOnly
+              />
             </div>
             <div className="flex justify-end gap-2">
               <Button
@@ -182,7 +182,7 @@ export function PedidosViewPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <div className="flex items-center mb-4">
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2">
               <Button onClick={handleNew} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
               </Button>

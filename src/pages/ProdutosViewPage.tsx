@@ -182,7 +182,7 @@ export function ProdutosViewPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <div className="flex items-center mb-4">
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2">
               <Button className="cursor-pointer" onClick={handleNew}>
                 <Plus className="w-4 h-4 mr-2" /> Novo
               </Button>

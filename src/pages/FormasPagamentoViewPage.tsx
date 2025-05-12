@@ -83,8 +83,8 @@ export function FormasPagamentoViewPage() {
           <CardHeader>
             <CardTitle className="text-xl font-semibold">
               {editando.forma_pagamento_id === "0"
-                ? "Nova Forma de Pagamento"
-                : "Editar Forma de Pagamento"}
+                ? "Novo Registro"
+                : "Editar Registro"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -169,7 +169,7 @@ export function FormasPagamentoViewPage() {
           />
 
           <div className="flex items-center mb-4">
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2">
               <Button onClick={handleNew} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2" /> Novo
               </Button>
