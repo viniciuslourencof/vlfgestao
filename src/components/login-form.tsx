@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import ModalAviso from "@/components/modal-aviso";
-import { AlertTriangle } from "lucide-react";
 
 export function LoginForm() {
   const [login, setLogin] = useState("");
@@ -58,11 +57,11 @@ export function LoginForm() {
     <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-4 m-0">
       <div className="flex w-full max-w-5xl h-[500px] bg-white rounded-lg shadow overflow-hidden">
         {/* Imagem à esquerda */}
-        <div className="basis-1/2 bg-gradient-to-br from-gray-100 to-gray-300 hidden md:block">
+        <div className="basis-1/2 bg-gradient-to-br from-gray-100 to-gray-300 hidden md:flex items-center justify-center">
           <img
             src="/vlf.png"
             alt="Ilustração de login"
-            className="w-full h-full object-cover"
+                className="w-[90%] h-[90%] object-contain"
           />
         </div>
 
