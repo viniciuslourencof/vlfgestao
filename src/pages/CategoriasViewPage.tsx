@@ -8,6 +8,7 @@ import { supabase } from "../lib/subabase";
 import { Confirmation } from "@/components/confirmation";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
+import { useSearch  } from "@/components/search-provider"; // ajuste o caminho se necessário
 
 type Categoria = {
   categoria_id: string;
@@ -23,6 +24,10 @@ export function CategoriasViewPage() {
   const [categoriaIdToDelete, setCategoriaIdToDelete] = useState<string | null>(
     null
   );
+  const { searchQuery } = useSearch(); // Agora você usa o valor global
+  
+  const [mostrarAviso, setMostrarAviso] = useState(false);
+  const [mensagemAviso, setMensagemAviso] = useState("");
 
   useEffect(() => {
     getCategorias();
@@ -75,8 +80,11 @@ export function CategoriasViewPage() {
     getCategorias();
   };
 
-  const [mostrarAviso, setMostrarAviso] = useState(false);
-  const [mensagemAviso, setMensagemAviso] = useState("");
+    // Filtrando os produtos com base na busca (searchQuery)
+  const categoriasFiltradas = categorias.filter((categoria) =>
+    categoria.dsc_categoria.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
 
   return (
     <div className="p-6">
@@ -174,7 +182,7 @@ export function CategoriasViewPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categorias.map((categoria) => (
+            {categoriasFiltradas.map((categoria) => (
               <Card
                 key={categoria.categoria_id}
                 className="p-4 flex flex-col justify-between"

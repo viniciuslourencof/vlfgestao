@@ -1,14 +1,13 @@
 import { User, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useSearch  } from "@/components/search-provider"; // ajuste o caminho se necessário
 
-interface HeaderProps {
-  onSearch: (query: string) => void;
-}
+export function Header() {
+const { setSearchQuery } = useSearch();
 
-export function Header({ onSearch }: HeaderProps) {
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onSearch(event.target.value); // Chama a função para atualizar o estado de pesquisa
+    setSearchQuery(event.target.value);
   };
 
   return (

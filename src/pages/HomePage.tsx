@@ -6,6 +6,8 @@ import { ShoppingCart } from "lucide-react";
 import { supabase } from "../lib/subabase";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useSearch } from "@/components/search-provider"; // ajuste o caminho se necessário
+import ModalAviso from "@/components/modal-aviso";
 
 // Definindo o tipo para as categorias
 interface Categoria {
@@ -28,11 +30,7 @@ interface CarrinhoItem {
   quantidade: number;
 }
 
-interface HomePageProps {
-  searchQuery: string;
-}
-
-export function HomePage({ searchQuery }: HomePageProps) {
+export function HomePage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<
@@ -40,6 +38,9 @@ export function HomePage({ searchQuery }: HomePageProps) {
   >(null);
   const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]); // Inicialização correta
   const [minimized, setMinimized] = useState(true);
+  const { searchQuery } = useSearch(); // Agora você usa o valor global
+  const [mostrarAviso, setMostrarAviso] = useState(false);
+  const [mensagemAviso, setMensagemAviso] = useState("");
 
   useEffect(() => {
     async function fetchCategorias() {
@@ -50,22 +51,19 @@ export function HomePage({ searchQuery }: HomePageProps) {
           ...data,
         ]);
       } else {
-        console.error("Erro ao carregar categorias:", error);
+        setMensagemAviso("Erro ao carregar categorias: " + error.message);
+        setMostrarAviso(true);
       }
     }
 
     fetchCategorias();
     selecionarCategoria(categoriaSelecionada); // Filtro inicial
-  }, [categoriaSelecionada, searchQuery]); // Dependendo da categoria e busca
+  }, [categoriaSelecionada]); // Dependendo da categoria e busca
 
   async function selecionarCategoria(categoria_id: number | null) {
     let query = supabase
       .from("produtos")
       .select("produto_id, dsc_produto, preco_venda1, desconto");
-
-    if (searchQuery.trim() !== "") {
-      query = query.ilike("dsc_produto", `%${searchQuery}%`); // Filtro condicional
-    }
 
     if (categoria_id) {
       query = query.eq("categoria_id", categoria_id);
@@ -75,7 +73,7 @@ export function HomePage({ searchQuery }: HomePageProps) {
     if (data) {
       setProdutos(data);
     } else {
-      console.error("Erro ao carregar produtos");
+      console.error("Erro ao carregar registros");
     }
   }
 
@@ -104,6 +102,10 @@ export function HomePage({ searchQuery }: HomePageProps) {
     );
   }
 
+  const produtosFiltrados = produtos.filter((produto) =>
+    produto.dsc_produto.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <CategoryFilter
@@ -116,7 +118,7 @@ export function HomePage({ searchQuery }: HomePageProps) {
           !minimized ? "xl:pr-[400px]" : ""
         }`}
       >
-        {produtos.map((produto) => (
+        {produtosFiltrados.map((produto) => (
           <Card
             key={produto.produto_id}
             className="bg-white rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer p-0"
@@ -167,6 +169,11 @@ export function HomePage({ searchQuery }: HomePageProps) {
           <ShoppingCart className="w-8 h-8 text-gray-600" />
         </Button>
       )}
+      <ModalAviso
+        open={mostrarAviso}
+        onClose={setMostrarAviso}
+        mensagem={mensagemAviso}
+      />
     </>
   );
 }

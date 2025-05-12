@@ -7,6 +7,7 @@ import { supabase } from "../lib/subabase";
 import { Confirmation } from "@/components/confirmation";
 import { toast } from "sonner";
 import ModalAviso from "@/components/modal-aviso";
+import { useSearch  } from "@/components/search-provider"; // ajuste o caminho se necessário
 
 type Produto = {
   produto_id: string;
@@ -31,18 +32,17 @@ export function ProdutosViewPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [produtoIdToDelete, setProdutoIdToDelete] = useState<string | null>(
-    null
-  );
+  const [produtoIdToDelete, setProdutoIdToDelete] = useState<string | null>(null);
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
+  const { searchQuery } = useSearch(); // <-- Pegando a query de busca do contexto
 
   useEffect(() => {
     getProdutos();
   }, []);
 
   async function getProdutos() {
-    const { data } = await supabase
+    const query = supabase
       .from("produtos")
       .select(
         `
@@ -54,6 +54,8 @@ export function ProdutosViewPage() {
       )
       .order("produto_id", { ascending: false });
 
+    const { data } = await query;
+    
     if (data) {
       setProdutos(data);
     }
@@ -77,7 +79,7 @@ export function ProdutosViewPage() {
       doses: "0.00",
       dsc_categoria: "",
       margem1: "0.00",
-      valor_dose: "0.00"
+      valor_dose: "0.00",
     });
   };
 
@@ -103,14 +105,17 @@ export function ProdutosViewPage() {
     if (error) {
       setMensagemAviso("Erro ao apagar produto: " + error.message);
       setMostrarAviso(true);
-
       return;
     }
 
     toast.success("Produto apagado com sucesso!");
-
     getProdutos();
   };
+
+  // Filtrando os produtos com base na busca (searchQuery)
+  const produtosFiltrados = produtos.filter((produto) =>
+    produto.dsc_produto.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="p-6">
@@ -183,7 +188,7 @@ export function ProdutosViewPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {produtos.map((produto) => (
+            {produtosFiltrados.map((produto) => ( // <-- Usando o filtro
               <Card
                 key={produto.produto_id}
                 className="p-4 flex flex-col justify-between"
@@ -197,16 +202,18 @@ export function ProdutosViewPage() {
                   </p>
                   <p className="text-sm mt-1">Estoque: {produto.estoque}</p>
                   <p className="text-sm">
-                    Preço de Venda: R$ {parseFloat(produto.preco_venda1).toFixed(2)}
+                    Preço de Venda: R${" "}
+                    {parseFloat(produto.preco_venda1).toFixed(2)}
                   </p>
                   <p className="text-sm">
-                    Preço de Custo: R$ {parseFloat(produto.preco_custo1).toFixed(2)}
+                    Preço de Custo: R${" "}
+                    {parseFloat(produto.preco_custo1).toFixed(2)}
                   </p>
                   <p className="text-sm">
                     Margem de Lucro: {parseFloat(produto.margem1).toFixed(2)} %
                   </p>
                   <p className="text-sm">
-                    Categoria: {produto.categorias?.dsc_categoria} 
+                    Categoria: {produto.categorias?.dsc_categoria}
                   </p>
                 </div>
                 <div className="flex gap-2 mt-4">
