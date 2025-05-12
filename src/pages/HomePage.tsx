@@ -9,21 +9,19 @@ import { Card } from "@/components/ui/card";
 import { useSearch } from "@/components/search-provider"; // ajuste o caminho se necessário
 import ModalAviso from "@/components/modal-aviso";
 
-// Definindo o tipo para as categorias
-interface Categoria {
+interface CategoriaInterface {
   categoria_id: number | null;
   dsc_categoria: string;
 }
 
-// Definindo o tipo para os produtos
-interface Produto {
+interface ProdutoInterface {
   produto_id: number;
   dsc_produto: string;
   preco_venda1: number;
   desconto: number;
 }
 
-interface CarrinhoItem {
+interface CarrinhoItemInterface {
   produto_id: number;
   dsc_produto: string;
   preco_venda1: number;
@@ -31,12 +29,12 @@ interface CarrinhoItem {
 }
 
 export function HomePage() {
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [categorias, setCategorias] = useState<CategoriaInterface[]>([]);
+  const [produtos, setProdutos] = useState<ProdutoInterface[]>([]);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<
     number | null
   >(null);
-  const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]); // Inicialização correta
+  const [carrinho, setCarrinho] = useState<CarrinhoItemInterface[]>([]); // Inicialização correta
   const [minimized, setMinimized] = useState(true);
   const { searchQuery } = useSearch(); // Agora você usa o valor global
   const [mostrarAviso, setMostrarAviso] = useState(false);
@@ -77,7 +75,7 @@ export function HomePage() {
     }
   }
 
-  function adicionarAoCarrinho(produto: Produto) {
+  function adicionarAoCarrinho(produto: ProdutoInterface) {
     setCarrinho((prevCarrinho) => {
       const produtoExistente = prevCarrinho.find(
         (item) => item.produto_id === produto.produto_id
@@ -177,3 +175,4 @@ export function HomePage() {
     </>
   );
 }
+

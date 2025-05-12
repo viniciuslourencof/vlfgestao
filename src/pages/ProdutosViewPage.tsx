@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import ModalAviso from "@/components/modal-aviso";
 import { useSearch  } from "@/components/search-provider"; // ajuste o caminho se necessário
 
-type Produto = {
+type ProdutoType = {
   produto_id: string;
   dsc_produto: string;
   estoque: string;
@@ -29,8 +29,8 @@ type Produto = {
 };
 
 export function ProdutosViewPage() {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
+  const [produtos, setProdutos] = useState<ProdutoType[]>([]);
+  const [produtoEditando, setProdutoEditando] = useState<ProdutoType | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [produtoIdToDelete, setProdutoIdToDelete] = useState<string | null>(null);
   const [mostrarAviso, setMostrarAviso] = useState(false);
@@ -61,7 +61,7 @@ export function ProdutosViewPage() {
     }
   }
 
-  const handleEdit = (produto: Produto) => {
+  const handleEdit = (produto: ProdutoType) => {
     setProdutoEditando(produto);
   };
 

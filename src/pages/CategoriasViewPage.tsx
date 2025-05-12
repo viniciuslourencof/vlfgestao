@@ -10,14 +10,14 @@ import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 import { useSearch  } from "@/components/search-provider"; // ajuste o caminho se necessário
 
-type Categoria = {
+type CategoriaType = {
   categoria_id: string;
   dsc_categoria: string;
 };
 
 export function CategoriasViewPage() {
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(
+  const [categorias, setCategorias] = useState<CategoriaType[]>([]);
+  const [categoriaEditando, setCategoriaEditando] = useState<CategoriaType | null>(
     null
   );
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -46,7 +46,7 @@ export function CategoriasViewPage() {
     setCategoriaEditando({ categoria_id: "0", dsc_categoria: "" });
   };
 
-  const handleEdit = (categoria: Categoria) => {
+  const handleEdit = (categoria: CategoriaType) => {
     setCategoriaEditando(categoria);
   };
 
@@ -84,7 +84,6 @@ export function CategoriasViewPage() {
   const categoriasFiltradas = categorias.filter((categoria) =>
     categoria.dsc_categoria.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
 
   return (
     <div className="p-6">

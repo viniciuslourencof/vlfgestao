@@ -49,7 +49,7 @@ type FormType = {
   valor_dose: string | number;
 };
 
-type ProdutoComposicao = {
+type ProdutoComposicaoType = {
   produto_composicao_id: number;
   produtofilho_id: number;
   produtopai_id: number;
@@ -149,7 +149,7 @@ export function ProdutosPage({
   });
 
   const [produtosComposicao, setProdutosComposicao] = useState<
-    ProdutoComposicao[]
+    ProdutoComposicaoType[]
   >([]);
 
   const [composicoesTemp, setComposicoesTemp] = useState<ComposicaoTempType[]>(
@@ -338,7 +338,7 @@ export function ProdutosPage({
   };
 
   const carregarComposicao = async () => {
-    const composicoesEmMemoria: ProdutoComposicao[] = composicoesTemp.map(
+    const composicoesEmMemoria: ProdutoComposicaoType[] = composicoesTemp.map(
       (item) => ({
         produto_composicao_id: 0,
         produtopai_id: Number(form.produto_id),
@@ -373,7 +373,7 @@ export function ProdutosPage({
         setMensagemAviso("Erro ao carregar produtos: " + error.message);
         setMostrarAviso(true);
       } else {
-        const composicoesCorrigidas: ProdutoComposicao[] = (data || []).map(
+        const composicoesCorrigidas: ProdutoComposicaoType[] = (data || []).map(
           (item) => {
             const produto = item.produtos as unknown as ProdutoRelacionadoType;
 
