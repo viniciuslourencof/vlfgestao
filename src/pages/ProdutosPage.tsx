@@ -65,7 +65,7 @@ type FormComposicaoType = {
   produtopai_id: string;
   produtofilho_id: string;
   dsc_produto: string;
-  preco_custo: string;
+  vr_custo: string;
   quantidade: number;
   preco_unitario?: string;
 };
@@ -73,7 +73,7 @@ type FormComposicaoType = {
 type ComposicaoTempType = {
   produtopai_id: string;
   produtofilho_id: string;
-  preco_custo: string;
+  vr_custo: string;
   dsc_produto: string;
 };
 
@@ -95,6 +95,16 @@ type ProdutoFormPropsType = {
   onClose?: () => void;
   onSave?: () => void;
 };
+
+const numericFields = [
+  "preco_custo1",
+  "preco_venda1",
+  "desconto",
+  "mililitros",
+  "doses",
+  "margem1",
+  "valor_dose",
+];
 
 export function ProdutosPage({
   produto,
@@ -134,7 +144,7 @@ export function ProdutosPage({
     produtopai_id: "",
     produtofilho_id: "",
     dsc_produto: "",
-    preco_custo: "",
+    vr_custo: "",
     quantidade: 1,
   });
 
@@ -197,16 +207,6 @@ export function ProdutosPage({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    const numericFields = [
-      "preco_custo1",
-      "preco_venda1",
-      "desconto",
-      "mililitros",
-      "doses",
-      "margem1",
-      "valor_dose",
-    ];
-
     let sanitizedValue = numericFields.includes(name)
       ? value.replace(",", ".")
       : value;
@@ -258,11 +258,11 @@ export function ProdutosPage({
       return;
     }
 
-    for (const [campo, valor] of Object.entries(formToSave)) {
-      if (valor === "" || valor === "0" || valor === "0.00") {
-        formToSave[campo as keyof FormType] = "0.00";
-      }
-    }
+    // for (const [campo, valor] of Object.entries(formToSave)) {
+    //   if (valor === "" || valor === "0" || valor === "0.00") {
+    //     formToSave[campo as keyof FormType] = "0.00";
+    //   }
+    // }
 
     const { data, error } = await supabase
       .from("produtos")
@@ -278,15 +278,30 @@ export function ProdutosPage({
 
     if (composicoesTemp && composicoesTemp.length > 0) {
       const produtopai_id = data[0].produto_id;
-      const produtofilho_id = composicoesTemp[0].produtofilho_id;
-      const preco_custo = composicoesTemp[0].preco_custo;
 
+      const composicoesTempComID = composicoesTemp.map((item) => ({
+        ...item,
+        produtopai_id: produtopai_id,
+      }));
+
+      // setComposicoesTemp(composicoesTempComID);
+
+      const composicoesTempInsert = composicoesTempComID.map((item) => ({
+        produtopai_id: Number(item.produtopai_id),
+        produtofilho_id: Number(item.produtofilho_id),
+        vr_custo: item.vr_custo === "" ? "0.00" : item.vr_custo,
+      }));
+
+      console.log(composicoesTempInsert);
+      
       const { error } = await supabase
         .from("produtos_composicao")
-        .insert([{ produtopai_id, produtofilho_id, vr_custo: preco_custo }]);
+        .insert(composicoesTempInsert);
 
       if (error) {
-        setMensagemAviso("Erro ao adicionar produto: " + error.message);
+        setMensagemAviso(
+          "Erro ao adicionar produto de composição: " + error.message
+        );
         setMostrarAviso(true);
       }
     }
@@ -312,7 +327,7 @@ export function ProdutosPage({
       dsc_produto: produtoSelecionado.dsc_produto,
       preco_unitario: precoUnitario.toFixed(2),
       quantidade: 1,
-      preco_custo: precoUnitario.toFixed(2),
+      vr_custo: precoUnitario.toFixed(2),
     }));
 
     setAbrirModalBusca(false);
@@ -325,13 +340,13 @@ export function ProdutosPage({
         produtopai_id: Number(form.produto_id),
         produtofilho_id: parseFloat(item.produtofilho_id),
         produtos: {
-          valor_dose: parseFloat(item.preco_custo),
+          valor_dose: parseFloat(item.vr_custo),
           dsc_produto: item.dsc_produto,
         },
-        vr_custo: parseFloat(item.preco_custo),
+        vr_custo: parseFloat(item.vr_custo),
       })
     );
-   if (composicoesEmMemoria && composicoesEmMemoria.length > 0) {      
+    if (composicoesEmMemoria && composicoesEmMemoria.length > 0) {
       setProdutosComposicao(composicoesEmMemoria);
     } else if (produto) {
       const { data, error } = await supabase
@@ -379,19 +394,19 @@ export function ProdutosPage({
   const adicionarProdutoNaComposicao = async () => {
     const produtopai_id = form?.produto_id;
 
-    const { produtofilho_id, preco_custo, dsc_produto } = formComposicao;
+    const { produtofilho_id, vr_custo, dsc_produto } = formComposicao;
 
     if (Number(produtofilho_id) == 0) {
       setMensagemAviso("Nenhum produto selecionado, verifique.");
       setMostrarAviso(true);
       return;
-    }    
+    }
 
     if (Number(produtopai_id) !== 0 && Number(produtofilho_id) !== 0) {
       // Inserir produto na tabela produtos_composicao
       const { error } = await supabase
         .from("produtos_composicao")
-        .insert([{ produtopai_id, produtofilho_id, vr_custo: preco_custo }]);
+        .insert([{ produtopai_id, produtofilho_id, vr_custo }]);
 
       if (error) {
         setMensagemAviso("Erro ao adicionar produto: " + error.message);
@@ -405,11 +420,11 @@ export function ProdutosPage({
         {
           produtopai_id: "0",
           produtofilho_id: produtofilho_id,
-          preco_custo: preco_custo,
+          vr_custo: vr_custo,
           dsc_produto: dsc_produto,
         },
       ]);
-    }    
+    }
 
     carregarComposicao();
 
@@ -417,7 +432,7 @@ export function ProdutosPage({
       produto_composicao_id: "",
       produtopai_id: "",
       produtofilho_id: "",
-      preco_custo: "",
+      vr_custo: "",
       dsc_produto: "",
       quantidade: 1,
     });
@@ -784,7 +799,7 @@ export function ProdutosPage({
                   <Input
                     id="preco_custo"
                     name="preco_custo"
-                    value={formComposicao.preco_custo}
+                    value={formComposicao.vr_custo}
                     onChange={(e) => {
                       const preco = e.target.value.replace(",", ".");
                       setFormComposicao((prev) => ({
