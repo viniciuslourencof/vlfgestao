@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import ModalAviso from "@/components/modal-aviso";
+import { AlertTriangle } from "lucide-react";
 
 export function LoginForm() {
   const [login, setLogin] = useState("");
@@ -21,7 +22,7 @@ export function LoginForm() {
       const { data, error } = await supabase
         .from("usuarios")
         .select("*")
-        .eq("login", login.toUpperCase);
+        .eq("login", login.toUpperCase());      
 
       if (error) {
         setMensagemAviso("Erro ao buscar usuário: " + error.message);
