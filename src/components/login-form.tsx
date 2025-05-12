@@ -58,12 +58,13 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-0 m-0">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-0 m-0">      
       <Card className="w-full max-w-[400px] p-8 mx-4">
-        <CardHeader>
+        <CardHeader className="flex items-center">
           <CardTitle className="text-center text-2xl font-bold text-gray-800">
             Acesso ao Sistema
           </CardTitle>
+          <img src="vlf.png" alt="eBar Logo" className="w-8 h-8" />
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleLogin} className="space-y-4">
@@ -99,7 +100,7 @@ export function LoginForm() {
             )}
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              className="w-full bg-blue-400 hover:bg-blue-300 text-white font-semibold cursor-pointer"
             >
               Entrar
             </Button>
