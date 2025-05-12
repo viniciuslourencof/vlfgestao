@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ProdutosPage } from "./ProdutosPage";
@@ -7,7 +8,6 @@ import { supabase } from "../lib/subabase";
 import { Confirmation } from "@/components/confirmation";
 import { toast } from "sonner";
 import ModalAviso from "@/components/modal-aviso";
-import { useSearch } from "@/components/search-provider"; // ajuste o caminho se necessário
 
 type ProdutoType = {
   produto_id: string;
@@ -39,7 +39,7 @@ export function ProdutosViewPage() {
   );
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
-  const { searchQuery } = useSearch(); // <-- Pegando a query de busca do contexto
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     getProdutos();
@@ -173,9 +173,15 @@ export function ProdutosViewPage() {
         />
       ) : (
         <>
+          <h1 className="text-2xl font-bold">Produtos</h1>
+          <Input
+            type="text"
+            placeholder="Pesquisar registros..."
+            className="w-full my-4 bg-white"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
           <div className="flex items-center mb-4">
-            <h1 className="text-2xl font-bold">Produtos</h1>
-
             <div className="flex gap-2 ml-auto">
               <Button className="cursor-pointer" onClick={handleNew}>
                 <Plus className="w-4 h-4 mr-2" /> Novo

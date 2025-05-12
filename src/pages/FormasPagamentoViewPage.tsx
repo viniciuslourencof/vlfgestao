@@ -8,7 +8,6 @@ import { supabase } from "../lib/subabase";
 import { Confirmation } from "@/components/confirmation";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { useSearch } from "@/components/search-provider";
 
 type FormaPagamentoType = {
   forma_pagamento_id: string;
@@ -20,8 +19,7 @@ export function FormasPagamentoViewPage() {
   const [editando, setEditando] = useState<FormaPagamentoType | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
-  const { searchQuery } = useSearch();
-
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Aqui você gerencia o valor de busca
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
 
@@ -140,10 +138,7 @@ export function FormasPagamentoViewPage() {
                       .update({
                         dsc_forma_documento: editando.dsc_forma_pagamento,
                       })
-                      .eq(
-                        "forma_pagamento_id",
-                        editando.forma_pagamento_id
-                      );
+                      .eq("forma_pagamento_id", editando.forma_pagamento_id);
 
                     if (error) {
                       setMensagemAviso("Erro ao atualizar: " + error.message);
@@ -164,15 +159,23 @@ export function FormasPagamentoViewPage() {
         </Card>
       ) : (
         <>
+          <h1 className="text-2xl font-bold">Formas de Pagamento</h1>
+          <Input
+            type="text"
+            placeholder="Pesquisar registros..."
+            className="w-full my-4 bg-white"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+
           <div className="flex items-center mb-4">
-            <h1 className="text-2xl font-bold">Formas de Pagamento</h1>
             <div className="flex gap-2 ml-auto">
               <Button onClick={handleNew} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2" /> Novo
               </Button>
               <Button onClick={getFormas} className="cursor-pointer">
                 <RefreshCcw className="w-4 h-4 mr-2" />
-                Atualizar
+                <span className="max-[400px]:hidden">Atualizar</span>
               </Button>
             </div>
           </div>
@@ -204,9 +207,7 @@ export function FormasPagamentoViewPage() {
                     className="cursor-pointer"
                     variant="destructive"
                     size="sm"
-                    onClick={() =>
-                      handleDeleteClick(forma.forma_pagamento_id)
-                    }
+                    onClick={() => handleDeleteClick(forma.forma_pagamento_id)}
                   >
                     <Trash2 className="w-4 h-4 mr-1" /> Apagar
                   </Button>

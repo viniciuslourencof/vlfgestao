@@ -4,8 +4,8 @@ import { Cart } from "../components/cart"; // Importando o componente Cart
 import { ShoppingCart } from "lucide-react";
 import { supabase } from "../lib/subabase";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { useSearch } from "@/components/search-provider"; // ajuste o caminho se necessário
 import ModalAviso from "@/components/modal-aviso";
 
 interface CategoriaInterface {
@@ -35,9 +35,9 @@ export function HomePage() {
   >(null);
   const [carrinho, setCarrinho] = useState<CarrinhoItemInterface[]>([]); // Inicialização correta
   const [minimized, setMinimized] = useState(true);
-  const { searchQuery } = useSearch(); // Agora você usa o valor global
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
-  const [mensagemAviso, setMensagemAviso] = useState("");  
+  const [mensagemAviso, setMensagemAviso] = useState("");
 
   function resetCarrinho() {
     setCarrinho([]);
@@ -59,7 +59,6 @@ export function HomePage() {
 
     fetchCategorias();
     selecionarCategoria(categoriaSelecionada); // Filtro inicial
-
   }, [categoriaSelecionada]); // Dependendo da categoria e busca
 
   async function selecionarCategoria(categoria_id: number | null) {
@@ -113,11 +112,21 @@ export function HomePage() {
 
   return (
     <>
-      <CategoryFilter
-        categorias={categorias}
-        categoriaSelecionada={categoriaSelecionada}
-        onSelectCategoria={setCategoriaSelecionada} // Passa a função para atualizar categoria
-      />
+      <div className="px-6 pt-6">
+        <h1 className="text-2xl font-bold">PDV</h1>
+        <Input
+          type="text"
+          placeholder="Pesquisar registros..."
+          className="w-full my-4 bg-white "
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <CategoryFilter
+          categorias={categorias}
+          categoriaSelecionada={categoriaSelecionada}
+          onSelectCategoria={setCategoriaSelecionada} // Passa a função para atualizar categoria
+        />
+      </div>
       <div
         className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${
           !minimized ? "xl:pr-[400px]" : ""

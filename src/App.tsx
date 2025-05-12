@@ -6,7 +6,7 @@ import { HomePage } from "./pages/HomePage";
 import { ProdutosViewPage } from "./pages/ProdutosViewPage";
 import { CategoriasViewPage } from "./pages/CategoriasViewPage";
 import { FormasPagamentoViewPage } from "./pages/FormasPagamentoViewPage";
-import { SearchProvider } from "@/components/search-provider"; // ajuste o caminho se necessário
+import { PedidosViewPage } from "./pages/PedidosViewPage";
 import { LoginPage } from "./pages/LoginPage"; // Página de login
 
 // App.tsx
@@ -27,7 +27,7 @@ export function App() {
   }, [navigate]);
 
   return (
-    <SearchProvider>
+    
       <div className="flex h-screen bg-gray-100 overflow-hidden">
         {isLoggedIn ? (
           <>
@@ -52,6 +52,7 @@ export function App() {
                       path="/formasPagamento"
                       element={<FormasPagamentoViewPage />}
                     />
+                    <Route path="/pedidos" element={<PedidosViewPage />} />
                   </Routes>
                 </main>
               </div>
@@ -63,7 +64,7 @@ export function App() {
           </Routes>
         )}
       </div>
-    </SearchProvider>
+    
   );
 }
 
