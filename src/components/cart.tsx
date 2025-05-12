@@ -1,9 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import {
   CreditCard,
   QrCode,
-  Banknote,  
+  Banknote,
   ChevronsRight,
   ChevronsLeft,
   Trash2,
@@ -42,8 +41,8 @@ export function Cart({
 
   return (
     <div
-      className={`bg-white border-l flex flex-col h-full transition-all duration-300 ${
-        minimized ? "w-0" : "w-[380px]"
+      className={`bg-white border-t md:border-l flex flex-col h-[600px] md:h-full transition-all duration-300 ${
+        minimized ? "w-0 md:w-0" : "w-full md:w-[380px]"
       }`}
     >
       {/* Top bar com botão de minimizar */}
@@ -54,7 +53,7 @@ export function Cart({
               <h2 className="text-xl font-bold">Pedido</h2>
               <p className="text-sm text-gray-500">Cliente atual</p>
             </div>
-            <div className="flex items-center gap-2">              
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -113,7 +112,7 @@ export function Cart({
                       </span>
                     </div>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => onRemoveItem(item.produto_id)}
                     className="text-red-500 hover:bg-red-700 hover:text-white cursor-pointer bg-red-500 text-white"
                   >
@@ -140,7 +139,7 @@ export function Cart({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
               <Button
                 variant="outline"
                 className="flex flex-col items-center gap-0 cursor-pointer"

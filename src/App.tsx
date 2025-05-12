@@ -16,41 +16,51 @@ interface CarrinhoItem {
   quantidade: number;
 }
 
+// App.tsx
 export function App() {
   const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]);
   const [minimized, setMinimized] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // 👈 novo estado
+
   const navigate = useNavigate();
 
   const handleRemoveItem = (index: number) => {
     setCarrinho((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Verificar se o usuário está logado no localStorage
   useEffect(() => {
     const usuarioId = localStorage.getItem("usuario_id");
     if (usuarioId) {
-      setIsLoggedIn(true); // Usuário logado
+      setIsLoggedIn(true);
     } else {
-      setIsLoggedIn(false); // Usuário não logado
-      navigate("/login"); // Redireciona para a página de login se não estiver logado
+      setIsLoggedIn(false);
+      navigate("/login");
     }
   }, [navigate]);
 
   return (
     <SearchProvider>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gray-100 overflow-hidden">
         {isLoggedIn ? (
           <>
-            <SidebarNav />
+            <SidebarNav
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+            />
+
             <div className="flex-1 flex flex-col overflow-hidden">
-              <Header />
+              <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+
               <div className="flex-1 flex overflow-hidden">
                 <main className="flex-1 overflow-auto p-4">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/produtos" element={<ProdutosViewPage />} />
-                    <Route path="/categorias" element={<CategoriasViewPage />} />
+                    <Route
+                      path="/categorias"
+                      element={<CategoriasViewPage />}
+                    />
                   </Routes>
                 </main>
                 <Cart
