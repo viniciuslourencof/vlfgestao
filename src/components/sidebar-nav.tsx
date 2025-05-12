@@ -53,7 +53,7 @@ export function SidebarNav({
             <Link to={item.path} key={index} onClick={onClose}>
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${
+                className={`w-full justify-start cursor-pointer ${
                   isActive
                     ? "font-semibold text-foreground"
                     : "text-muted-foreground"
@@ -69,7 +69,7 @@ export function SidebarNav({
 
       <Button
         variant="ghost"
-        className="w-full justify-start mt-auto text-muted-foreground absolute bottom-4 cursor-pointer"
+        className="justify-start mt-auto text-muted-foreground absolute bottom-4 cursor-pointer w-56 "
         onClick={() => {
           onClose();
           handleLogout();

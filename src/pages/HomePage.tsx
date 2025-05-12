@@ -91,7 +91,10 @@ export function HomePage() {
         return [...prevCarrinho, { ...produto, quantidade: 1 }];
       }
     });
-    setMinimized(false); // <-- abre o carrinho
+
+    if (screen.width > 640 && screen.height > 480) {
+      setMinimized(false); // <-- abre o carrinho se não tiver no mobile
+    }
   }
 
   function removerDoCarrinho(produtoId: number) {
@@ -162,9 +165,14 @@ export function HomePage() {
           variant="ghost"
           size="icon"
           onClick={() => setMinimized(false)}
-          className="fixed top-20 right-4 z-50 bg-gray-300 w-14 h-14 shadow-lg hover:bg-gray-400 cursor-pointer flex items-center justify-center"
+          className="fixed top-20 right-4 z-50 bg-gray-300 w-11 h-11 shadow-lg hover:bg-gray-400 cursor-pointer flex items-center justify-center"
         >
           <ShoppingCart className="w-8 h-8 text-gray-600" />
+          {carrinho.length > 0 && (
+            <span className="absolute bottom-7 right-0 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+              {carrinho.length}
+            </span>
+          )}
         </Button>
       )}
       <ModalAviso
@@ -175,4 +183,3 @@ export function HomePage() {
     </>
   );
 }
-

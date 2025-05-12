@@ -7,7 +7,7 @@ import { supabase } from "../lib/subabase";
 import { Confirmation } from "@/components/confirmation";
 import { toast } from "sonner";
 import ModalAviso from "@/components/modal-aviso";
-import { useSearch  } from "@/components/search-provider"; // ajuste o caminho se necessário
+import { useSearch } from "@/components/search-provider"; // ajuste o caminho se necessário
 
 type ProdutoType = {
   produto_id: string;
@@ -30,9 +30,13 @@ type ProdutoType = {
 
 export function ProdutosViewPage() {
   const [produtos, setProdutos] = useState<ProdutoType[]>([]);
-  const [produtoEditando, setProdutoEditando] = useState<ProdutoType | null>(null);
+  const [produtoEditando, setProdutoEditando] = useState<ProdutoType | null>(
+    null
+  );
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [produtoIdToDelete, setProdutoIdToDelete] = useState<string | null>(null);
+  const [produtoIdToDelete, setProdutoIdToDelete] = useState<string | null>(
+    null
+  );
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
   const { searchQuery } = useSearch(); // <-- Pegando a query de busca do contexto
@@ -55,7 +59,7 @@ export function ProdutosViewPage() {
       .order("produto_id", { ascending: false });
 
     const { data } = await query;
-    
+
     if (data) {
       setProdutos(data);
     }
@@ -182,60 +186,66 @@ export function ProdutosViewPage() {
                   getProdutos();
                 }}
               >
-                <RefreshCcw className="w-4 h-4 mr-2" /> Atualizar
+                <RefreshCcw className="w-4 h-4 mr-2" />
+                <span className="max-[400px]:hidden">Atualizar</span>
               </Button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {produtosFiltrados.map((produto) => ( // <-- Usando o filtro
-              <Card
-                key={produto.produto_id}
-                className="p-4 flex flex-col justify-between"
-              >
-                <div>
-                  <h2 className="font-semibold text-lg">
-                    {produto.dsc_produto}
-                  </h2>
-                  <p className="text-sm text-gray-600">
-                    Código: {produto.produto_id}
-                  </p>
-                  <p className="text-sm mt-1">Estoque: {produto.estoque}</p>
-                  <p className="text-sm">
-                    Preço de Venda: R${" "}
-                    {parseFloat(produto.preco_venda1).toFixed(2)}
-                  </p>
-                  <p className="text-sm">
-                    Preço de Custo: R${" "}
-                    {parseFloat(produto.preco_custo1).toFixed(2)}
-                  </p>
-                  <p className="text-sm">
-                    Margem de Lucro: {parseFloat(produto.margem1).toFixed(2)} %
-                  </p>
-                  <p className="text-sm">
-                    Categoria: {produto.categorias?.dsc_categoria}
-                  </p>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    className="cursor-pointer"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(produto)}
-                  >
-                    <Pencil className="w-4 h-4 mr-1" /> Editar
-                  </Button>
-                  <Button
-                    className="cursor-pointer"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteClick(produto.produto_id)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" /> Apagar
-                  </Button>
-                </div>
-              </Card>
-            ))}
+            {produtosFiltrados.map(
+              (
+                produto // <-- Usando o filtro
+              ) => (
+                <Card
+                  key={produto.produto_id}
+                  className="p-4 flex flex-col justify-between"
+                >
+                  <div>
+                    <h2 className="font-semibold text-lg">
+                      {produto.dsc_produto}
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Código: {produto.produto_id}
+                    </p>
+                    <p className="text-sm mt-1">Estoque: {produto.estoque}</p>
+                    <p className="text-sm">
+                      Preço de Venda: R${" "}
+                      {parseFloat(produto.preco_venda1).toFixed(2)}
+                    </p>
+                    <p className="text-sm">
+                      Preço de Custo: R${" "}
+                      {parseFloat(produto.preco_custo1).toFixed(2)}
+                    </p>
+                    <p className="text-sm">
+                      Margem de Lucro: {parseFloat(produto.margem1).toFixed(2)}{" "}
+                      %
+                    </p>
+                    <p className="text-sm">
+                      Categoria: {produto.categorias?.dsc_categoria}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      className="cursor-pointer"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(produto)}
+                    >
+                      <Pencil className="w-4 h-4 mr-1" /> Editar
+                    </Button>
+                    <Button
+                      className="cursor-pointer"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteClick(produto.produto_id)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" /> Apagar
+                    </Button>
+                  </div>
+                </Card>
+              )
+            )}
           </div>
         </>
       )}

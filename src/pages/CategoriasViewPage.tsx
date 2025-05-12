@@ -175,7 +175,8 @@ export function CategoriasViewPage() {
                 <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
               </Button>
               <Button onClick={getCategorias} className="cursor-pointer">
-                <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" /> Atualizar
+                <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
+                <span className="max-[400px]:hidden">Atualizar</span>
               </Button>
             </div>
           </div>
