@@ -21,7 +21,7 @@ export function LoginForm() {
       const { data, error } = await supabase
         .from("usuarios")
         .select("*")
-        .eq("login", login);
+        .eq("login", login.toUpperCase);
 
       if (error) {
         setMensagemAviso("Erro ao buscar usuário: " + error.message);
@@ -89,7 +89,8 @@ export function LoginForm() {
                     id="login"
                     type="text"
                     value={login}
-                    onChange={(e) => setLogin(e.target.value)}
+                    onChange={(e) => setLogin(e.target.value)}                    
+                    className="uppercase"
                     required
                   />
                 </div>
