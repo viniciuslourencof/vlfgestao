@@ -37,7 +37,7 @@ export function HomePage() {
   const [minimized, setMinimized] = useState(true);
   const { searchQuery } = useSearch(); // Agora você usa o valor global
   const [mostrarAviso, setMostrarAviso] = useState(false);
-  const [mensagemAviso, setMensagemAviso] = useState("");
+  const [mensagemAviso, setMensagemAviso] = useState("");  
 
   function resetCarrinho() {
     setCarrinho([]);
@@ -59,6 +59,7 @@ export function HomePage() {
 
     fetchCategorias();
     selecionarCategoria(categoriaSelecionada); // Filtro inicial
+
   }, [categoriaSelecionada]); // Dependendo da categoria e busca
 
   async function selecionarCategoria(categoria_id: number | null) {

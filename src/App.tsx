@@ -5,13 +5,14 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { ProdutosViewPage } from "./pages/ProdutosViewPage";
 import { CategoriasViewPage } from "./pages/CategoriasViewPage";
+import { FormasPagamentoViewPage } from "./pages/FormasPagamentoViewPage";
 import { SearchProvider } from "@/components/search-provider"; // ajuste o caminho se necessário
 import { LoginPage } from "./pages/LoginPage"; // Página de login
 
 // App.tsx
-export function App() {  
+export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -47,8 +48,12 @@ export function App() {
                       path="/categorias"
                       element={<CategoriasViewPage />}
                     />
+                    <Route
+                      path="/formasPagamento"
+                      element={<FormasPagamentoViewPage />}
+                    />
                   </Routes>
-                </main>                
+                </main>
               </div>
             </div>
           </>

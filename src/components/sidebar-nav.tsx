@@ -1,21 +1,26 @@
-import { Cuboid, LogOut, Home, Group } from "lucide-react";
+import { Cuboid, LogOut, Home, Group, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 const navItems = [
-  { icon: Home, label: "Inicio", color: "text-green-600", path: "/" },
+  { icon: Home, 
+    label: "Inicio",     
+    path: "/" },
   {
     icon: Cuboid,
-    label: "Produtos",
-    color: "text-green-600",
+    label: "Produtos",    
     path: "/produtos",
   },
   {
     icon: Group,
-    label: "Categorias",
-    color: "text-green-600",
+    label: "Categorias",    
     path: "/categorias",
+  },
+    {
+    icon: CreditCard,
+    label: "Formas de Pagamento",    
+    path: "/formasPagamento",
   },
 ];
 

@@ -112,7 +112,7 @@ export function ProdutosViewPage() {
       return;
     }
 
-    toast.success("Produto apagado com sucesso!");
+    toast.success("Registro apagado com sucesso!");
     getProdutos();
   };
 

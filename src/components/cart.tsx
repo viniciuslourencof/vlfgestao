@@ -1,15 +1,17 @@
 import { Button } from "@/components/ui/button";
-import {
-  CreditCard,
-  QrCode,
-  Banknote,
-  ChevronsRight,
-  ChevronsLeft,
-  Trash2,
-} from "lucide-react";
+import { ChevronsRight, ChevronsLeft, Trash2, Search } from "lucide-react";
 import { supabase } from "../lib/subabase";
 import ModalAviso from "@/components/modal-aviso";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
+
+type FormaPagamentoType = {
+  forma_pagamento_id: number;
+  dsc_forma_pagamento: string;
+};
 
 interface CarrinhoItem {
   produto_id: number;
@@ -33,9 +35,15 @@ export function Cart({
   setMinimized,
   resetCarrinho,
 }: CartProps) {
-
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
+  const [formaPagamento, setformaPagamento] = useState<FormaPagamentoType>({
+    forma_pagamento_id: 0,
+    dsc_forma_pagamento: "",
+  });
+
+  const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
+    useState(false);
 
   if (!carrinho) return;
 
@@ -49,6 +57,20 @@ export function Cart({
   const total = subtotal;
 
   async function finalizarPedido() {
+    if (!carrinho || carrinho.length == 0) {
+      setMensagemAviso("Nenhum item encontrado no pedido.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    if (!formaPagamento || formaPagamento.forma_pagamento_id == 0) {
+      setMensagemAviso(
+        "Selecione a forma de pagamento antes de finalizar o pedido."
+      );
+      setMostrarAviso(true);
+      return;
+    }
+
     const subtotal = carrinho.reduce(
       (acc, item) => acc + item.preco_venda1 * item.quantidade,
       0
@@ -57,14 +79,18 @@ export function Cart({
     // 1. Insere o pedido
     const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
-      .insert([{ vr_liquido: subtotal }])
+      .insert([
+        {
+          forma_pagamento_id: formaPagamento.forma_pagamento_id,
+          vr_liquido: subtotal,
+        },
+      ])
       .select()
       .single();
 
-    if (pedidoError) {      
-
+    if (pedidoError) {
       setMensagemAviso("Erro ao inserir pedido: " + pedidoError);
-      setMostrarAviso(true);    
+      setMostrarAviso(true);
 
       return;
     }
@@ -84,15 +110,19 @@ export function Cart({
 
     if (itensError) {
       setMensagemAviso("Erro ao inserir itens: " + itensError);
-      setMostrarAviso(true);    
+      setMostrarAviso(true);
 
       return;
-    }    
+    }
 
     setMensagemAviso("Pedido finalizado com sucesso!");
-    setMostrarAviso(true);    
+    setMostrarAviso(true);
 
     resetCarrinho();
+    setformaPagamento({
+      forma_pagamento_id: 0,
+      dsc_forma_pagamento: "",
+    });
   }
 
   return (
@@ -195,29 +225,44 @@ export function Cart({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-0 cursor-pointer"
-              >
-                <Banknote className="h-5 w-5 mb-1" />
-                <span className="text-xs">Dinheiro</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-0 cursor-pointer"
-              >
-                <CreditCard className="h-5 w-5 mb-1" />
-                <span className="text-xs">Cartão</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex flex-col items-center gap-0 cursor-pointer"
-              >
-                <QrCode className="h-5 w-5 mb-1" />
-                <span className="text-xs">Pix</span>
-              </Button>
-            </div>
+            <Card className="p-4 mb-4">
+              <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
+                Forma de Pagamento
+              </h3>
+
+              <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
+                <div className="space-y-2 w-12">
+                  <Label htmlFor="categoria_id">Código</Label>
+                  <Input
+                    id="categoria_id"
+                    name="categoria_id"
+                    value={formaPagamento?.forma_pagamento_id || ""}
+                    readOnly
+                  />
+                </div>
+
+                <div className="space-y-2 w-10">
+                  <Label className="invisible">Buscar</Label>
+                  <button
+                    onClick={() => setAbrirModalBuscaFormaPagamento(true)}
+                    type="button"
+                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
+                  >
+                    <Search className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-2 w-full">
+                  <Label htmlFor="dsc_forma_pagamento">Descrição</Label>
+                  <Input
+                    id="dsc_forma_pagamento"
+                    name="dsc_forma_pagamento"
+                    value={formaPagamento?.dsc_forma_pagamento || ""}
+                    readOnly
+                  />
+                </div>
+              </div>
+            </Card>
 
             <Button
               className="w-full bg-gray-600 hover:bg-gray-700 text-white h-12 cursor-pointer"
@@ -228,6 +273,17 @@ export function Cart({
           </div>
         </>
       )}
+      <ModalBuscaFormaPagamento
+        open={abrirModalBuscaFormaPagamento}
+        onClose={() => setAbrirModalBuscaFormaPagamento(false)}
+        onSelect={(forma_pagamento) => {
+          setformaPagamento((prev) => ({
+            ...prev,
+            forma_pagamento_id: forma_pagamento.forma_pagamento_id,
+            dsc_forma_pagamento: forma_pagamento.dsc_forma_pagamento,
+          }));
+        }}
+      />
       <ModalAviso
         open={mostrarAviso}
         onClose={setMostrarAviso}
