@@ -9,13 +9,13 @@ export type PedidoType = {
 };
 
 export type PedidoItemType = {
-  pedido_item_id: number;
+  pedido_item_id?: number;
   pedido_id: number;
   produto_id: number;
   quantidade: number;
   vr_unit: number;
   vr_item: number;
-  produtos: {
+  produtos?: {
     dsc_produto: string;
   };
 }
@@ -29,5 +29,13 @@ export type PedidoComRelacionamentoType = {
     dsc_forma_pagamento: string;
   };
 };  
+
+export type CartPropsType = {
+  carrinho: PedidoItemType[];
+  onRemoveItem: (produtoId: number) => void;
+  carrinhoMinimizado: boolean;
+  setMinimized: (minimized: boolean) => void;
+  limpaCarrinho: () => void; //
+}
   
 

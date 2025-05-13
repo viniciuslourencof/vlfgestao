@@ -7,6 +7,7 @@ import { ProdutosViewPage } from "./pages/ProdutosViewPage";
 import { CategoriasViewPage } from "./pages/CategoriasViewPage";
 import { FormasPagamentoViewPage } from "./pages/FormasPagamentoViewPage";
 import { PedidosViewPage } from "./pages/PedidosViewPage";
+import { FornecedoresViewPage } from "./pages/FornecedoresViewPage";
 import { LoginPage } from "./pages/LoginPage"; // Página de login
 // import { Footer } from "./components/footer";
 
@@ -54,6 +55,7 @@ export function App() {
                       element={<FormasPagamentoViewPage />}
                     />
                     <Route path="/pedidos" element={<PedidosViewPage />} />
+                    <Route path="/fornecedores" element={<FornecedoresViewPage />} />
                   </Routes>
                 </main>
               </div>

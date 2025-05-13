@@ -10,7 +10,7 @@ import { CategoriaType } from "../types/categoria";
 import { PedidoItemType } from "../types/pedido";
 import { CategoriaServices } from "../services/categoriaServices";
 import { ProdutoServices } from "../services/produtoServices";
-import { PedidoServices } from "@/services/pedidoServices";
+import { PedidoItemServices } from "@/services/pedidoItemServices";
 
 export function HomePage() {
   const [categorias, setCategorias] = useState<CategoriaType[]>([]);
@@ -34,7 +34,7 @@ export function HomePage() {
   };
 
   const carregarCategorias = async () => {
-    const resultado = await CategoriaServices.buscarCategorias();
+    const resultado = await CategoriaServices.buscarRegistros();
 
     if (resultado) {
       setCategorias([
@@ -51,7 +51,7 @@ export function HomePage() {
 
   function adicionarAoCarrinho(produto: ProdutoInterface) {
     setCarrinho((prevCarrinho) => {
-      const novoCarrinho = PedidoServices.adicionar(prevCarrinho, produto);
+      const novoCarrinho = PedidoItemServices.inserirNoCarrinho(prevCarrinho, produto);
 
       if (screen.width > 640 && screen.height > 480) {
         setCarrinhoMinimizado(false);

@@ -1,4 +1,4 @@
-import { Cuboid, LogOut, Home, Group, CreditCard, ShoppingCartIcon } from "lucide-react";
+import { Cuboid, LogOut, Home, Group, CreditCard, ShoppingCartIcon, ContactRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,11 @@ const navItems = [
     icon: ShoppingCartIcon,
     label: "Pedidos",    
     path: "/pedidos",
+  },
+    {
+    icon: ContactRound,
+    label: "Fornecedores",    
+    path: "/fornecedores",
   },
 ];
 

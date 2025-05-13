@@ -7,13 +7,13 @@ import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { CategoriaType } from "../types/categoria";
-import { CategoriaServices } from "../services/categoriaServices";
+import { FornecedorType } from "../types/fornecedor";
+import { FornecedorServices } from "../services/fornecedorServices";
 
-export function CategoriasViewPage() {
-  const [registros, setRegistros] = useState<CategoriaType[]>([]);
+export function FornecedoresViewPage() {
+  const [registros, setRegistros] = useState<FornecedorType[]>([]);
   const [registroEditando, setRegistroEditando] =
-    useState<CategoriaType | null>(null);
+    useState<FornecedorType | null>(null);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -23,19 +23,23 @@ export function CategoriasViewPage() {
   const [mensagemAviso, setMensagemAviso] = useState("");
 
   const carregarRegistros = useCallback(async () => {
-    const resultado = await CategoriaServices.buscarRegistros();
+    const resultado = await FornecedorServices.buscarRegistros();
     setRegistros(resultado);
-  }, []); 
+  }, []);
 
   useEffect(() => {
     carregarRegistros();
   }, [carregarRegistros]);
 
   const aoInserir = () => {
-    setRegistroEditando({ categoria_id: 0, dsc_categoria: "" });
+    setRegistroEditando({
+      fornecedor_id: 0,
+      dsc_razao_social: "",
+      dsc_nome_fantasia: "",
+    });
   };
 
-  const aoEditar = (p_registro: CategoriaType) => {
+  const aoEditar = (p_registro: FornecedorType) => {
     setRegistroEditando(p_registro);
   };
 
@@ -53,14 +57,14 @@ export function CategoriasViewPage() {
 
     setMostrarConfirmacao(false);
 
-    const emUso = await CategoriaServices.registroEmUso(registroIdADeletar);
-    if (emUso) {
-      setMensagemAviso("Registro em uso dentro de Produtos, verifique!");
-      setMostrarAviso(true);
-      return;
-    }
+    // const emUso = await FornecedorServices.registroEmUso(registroIdADeletar);
+    // if (emUso) {
+    //   setMensagemAviso("Registro em uso dentro de Produtos, verifique!");
+    //   setMostrarAviso(true);
+    //   return;
+    // }
 
-    const error = await CategoriaServices.deletar(registroIdADeletar);
+    const error = await FornecedorServices.deletar(registroIdADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
@@ -69,31 +73,32 @@ export function CategoriasViewPage() {
     }
 
     toast.success("Registro apagado com sucesso!");
-    
+
     carregarRegistros();
   };
 
   const aoSalvar = async () => {
     if (!registroEditando) return;
 
-    if (!registroEditando.dsc_categoria.trim()) {
-      setMensagemAviso("Descrição não pode estar vazia.");
+    if (!registroEditando.dsc_razao_social.trim()) {
+      setMensagemAviso("Razão Social não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
 
-    const duplicado = await CategoriaServices.verificaDuplicidade(
-      registroEditando.dsc_categoria
+    const duplicado = await FornecedorServices.verificaDuplicidade(
+      registroEditando.dsc_razao_social
     );
     if (duplicado) {
-      setMensagemAviso("Descrição já cadastrada, verifique.");
+      setMensagemAviso("Razão Social já cadastrada, verifique.");
       setMostrarAviso(true);
       return;
     }
 
-    if (registroEditando.categoria_id === 0) {
-      const error = await CategoriaServices.inserir(
-        registroEditando.dsc_categoria
+    if (registroEditando.fornecedor_id === 0) {
+      const error = await FornecedorServices.inserir(
+        registroEditando.dsc_razao_social,
+        registroEditando.dsc_nome_fantasia
       );
 
       if (error) {
@@ -102,9 +107,10 @@ export function CategoriasViewPage() {
         return;
       }
     } else {
-      const error = await CategoriaServices.atualizar(
-        registroEditando.categoria_id,
-        registroEditando.dsc_categoria
+      const error = await FornecedorServices.atualizar(
+        registroEditando.fornecedor_id,
+        registroEditando.dsc_razao_social,
+        registroEditando.dsc_nome_fantasia
       );
 
       if (error) {
@@ -120,13 +126,15 @@ export function CategoriasViewPage() {
   };
 
   const registrosFiltrados = registros.filter((registro) =>
-    registro.dsc_categoria.toLowerCase().includes(textoPesquisa.toLowerCase())
+    registro.dsc_razao_social
+      .toLowerCase()
+      .includes(textoPesquisa.toLowerCase())
   );
 
   function ListaRegistros() {
     return (
       <>
-        <h1 className="text-2xl font-bold">Categorias</h1>
+        <h1 className="text-2xl font-bold">Fornecedores</h1>
         <Input
           type="text"
           placeholder="Pesquisar registros..."
@@ -149,15 +157,15 @@ export function CategoriasViewPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {registrosFiltrados.map((registro) => (
             <Card
-              key={registro.categoria_id}
+              key={registro.fornecedor_id}
               className="p-4 flex flex-col justify-between"
             >
               <div>
                 <h2 className="font-semibold text-lg">
-                  {registro.dsc_categoria}
+                  {registro.dsc_razao_social}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Código: {registro.categoria_id}
+                  Código: {registro.fornecedor_id}
                 </p>
               </div>
               <div className="flex gap-2 mt-4">
@@ -172,7 +180,7 @@ export function CategoriasViewPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => antesDeDeletar(registro.categoria_id)}
+                  onClick={() => antesDeDeletar(registro.fornecedor_id)}
                   className="cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-1" /> Apagar
@@ -192,23 +200,35 @@ export function CategoriasViewPage() {
           <Card className=" w-full h-full mx-auto p-6">
             <CardHeader>
               <CardTitle className="text-xl font-semibold">
-                {registroEditando.categoria_id === 0
+                {registroEditando.fornecedor_id === 0
                   ? "Novo Registro"
                   : "Editar Registro"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição da categoria</Label>
+                <Label htmlFor="descricao">Razão Social</Label>
                 <Input
                   id="descricao"
-                  value={registroEditando.dsc_categoria}
+                  value={registroEditando.dsc_razao_social}
                   onChange={(e) =>
                     setRegistroEditando((prev) =>
-                      prev ? { ...prev, dsc_categoria: e.target.value } : prev
+                      prev ? { ...prev, dsc_razao_social: e.target.value } : prev
                     )
                   }
-                  placeholder="Ex: Bebidas, Alimentos, etc."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="descricao">Nome Fantasia</Label>
+                <Input
+                  id="descricao"
+                  value={registroEditando.dsc_nome_fantasia}
+                  onChange={(e) =>
+                    setRegistroEditando((prev) =>
+                      prev ? { ...prev, dsc_nome_fantasia: e.target.value } : prev
+                    )
+                  }
+                  placeholder=""
                 />
               </div>
               <div className="flex justify-end gap-2">

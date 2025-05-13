@@ -4,20 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw, Search } from "lucide-react";
-import { supabase } from "../lib/subabase";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
-import { FormaPagamentoServices } from "../services/formaPagamentoServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import {
-  PedidoType,  
+  PedidoType,
   PedidoItemType,
-  PedidoComRelacionamentoType
+  PedidoComRelacionamentoType,
 } from "../types/pedido";
-import { PedidoServices } from "../services/pedidoServices"; // Ajuste o caminho conforme necessário
+import { PedidoItemServices } from "../services/pedidoItemServices";
+import { PedidoServices } from "../services/pedidoServices";
 import {
   Table,
   TableHeader,
@@ -25,13 +24,19 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { formatarData } from "@/lib/formatarData"; // ajuste o caminho conforme sua estrutura
+import { formatarData } from "@/lib/formatarData";
+import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
 
 export function PedidosViewPage() {
-  const [pedidos, setPedidos] = useState<PedidoType[]>([]);
-  const [pedidoEditando, setPedidoEditando] = useState<PedidoType | null>(null);
+  const [registros, setRegistros] = useState<PedidoType[]>([]);
+  const [registroEditando, setRegistroEditando] = useState<PedidoType | null>(
+    null
+  );
+  const [itensPedido, setItensPedido] = useState<PedidoItemType[]>([]);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
-  const [pedidoIdADeletar, setPedidoIdADeletar] = useState<number | null>(null);
+  const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
+    null
+  );
   const [textoConsulta, setTextoConsulta] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
@@ -41,48 +46,49 @@ export function PedidosViewPage() {
   });
   const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
     useState(false);
-  const [itensPedido, setItensPedido] = useState<PedidoItemType[]>([]);
 
-  async function carregarPedidos() {
-    const resultado = await PedidoServices.buscarPedidos();
+  const carregarRegistros = useCallback(async () => {
+    const resultado = await PedidoServices.buscarRegistros();
 
-    const resultadosFormatado: PedidoType[] = resultado.map((pedido: PedidoComRelacionamentoType) => ({
-      pedido_id: pedido.pedido_id,
-      vr_liquido: pedido.vr_liquido,
-      forma_pagamento_id: pedido.forma_pagamento_id,
-      dt_inc: pedido.dt_inc,
-      dsc_forma_pagamento: pedido.formas_pagamento?.dsc_forma_pagamento ?? "",
-    }));
+    const resultadosFormatado: PedidoType[] = resultado.map(
+      (pedido: PedidoComRelacionamentoType) => ({
+        pedido_id: pedido.pedido_id,
+        vr_liquido: pedido.vr_liquido,
+        forma_pagamento_id: pedido.forma_pagamento_id,
+        dt_inc: pedido.dt_inc,
+        dsc_forma_pagamento: pedido.formas_pagamento?.dsc_forma_pagamento ?? "",
+      })
+    );
 
-    setPedidos(resultadosFormatado);
-  }
+    setRegistros(resultadosFormatado);
+  }, []);
 
   const carregarItensDoPedido = useCallback(async () => {
-    if (!pedidoEditando) return;
+    if (!registroEditando) return;
 
-    const resultado = await PedidoServices.buscarItensDoPedido(
-      pedidoEditando.pedido_id
+    const resultado = await PedidoItemServices.buscarRegistros(
+      registroEditando.pedido_id
     );
 
     setItensPedido(resultado);
-  }, [pedidoEditando]);
+  }, [registroEditando]);
 
   useEffect(() => {
-    const carregarPedido = async () => {
-      carregarPedidos();
+    const carregarDados = async () => {
+      // Sempre carrega os registros principais
+      await carregarRegistros();
 
-      if (!pedidoEditando) return;
-
-      if (pedidoEditando.pedido_id > 0) {
-        await carregarItensDoPedido(); // Usando 'await' para garantir que a chamada seja resolvida
+      // Se estiver editando um registro válido, carrega os dados detalhados
+      if (registroEditando && registroEditando.pedido_id > 0) {
+        await carregarItensDoPedido(); // ou o nome da função de detalhe correspondente
       }
     };
 
-    carregarPedido();
-  }, [pedidoEditando, carregarItensDoPedido]);
+    carregarDados();
+  }, [registroEditando, carregarRegistros, carregarItensDoPedido]);
 
   const aoInserir = () => {
-    setPedidoEditando({
+    setRegistroEditando({
       pedido_id: 0,
       vr_liquido: 0.0,
       forma_pagamento_id: 0,
@@ -90,36 +96,35 @@ export function PedidosViewPage() {
     });
   };
 
-  const aoEditar = async (pedido: PedidoType) => {
-    setPedidoEditando(pedido);
+  const aoEditar = async (p_registro: PedidoType) => {
+    setRegistroEditando(p_registro);
 
-    if (pedido.forma_pagamento_id !== 0) {
-      const formaPagamento = await FormaPagamentoServices.buscarFormaPagamento(
-        Number(pedido.forma_pagamento_id)
+    if (p_registro.forma_pagamento_id !== 0) {
+      const formaPagamento = await FormaPagamentoServices.buscarRegistro(
+        Number(p_registro.forma_pagamento_id)
       );
       setFormaPagamento(formaPagamento);
     }
   };
 
-  const AoFecharForm = () => {
-    setPedidoEditando(null);
+  const aoFecharFormulario = () => {
+    setRegistroEditando(null);
   };
 
-  const aoClicarEmDeletar = (pedido_id: number) => {
-    setPedidoIdADeletar(pedido_id);
+  const aoClicarEmDeletar = (p_id: number) => {
+    setRegistroIdADeletar(p_id);
     setMostrarConfirmacao(true);
   };
 
   const aoDeletar = async () => {
-    if (!pedidoIdADeletar) return;
+    if (!registroIdADeletar) return;
 
-    const { error } = await supabase
-      .from("pedidos")
-      .delete()
-      .eq("pedido_id", pedidoIdADeletar);
+    setMostrarConfirmacao(false);
+
+    const error = await PedidoServices.deletar(registroIdADeletar);
 
     if (error) {
-      setMensagemAviso("Erro ao apagar registro: " + error.message);
+      setMensagemAviso("Erro ao apagar registro: " + error);
       setMostrarAviso(true);
 
       return;
@@ -128,11 +133,44 @@ export function PedidosViewPage() {
     toast.success("Registro apagado com sucesso!");
 
     setMostrarConfirmacao(false);
-    carregarPedidos();
+    carregarRegistros();
   };
 
-  const pedidosFiltrados = pedidos.filter((pedido) =>
-    pedido.pedido_id.toString().includes(textoConsulta)
+  const aoSalvar = async () => {
+    if (!registroEditando) return;
+
+    if (registroEditando.pedido_id === 0) {
+      const error = await PedidoServices.inserir(
+        registroEditando.vr_liquido,
+        registroEditando.forma_pagamento_id
+      );
+
+      if (error) {
+        setMensagemAviso("Erro ao inserir registro: " + error);
+        setMostrarAviso(true);
+        return;
+      }
+    } else {
+      const error = await PedidoServices.atualizar(
+        registroEditando.pedido_id,
+        registroEditando.vr_liquido,
+        registroEditando.forma_pagamento_id
+      );
+
+      if (error) {
+        setMensagemAviso("Erro ao atualizar registro: " + error);
+        setMostrarAviso(true);
+        return;
+      }
+    }
+
+    toast.success("Registro salvo com sucesso!");
+    carregarRegistros();
+    aoFecharFormulario();
+  };
+
+  const registrosFiltrados = registros.filter((registro) =>
+    registro.pedido_id.toString().includes(textoConsulta)
   );
 
   function ListaRegistros() {
@@ -148,10 +186,10 @@ export function PedidosViewPage() {
         />
         <div className="flex items-center mb-4">
           <div className="flex gap-2">
-            <Button onClick={aoInserir} className="cursor-pointer">
+            <Button onClick={aoInserir} className="cursor-pointer hidden">
               <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
             </Button>
-            <Button onClick={carregarPedidos} className="cursor-pointer">
+            <Button onClick={carregarRegistros} className="cursor-pointer">
               <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
               <span className="max-[400px]:hidden">Atualizar</span>
             </Button>
@@ -159,7 +197,7 @@ export function PedidosViewPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pedidosFiltrados.map((pedido) => (
+          {registrosFiltrados.map((pedido) => (
             <Card
               key={pedido.pedido_id}
               className="p-4 flex flex-col justify-between"
@@ -176,7 +214,9 @@ export function PedidosViewPage() {
                   Vr. Pedido: {pedido.vr_liquido.toFixed(2)}
                 </p>
 
-                <p className="text-sm ">Forma: {pedido.dsc_forma_pagamento}</p>
+                <p className="text-sm ">
+                  Forma de Pagamento: {pedido.dsc_forma_pagamento}
+                </p>
               </div>
               <div className="flex gap-2 mt-4">
                 <Button
@@ -206,7 +246,7 @@ export function PedidosViewPage() {
   function FormularioRegistro() {
     return (
       <>
-        {pedidoEditando ? (
+        {registroEditando ? (
           <Tabs
             defaultValue="geral"
             className="w-full h-full max-w-none mx-auto"
@@ -220,7 +260,7 @@ export function PedidosViewPage() {
               <Card className="w-full h-full mx-auto">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
-                    {pedidoEditando.pedido_id === 0
+                    {registroEditando.pedido_id === 0
                       ? "Novo Registro"
                       : "Editar Registro"}
                   </CardTitle>
@@ -231,7 +271,7 @@ export function PedidosViewPage() {
                       <Label htmlFor="pedido_id">Código do Pedido</Label>
                       <Input
                         id="pedido_id"
-                        value={pedidoEditando.pedido_id}
+                        value={registroEditando.pedido_id}
                         readOnly
                       />
                     </div>
@@ -240,7 +280,7 @@ export function PedidosViewPage() {
                       <Label htmlFor="dt_inc">Data de Efetivação</Label>
                       <Input
                         id="dt_inc"
-                        value={formatarData(pedidoEditando.dt_inc)}
+                        value={formatarData(registroEditando.dt_inc)}
                         readOnly
                       />
                     </div>
@@ -249,7 +289,7 @@ export function PedidosViewPage() {
                       <Label htmlFor="vr_liquido">Vr. Liquido</Label>
                       <Input
                         id="vr_liquido"
-                        value={(pedidoEditando.vr_liquido ?? 0).toFixed(2)}
+                        value={(registroEditando.vr_liquido ?? 0).toFixed(2)}
                         readOnly
                       />
                     </div>
@@ -351,51 +391,12 @@ export function PedidosViewPage() {
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={AoFecharForm}
+                onClick={aoFecharFormulario}
                 className="cursor-pointer"
               >
                 Cancelar
               </Button>
-              <Button
-                className="cursor-pointer"
-                onClick={async () => {
-                  if (pedidoEditando.pedido_id === 0) {
-                    const { error } = await supabase.from("pedidos").insert({
-                      vr_liquido: pedidoEditando.vr_liquido,
-                      forma_pagamento_id: formaPagamento.forma_pagamento_id,
-                    });
-
-                    if (error) {
-                      setMensagemAviso(
-                        "Erro ao criar registro: " + error.message
-                      );
-                      setMostrarAviso(true);
-                      return;
-                    }
-                  } else {
-                    const { error } = await supabase
-                      .from("pedidos")
-                      .update({
-                        pedido_id: pedidoEditando.pedido_id,
-                        vr_liquido: pedidoEditando.vr_liquido,
-                        forma_pagamento_id: formaPagamento.forma_pagamento_id,
-                      })
-                      .eq("pedido_id", pedidoEditando.pedido_id);
-
-                    if (error) {
-                      setMensagemAviso(
-                        "Erro ao atualizar registro: " + error.message
-                      );
-                      setMostrarAviso(true);
-                      return;
-                    }
-                  }
-
-                  toast.success("Registro salvo com sucesso!");
-                  carregarPedidos();
-                  AoFecharForm();
-                }}
-              >
+              <Button className="cursor-pointer" onClick={aoSalvar}>
                 Salvar
               </Button>
             </div>
@@ -407,7 +408,7 @@ export function PedidosViewPage() {
 
   return (
     <div className="p-6">
-      {pedidoEditando ? FormularioRegistro() : ListaRegistros()}
+      {registroEditando ? FormularioRegistro() : ListaRegistros()}
 
       <ModalConfirmacao
         open={mostrarConfirmacao}

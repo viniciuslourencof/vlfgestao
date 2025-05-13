@@ -1,44 +1,9 @@
-import { ProdutoInterface } from "@/types/produto";
 import { supabase } from "../lib/subabase";
-import { PedidoType, PedidoItemType } from "@/types/pedido";
+import { PedidoItemType, PedidoType } from "@/types/pedido";
+import { PedidoItemServices } from "./pedidoItemServices";
 
 export class PedidoServices {
-  static adicionar(
-    carrinhoAtual: PedidoItemType[],
-    produto: ProdutoInterface
-  ): PedidoItemType[] {
-    const produtoExistente = carrinhoAtual.find(
-      (item) => item.produto_id === produto.produto_id
-    );
-
-    if (produtoExistente) {
-      return carrinhoAtual.map((item) =>
-        item.produto_id === produto.produto_id
-          ? {
-              ...item,
-              quantidade: item.quantidade + 1,
-              vr_item: (item.quantidade + 1) * item.vr_unit,
-            }
-          : item
-      );
-    } else {
-      const novoItem: PedidoItemType = {
-        pedido_item_id: 0, // valor padrão, você pode mudar quando salvar no banco
-        pedido_id: 0, // idem acima
-        produto_id: produto.produto_id,
-        quantidade: 1,
-        vr_unit: produto.preco_venda1,
-        vr_item: produto.preco_venda1,
-        produtos: {
-          dsc_produto: produto.dsc_produto,
-        },
-      };
-
-      return [...carrinhoAtual, novoItem];
-    }
-  }
-
-  static async buscarPedidos(): Promise<PedidoType[]> {
+  static async buscarRegistros(): Promise<PedidoType[]> {
     const { data, error } = await supabase
       .from("pedidos")
       .select("*, formas_pagamento(dsc_forma_pagamento)")
@@ -52,19 +17,115 @@ export class PedidoServices {
     return data;
   }
 
-  static async buscarItensDoPedido(
-    pedido_id: number
-  ): Promise<PedidoItemType[]> {
-    const { data, error } = await supabase
-      .from("pedidos_itens")
-      .select("*, produtos(dsc_produto)")
-      .eq("pedido_id", pedido_id);
+  static async inserir(
+    p_vr_liquido: number,
+    p_forma_pagamento_id: number
+  ): Promise<string | null> {
+    const { error } = await supabase.from("pedidos").insert({
+      vr_liquido: p_vr_liquido,
+      forma_pagamento_id: p_forma_pagamento_id,
+    });
 
     if (error) {
-      console.error("Erro ao buscar itens do pedido:", error.message);
-      return [];
+      return error.message;
     }
 
-    return data as PedidoItemType[];
+    return null;
+  }
+
+  static async inserirComRetorno(
+    p_vr_liquido: number,
+    p_forma_pagamento_id: number
+  ): Promise<{ pedido?: PedidoType; erro?: string | null }> {
+    const { data, error } = await supabase
+      .from("pedidos")
+      .insert({
+        vr_liquido: p_vr_liquido,
+        forma_pagamento_id: p_forma_pagamento_id,
+      })
+      .select("*") // ou selecione campos específicos se preferir
+      .single();
+
+    if (error || !data) {
+      return { erro: error?.message ?? "Erro ao inserir pedido" };
+    }
+
+    return { pedido: data, erro: null };
+  }
+
+  static async atualizar(
+    p_pedido_id: number,
+    p_vr_liquido: number,
+    p_forma_pagamento_id: number
+  ): Promise<string | null> {
+    const { error } = await supabase
+      .from("pedidos")
+      .update({
+        vr_liquido: p_vr_liquido,
+        forma_pagamento_id: p_forma_pagamento_id,
+      })
+      .eq("pedido_id", p_pedido_id);
+
+    if (error) {
+      return error.message;
+    }
+
+    return null;
+  }
+
+  static async deletar(p_id: number): Promise<string | null> {
+    const { error } = await supabase
+      .from("pedidos")
+      .delete()
+      .eq("pedido_id", p_id);
+
+    if (error) {
+      return error.message;
+    }
+
+    return null;
+  }
+
+  static async efetivarPedido(
+    carrinho: PedidoItemType[],
+    forma_pagamento_id: number
+  ): Promise<{ erro: string | null; pedido_id?: number }> {
+    if (!carrinho || carrinho.length === 0) {
+      return { erro: "Nenhum item encontrado no pedido." };
+    }
+
+    if (!forma_pagamento_id || forma_pagamento_id === 0) {
+      return { erro: "Forma de Pagamento não selecionada, verifique." };
+    }
+
+    const subtotal = carrinho.reduce(
+      (acc, item) => acc + item.vr_unit * item.quantidade,
+      0
+    );
+
+    const { pedido, erro } = await PedidoServices.inserirComRetorno(
+      subtotal,
+      forma_pagamento_id
+    );
+
+    if (erro || !pedido) {
+      return { erro: "Erro ao inserir pedido: " + erro };
+    }
+
+    const itens = carrinho.map((item) => ({
+      pedido_id: pedido.pedido_id,
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      vr_unit: item.vr_unit,
+      vr_item: item.vr_unit * item.quantidade,
+    }));
+
+    const itensError = await PedidoItemServices.inserir(itens);
+
+    if (itensError) {
+      return { erro: "Erro ao inserir itens do pedido: " + itensError };
+    }
+
+    return { erro: null, pedido_id: pedido.pedido_id };
   }
 }

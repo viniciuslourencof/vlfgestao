@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
-import { supabase } from "../lib/subabase";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
@@ -12,227 +11,231 @@ import { FormaPagamentoType } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "../services/formaPagamentoServices";
 
 export function FormasPagamentoViewPage() {
-  const [formasPagamento, setFormasPagamento] = useState<FormaPagamentoType[]>(
-    []
-  );
-  const [formaPagamentoEditando, setFormaPagamentoEditando] =
+  const [registros, setRegistros] = useState<FormaPagamentoType[]>([]);
+  const [registroEditando, setRegistroEditando] =
     useState<FormaPagamentoType | null>(null);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
-  const [formaPagamentoIDADeletar, setformaPagamentoIDADeletar] = useState<
-    number | null
-  >(null);
-  const [textoPesquisa, setTextoPesquisa] = useState<string>(""); // Aqui você gerencia o valor de busca
+  const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
+    null
+  );
+  const [textoPesquisa, setTextoPesquisa] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
 
-  const carregarFormasPagamento = async () => {
-    const resultado = await FormaPagamentoServices.buscarFormasPagamento();
-    setFormasPagamento(resultado);
-  };
+  const carregarRegistros = useCallback(async () => {
+    const resultado = await FormaPagamentoServices.buscarRegistros();
+    setRegistros(resultado);
+  }, []);
 
   useEffect(() => {
-    carregarFormasPagamento();
-  }, [carregarFormasPagamento()]);
+    carregarRegistros();
+  }, [carregarRegistros]);
 
   const aoInserir = () => {
-    setFormaPagamentoEditando({
-      forma_pagamento_id: 0,
-      dsc_forma_pagamento: "",
-    });
+    setRegistroEditando({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
   };
 
-  const aoEditar = (forma: FormaPagamentoType) => {
-    setFormaPagamentoEditando(forma);
+  const aoEditar = (p_registro: FormaPagamentoType) => {
+    setRegistroEditando(p_registro);
   };
 
-  const aoFecharForm = () => {
-    setFormaPagamentoEditando(null);
+  const aoFecharFormulario = () => {
+    setRegistroEditando(null);
   };
 
-  const aoClicarEmDeletar = (id: number) => {
-    setformaPagamentoIDADeletar(id);
+  const antesDeDeletar = (p_registro_id: number) => {
+    setRegistroIdADeletar(p_registro_id);
     setMostrarConfirmacao(true);
   };
 
   const aoDeletar = async () => {
-    if (!formaPagamentoIDADeletar) return;
+    if (!registroIdADeletar) return;
 
-    const { error } = await supabase
-      .from("formas_pagamento")
-      .delete()
-      .eq("forma_pagamento_id", formaPagamentoIDADeletar);
+    setMostrarConfirmacao(false);
+
+    const emUso = await FormaPagamentoServices.registroEmUso(
+      registroIdADeletar
+    );
+    if (emUso) {
+      setMensagemAviso("Registro em uso dentro de Pedidos, verifique!");
+      setMostrarAviso(true);
+      return;
+    }
+
+    const error = await FormaPagamentoServices.deletar(registroIdADeletar);
 
     if (error) {
-      setMensagemAviso("Erro ao apagar: " + error.message);
+      setMensagemAviso("Erro ao apagar registro: " + error);
       setMostrarAviso(true);
       return;
     }
 
     toast.success("Registro apagado com sucesso!");
-    setMostrarConfirmacao(false);
-    carregarFormasPagamento();
+    carregarRegistros();
   };
 
-  const formasFiltradas = formasPagamento.filter((e) =>
-    e.dsc_forma_pagamento.toLowerCase().includes(textoPesquisa.toLowerCase())
+  const aoSalvar = async () => {
+    if (!registroEditando) return;
+
+    if (!registroEditando.dsc_forma_pagamento.trim()) {
+      setMensagemAviso("Descrição não pode estar vazia.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    const duplicado = await FormaPagamentoServices.verificaDuplicidade(
+      registroEditando.dsc_forma_pagamento
+    );
+    if (duplicado) {
+      setMensagemAviso("Descrição já cadastrada, verifique.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    if (registroEditando.forma_pagamento_id === 0) {
+      const error = await FormaPagamentoServices.inserir(
+        registroEditando.dsc_forma_pagamento
+      );
+
+      if (error) {
+        setMensagemAviso("Erro ao inserir registro: " + error);
+        setMostrarAviso(true);
+        return;
+      }
+    } else {
+      const error = await FormaPagamentoServices.atualizar(
+        registroEditando.forma_pagamento_id,
+        registroEditando.dsc_forma_pagamento
+      );
+
+      if (error) {
+        setMensagemAviso("Erro ao atualizar registro: " + error);
+        setMostrarAviso(true);
+        return;
+      }
+    }
+
+    toast.success("Registro salvo com sucesso!");
+    carregarRegistros();
+    aoFecharFormulario();
+  };
+
+  const registrosFiltrados = registros.filter((registro) =>
+    registro.dsc_forma_pagamento
+      .toLowerCase()
+      .includes(textoPesquisa.toLowerCase())
   );
+
+  function ListaRegistros() {
+    return (
+      <>
+        <h1 className="text-2xl font-bold">Categorias</h1>
+        <Input
+          type="text"
+          placeholder="Pesquisar registros..."
+          className="w-full my-4 bg-white"
+          value={textoPesquisa}
+          onChange={(e) => setTextoPesquisa(e.target.value)}
+        />
+        <div className="flex items-center mb-4">
+          <div className="flex gap-2">
+            <Button onClick={aoInserir} className="cursor-pointer">
+              <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
+            </Button>
+            <Button onClick={carregarRegistros} className="cursor-pointer">
+              <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
+              <span className="max-[400px]:hidden">Atualizar</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {registrosFiltrados.map((registro) => (
+            <Card
+              key={registro.forma_pagamento_id}
+              className="p-4 flex flex-col justify-between"
+            >
+              <div>
+                <h2 className="font-semibold text-lg">
+                  {registro.dsc_forma_pagamento}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Código: {registro.forma_pagamento_id}
+                </p>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => aoEditar(registro)}
+                  className="cursor-pointer"
+                >
+                  <Pencil className="w-4 h-4 mr-1" /> Editar
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => antesDeDeletar(registro.forma_pagamento_id)}
+                  className="cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" /> Apagar
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  function FormularioRegistro() {
+    return (
+      <>
+        {registroEditando ? (
+          <Card className=" w-full h-full mx-auto p-6">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">
+                {registroEditando.forma_pagamento_id === 0
+                  ? "Novo Registro"
+                  : "Editar Registro"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="descricao">Descrição da categoria</Label>
+                <Input
+                  id="descricao"
+                  value={registroEditando.dsc_forma_pagamento}
+                  onChange={(e) =>
+                    setRegistroEditando((prev) =>
+                      prev ? { ...prev, dsc_forma_pagamento: e.target.value } : prev
+                    )
+                  }
+                  placeholder="Ex: Cartão de Débito, Dinheiro, etc."
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={aoFecharFormulario}
+                  className="cursor-pointer"
+                >
+                  Cancelar
+                </Button>
+                <Button className="cursor-pointer" onClick={aoSalvar}>
+                  Salvar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <div className="p-6">
-      {formaPagamentoEditando ? (
-        <Card className="w-full h-full mx-auto p-6">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">
-              {formaPagamentoEditando.forma_pagamento_id === 0
-                ? "Novo Registro"
-                : "Editar Registro"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="descricao">Descrição</Label>
-              <Input
-                id="descricao"
-                value={formaPagamentoEditando.dsc_forma_pagamento}
-                onChange={(e) =>
-                  setFormaPagamentoEditando((prev) =>
-                    prev
-                      ? { ...prev, dsc_forma_pagamento: e.target.value }
-                      : prev
-                  )
-                }
-                placeholder="Ex: Dinheiro, Cartão de Crédito, etc."
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={aoFecharForm}
-                className="cursor-pointer"
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="cursor-pointer"
-                onClick={async () => {
-                  if (!formaPagamentoEditando.dsc_forma_pagamento.trim()) {
-                    setMensagemAviso("Descrição não pode estar vazia.");
-                    setMostrarAviso(true);
-                    return;
-                  }
-
-                  console.log(formaPagamentoEditando)
-
-                  if (formaPagamentoEditando.forma_pagamento_id === 0) {
-                    const { error } = await supabase
-                      .from("formas_pagamento")
-                      .insert({
-                        dsc_forma_pagamento:
-                          formaPagamentoEditando.dsc_forma_pagamento,
-                      });
-
-                    if (error) {
-                      setMensagemAviso(
-                        "Erro ao inserir registro: " + error.message
-                      );
-                      setMostrarAviso(true);
-                      return;
-                    }
-                  } else {
-                    const { error } = await supabase
-                      .from("formas_pagamento")
-                      .update({
-                        dsc_forma_pagamento:
-                          formaPagamentoEditando.dsc_forma_pagamento,
-                      })
-                      .eq(
-                        "forma_pagamento_id",
-                        formaPagamentoEditando.forma_pagamento_id
-                      );
-
-                    if (error) {
-                      setMensagemAviso(
-                        "Erro ao atualizar registro: " + error.message
-                      );
-                      setMostrarAviso(true);
-                      return;
-                    }
-                  }
-
-                  toast.success("Registro salvo com sucesso!");
-                  carregarFormasPagamento();
-                  aoFecharForm();
-                }}
-              >
-                Salvar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <h1 className="text-2xl font-bold">Formas de Pagamento</h1>
-          <Input
-            type="text"
-            placeholder="Pesquisar registros..."
-            className="w-full my-4 bg-white"
-            value={textoPesquisa}
-            onChange={(e) => setTextoPesquisa(e.target.value)}
-          />
-
-          <div className="flex items-center mb-4">
-            <div className="flex gap-2">
-              <Button onClick={aoInserir} className="cursor-pointer">
-                <Plus className="w-4 h-4 mr-2" /> Novo
-              </Button>
-              <Button
-                onClick={carregarFormasPagamento}
-                className="cursor-pointer"
-              >
-                <RefreshCcw className="w-4 h-4 mr-2" />
-                <span className="max-[400px]:hidden">Atualizar</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {formasFiltradas.map((forma) => (
-              <Card
-                key={forma.forma_pagamento_id}
-                className="p-4 flex flex-col justify-between"
-              >
-                <div>
-                  <h2 className="font-semibold text-lg">
-                    {forma.dsc_forma_pagamento}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Código: {forma.forma_pagamento_id}
-                  </p>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    className="cursor-pointer"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => aoEditar(forma)}
-                  >
-                    <Pencil className="w-4 h-4 mr-1" /> Editar
-                  </Button>
-                  <Button
-                    className="cursor-pointer"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => aoClicarEmDeletar(forma.forma_pagamento_id)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" /> Apagar
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
-
+      {registroEditando ? FormularioRegistro() : ListaRegistros()}
       <ModalConfirmacao
         open={mostrarConfirmacao}
         onCancel={() => setMostrarConfirmacao(false)}

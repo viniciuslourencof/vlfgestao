@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ChevronsRight, ChevronsLeft, Trash2, Search } from "lucide-react";
-import { supabase } from "../lib/subabase";
 import ModalAviso from "@/components/modal-aviso";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -8,15 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
 import { FormaPagamentoType } from "../types/formaPagamento";
-import { PedidoItemType } from "../types/pedido";
-
-interface CartProps {
-  carrinho: PedidoItemType[];
-  onRemoveItem: (produtoId: number) => void;
-  carrinhoMinimizado: boolean;
-  setMinimized: (minimized: boolean) => void;
-  limpaCarrinho: () => void; //
-}
+import { CartPropsType } from "../types/pedido";
+import { PedidoServices } from "@/services/pedidoServices";
 
 export function Cart({
   carrinho,
@@ -24,7 +16,7 @@ export function Cart({
   carrinhoMinimizado: minimized,
   setMinimized,
   limpaCarrinho: resetCarrinho,
-}: CartProps) {
+}: CartPropsType) {
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
   const [formaPagamento, setformaPagamento] = useState<FormaPagamentoType>({
@@ -37,85 +29,30 @@ export function Cart({
 
   if (!carrinho) return;
 
-  // console.log(carrinho);
-
   const subtotal = carrinho.reduce(
     (acc, item) => acc + item.vr_unit * item.quantidade,
     0
   );
-  // const tax = subtotal * 0.05;
-  // const total = subtotal + tax;
 
   const total = subtotal;
 
-  async function finalizarPedido() {
-    if (!carrinho || carrinho.length == 0) {
-      setMensagemAviso("Nenhum item encontrado no pedido.");
-      setMostrarAviso(true);
-      return;
-    }
-
-    if (!formaPagamento || formaPagamento.forma_pagamento_id == 0) {
-      setMensagemAviso(
-        "Selecione a forma de pagamento antes de finalizar o pedido."
-      );
-      setMostrarAviso(true);
-      return;
-    }
-
-    const subtotal = carrinho.reduce(
-      (acc, item) => acc + item.vr_unit * item.quantidade,
-      0
+  const aoFinalizar = async () => {
+    const resultado = await PedidoServices.efetivarPedido(
+      carrinho,
+      formaPagamento.forma_pagamento_id
     );
 
-    // 1. Insere o pedido
-    const { data: pedido, error: pedidoError } = await supabase
-      .from("pedidos")
-      .insert([
-        {
-          forma_pagamento_id: formaPagamento.forma_pagamento_id,
-          vr_liquido: subtotal,
-        },
-      ])
-      .select()
-      .single();
-
-    if (pedidoError) {
-      setMensagemAviso("Erro ao inserir pedido: " + pedidoError);
+    if (resultado.erro) {
+      setMensagemAviso(resultado.erro);
       setMostrarAviso(true);
-
-      return;
-    }
-
-    // 2. Insere os itens do pedido
-    const itens = carrinho.map((item) => ({
-      pedido_id: pedido.pedido_id,
-      produto_id: item.produto_id,
-      quantidade: item.quantidade,
-      vr_unit: item.vr_unit,
-      vr_item: item.vr_unit * item.quantidade,
-    }));
-
-    const { error: itensError } = await supabase
-      .from("pedidos_itens")
-      .insert(itens);
-
-    if (itensError) {
-      setMensagemAviso("Erro ao inserir itens: " + itensError);
-      setMostrarAviso(true);
-
       return;
     }
 
     setMensagemAviso("Pedido finalizado com sucesso!");
     setMostrarAviso(true);
-
     resetCarrinho();
-    setformaPagamento({
-      forma_pagamento_id: 0,
-      dsc_forma_pagamento: "",
-    });
-  }
+    setformaPagamento({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
+  };
 
   return (
     <div
@@ -155,20 +92,6 @@ export function Cart({
 
       {!minimized && (
         <>
-          {/* <div className="p-4 border-b">
-            <div className="flex gap-2 mb-4">
-              <Button variant="secondary" className="flex-1 rounded-full">
-                Local
-              </Button>
-              <Button variant="outline" className="flex-1 rounded-full">
-                Retirada
-              </Button>
-              <Button variant="outline" className="flex-1 rounded-full">
-                Entrega
-              </Button>
-            </div>
-          </div> */}
-
           <div className="flex-1 overflow-auto p-4">
             {carrinho.length === 0 ? (
               <p className="text-gray-500">Seu carrinho está vazio.</p>
@@ -180,7 +103,9 @@ export function Cart({
                 >
                   {/* <div className="w-16 h-16 bg-gray-200 rounded-lg" /> */}
                   <div className="flex-1">
-                    <h4 className="text-sm font-medium">{item.produtos.dsc_produto}</h4>
+                    <h4 className="text-sm font-medium">
+                      {item.produtos ? item.produtos.dsc_produto : ""}
+                    </h4>
                     <div className="flex justify-between items-center mt-1">
                       <span className="text-black-600 font-bold">
                         R$ {item.vr_unit.toFixed(2)}
@@ -192,7 +117,7 @@ export function Cart({
                   </div>
                   <Button
                     onClick={() => onRemoveItem(item.produto_id)}
-                    className="text-red-500 hover:bg-red-700 hover:text-white cursor-pointer bg-red-500 text-white"
+                    className="hover:bg-red-700 hover:text-white cursor-pointer bg-red-500"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -207,10 +132,6 @@ export function Cart({
                 <span className="text-gray-600">Subtotal</span>
                 <span>R$ {subtotal.toFixed(2)}</span>
               </div>
-              {/* <div className="flex justify-between">
-                <span className="text-gray-600">Taxa (5%)</span>
-                <span>R$ {tax.toFixed(2)}</span>
-              </div> */}
               <div className="flex justify-between font-bold">
                 <span>Total</span>
                 <span>R$ {total.toFixed(2)}</span>
@@ -258,7 +179,7 @@ export function Cart({
 
             <Button
               className="w-full bg-gray-600 hover:bg-gray-700 text-white h-12 cursor-pointer"
-              onClick={finalizarPedido}
+              onClick={aoFinalizar}
             >
               Finalizar Pedido
             </Button>
