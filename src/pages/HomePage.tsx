@@ -6,19 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ProdutoInterface } from "../types/produto";
-import { CategoriaInterface } from "../types/categoria";
-import { CarrinhoItemInterface } from "../types/pedido";
+import { CategoriaType } from "../types/categoria";
+import { PedidoItemType } from "../types/pedido";
 import { CategoriaServices } from "../services/categoriaServices";
 import { ProdutoServices } from "../services/produtoServices";
 import { PedidoServices } from "@/services/pedidoServices";
 
 export function HomePage() {
-  const [categorias, setCategorias] = useState<CategoriaInterface[]>([]);
+  const [categorias, setCategorias] = useState<CategoriaType[]>([]);
   const [produtos, setProdutos] = useState<ProdutoInterface[]>([]);
   const [categoriaSelecionadaID, setCategoriaSelecionada] = useState<
     number | null
   >(null);
-  const [carrinho, setCarrinho] = useState<CarrinhoItemInterface[]>([]); // Inicialização correta
+  const [carrinho, setCarrinho] = useState<PedidoItemType[]>([]); // Inicialização correta
   const [carrinhoMinimizado, setCarrinhoMinimizado] = useState(true);
   const [textoPesquisa, setTextoPesquisa] = useState<string>("");
 
@@ -38,7 +38,7 @@ export function HomePage() {
 
     if (resultado) {
       setCategorias([
-        { categoria_id: null, dsc_categoria: "Todos" },
+        { categoria_id: 0, dsc_categoria: "Todos" },
         ...resultado,
       ]);
     }
@@ -69,61 +69,61 @@ export function HomePage() {
 
   const produtosFiltrados = produtos.filter((produto) =>
     produto.dsc_produto.toLowerCase().includes(textoPesquisa.toLowerCase())
-  );
+  );  
+
+  function ListaRegistros() {
+    return (
+      <>
+        <div className="px-6 pt-6">
+          <h1 className="text-2xl font-bold">PDV</h1>
+          <Input
+            type="text"
+            placeholder="Pesquisar registros..."
+            className="w-full my-4 bg-white "
+            value={textoPesquisa}
+            onChange={(e) => setTextoPesquisa(e.target.value)}
+          />
+          <CategoryFilter
+            categorias={categorias}
+            categoriaSelecionadaID={categoriaSelecionadaID}
+            onSelectCategoria={setCategoriaSelecionada}
+          />
+        </div>
+
+        <div
+          className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${
+            !carrinhoMinimizado ? "xl:pr-[400px]" : ""
+          }`}
+        >
+          {produtosFiltrados.map((produto) => (
+            <Card
+              key={produto.produto_id}
+              className="bg-white rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer p-0"
+              onClick={() => adicionarAoCarrinho(produto)}
+            >
+              <div className="p-4">
+                <h3 className="text-lg font-semibold">{produto.dsc_produto}</h3>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-600 font-semibold">
+                    R$ {produto.preco_venda1.toFixed(2)}
+                  </span>
+                  {produto.desconto > 0 && (
+                    <span className="text-sm text-gray-500">
+                      {produto.desconto}% DESC.
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <div className="px-6 pt-6">
-        <h1 className="text-2xl font-bold">PDV</h1>
-        <Input
-          type="text"
-          placeholder="Pesquisar registros..."
-          className="w-full my-4 bg-white "
-          value={textoPesquisa}
-          onChange={(e) => setTextoPesquisa(e.target.value)}
-        />
-        <CategoryFilter
-          categorias={categorias}
-          categoriaSelecionadaID={categoriaSelecionadaID}
-          onSelectCategoria={setCategoriaSelecionada} // Passa a função para atualizar categoria
-        />
-      </div>
-      <div
-        className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${
-          !carrinhoMinimizado ? "xl:pr-[400px]" : ""
-        }`}
-      >
-        {produtosFiltrados.map((produto) => (
-          <Card
-            key={produto.produto_id}
-            className="bg-white rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer p-0"
-            onClick={() => adicionarAoCarrinho(produto)}
-          >
-            {/* <img
-              src="https://via.placeholder.com/300" // Substitua com a URL da imagem do produto
-              alt={produto.dsc_produto}
-              className="w-full h-48 object-cover rounded-t-lg"
-            /> */}
-            <div className="p-4">
-              <h3 className="text-lg font-semibold">{produto.dsc_produto}</h3>
-              {/* <p className="text-gray-500 text-sm">
-                Preço: R${produto.preco_venda1.toFixed(2)}
-              </p> */}
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-gray-600 font-semibold">
-                  R$ {produto.preco_venda1.toFixed(2)}
-                </span>
-
-                {produto.desconto > 0 && (
-                  <span className="text-sm text-gray-500">
-                    {produto.desconto}% DESC.
-                  </span>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {ListaRegistros()}
 
       <div className="fixed top-0 right-0 h-full z-50">
         <Cart
@@ -149,7 +149,7 @@ export function HomePage() {
             </span>
           )}
         </Button>
-      )}      
+      )}
     </>
   );
 }

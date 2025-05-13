@@ -259,7 +259,10 @@ export function ProdutosPage({
     delete dadosFormLimpo.categorias;
     delete dadosFormLimpo.dsc_categoria;
 
-    if (dadosFormLimpo.categoria_id === "" || dadosFormLimpo.categoria_id === "0")
+    if (
+      dadosFormLimpo.categoria_id === "" ||
+      dadosFormLimpo.categoria_id === "0"
+    )
       delete dadosFormLimpo.categoria_id;
 
     if (dadosFormLimpo.produto_id === "" || dadosFormLimpo.produto_id === "0")
@@ -290,13 +293,13 @@ export function ProdutosPage({
       const composicoesTempComID = composicoesTemp.map((item) => ({
         ...item,
         produtopai_id: produtopai_id,
-      }));            
+      }));
 
       const composicoesTempLimpo = composicoesTempComID.map((item) => ({
         produtopai_id: Number(item.produtopai_id),
         produtofilho_id: Number(item.produtofilho_id),
         vr_custo: item.vr_custo === "" ? "0.00" : item.vr_custo,
-      }));      
+      }));
 
       const { error } = await supabase
         .from("produtos_composicao")
@@ -924,25 +927,24 @@ export function ProdutosPage({
                   </Button>
                 </div>
               </Card>
-
-              <div className="flex justify-end gap-2 mt-4">
-                {onClose && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onClose}
-                    className="cursor-pointer w-auto"
-                  >
-                    Cancelar
-                  </Button>
-                )}
-                <Button type="submit" className="cursor-pointer w-auto">
-                  Salvar
-                </Button>
-              </div>
             </form>
           </CardContent>
         </Card>
+        <div className="flex justify-end gap-2 mt-4">
+          {onClose && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="cursor-pointer w-auto"
+            >
+              Cancelar
+            </Button>
+          )}
+          <Button type="submit" className="cursor-pointer w-auto">
+            Salvar
+          </Button>
+        </div>
       </TabsContent>
       <ModalBuscaProduto
         open={abrirModalBusca}

@@ -1,15 +1,12 @@
 import { ProdutoInterface } from "@/types/produto";
-import { PedidoInterface } from "@/types/pedido";
 import { supabase } from "../lib/subabase";
-import { PedidoItemInterface } from "@/types/pedido";
-
-type CarrinhoItem = ProdutoInterface & { quantidade: number };
+import { PedidoType, PedidoItemType } from "@/types/pedido";
 
 export class PedidoServices {
   static adicionar(
-    carrinhoAtual: CarrinhoItem[],
+    carrinhoAtual: PedidoItemType[],
     produto: ProdutoInterface
-  ): CarrinhoItem[] {
+  ): PedidoItemType[] {
     const produtoExistente = carrinhoAtual.find(
       (item) => item.produto_id === produto.produto_id
     );
@@ -17,18 +14,34 @@ export class PedidoServices {
     if (produtoExistente) {
       return carrinhoAtual.map((item) =>
         item.produto_id === produto.produto_id
-          ? { ...item, quantidade: item.quantidade + 1 }
+          ? {
+              ...item,
+              quantidade: item.quantidade + 1,
+              vr_item: (item.quantidade + 1) * item.vr_unit,
+            }
           : item
       );
     } else {
-      return [...carrinhoAtual, { ...produto, quantidade: 1 }];
+      const novoItem: PedidoItemType = {
+        pedido_item_id: 0, // valor padrão, você pode mudar quando salvar no banco
+        pedido_id: 0, // idem acima
+        produto_id: produto.produto_id,
+        quantidade: 1,
+        vr_unit: produto.preco_venda1,
+        vr_item: produto.preco_venda1,
+        produtos: {
+          dsc_produto: produto.dsc_produto,
+        },
+      };
+
+      return [...carrinhoAtual, novoItem];
     }
   }
 
-  static async buscarPedidos(): Promise<PedidoInterface[]> {
+  static async buscarPedidos(): Promise<PedidoType[]> {
     const { data, error } = await supabase
       .from("pedidos")
-      .select("*")
+      .select("*, formas_pagamento(dsc_forma_pagamento)")
       .order("pedido_id", { ascending: false });
 
     if (error || !data) {
@@ -41,7 +54,7 @@ export class PedidoServices {
 
   static async buscarItensDoPedido(
     pedido_id: number
-  ): Promise<PedidoItemInterface[]> {
+  ): Promise<PedidoItemType[]> {
     const { data, error } = await supabase
       .from("pedidos_itens")
       .select("*, produtos(dsc_produto)")
@@ -52,32 +65,6 @@ export class PedidoServices {
       return [];
     }
 
-    return data as PedidoItemInterface[];
+    return data as PedidoItemType[];
   }
-
-  // static async buscarItensDoPedido(
-  //   pedido_id: number
-  // ): Promise<PedidoItemInterface[]> {
-  //   const { data, error } = await supabase
-  //     .from("pedidos_itens")
-  //     .select(
-  //       `
-  //     pedido_item_id,
-  //     pedido_id,
-  //     produto_id,
-  //     quantidade,
-  //     vr_unitario,
-  //     vr_total,
-  //     produtos (dsc_produto)
-  //   `
-  //     )
-  //     .eq("pedido_id", pedido_id);
-
-  //   if (error) {
-  //     console.error("Erro ao buscar itens do pedido:", error.message);
-  //     return [];
-  //   }
-
-  //   return data as PedidoItemInterface[];
-  // }
 }

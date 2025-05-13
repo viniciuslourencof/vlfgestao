@@ -7,25 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
-
-type FormaPagamentoType = {
-  forma_pagamento_id: number;
-  dsc_forma_pagamento: string;
-};
-
-interface CarrinhoItem {
-  produto_id: number;
-  dsc_produto: string;
-  preco_venda1: number;
-  quantidade: number;
-}
+import { FormaPagamentoType } from "../types/formaPagamento";
+import { PedidoItemType } from "../types/pedido";
 
 interface CartProps {
-  carrinho: CarrinhoItem[];
+  carrinho: PedidoItemType[];
   onRemoveItem: (produtoId: number) => void;
   carrinhoMinimizado: boolean;
   setMinimized: (minimized: boolean) => void;
-  limpaCarrinho: () => void; // 
+  limpaCarrinho: () => void; //
 }
 
 export function Cart({
@@ -47,8 +37,10 @@ export function Cart({
 
   if (!carrinho) return;
 
+  // console.log(carrinho);
+
   const subtotal = carrinho.reduce(
-    (acc, item) => acc + item.preco_venda1 * item.quantidade,
+    (acc, item) => acc + item.vr_unit * item.quantidade,
     0
   );
   // const tax = subtotal * 0.05;
@@ -72,7 +64,7 @@ export function Cart({
     }
 
     const subtotal = carrinho.reduce(
-      (acc, item) => acc + item.preco_venda1 * item.quantidade,
+      (acc, item) => acc + item.vr_unit * item.quantidade,
       0
     );
 
@@ -100,8 +92,8 @@ export function Cart({
       pedido_id: pedido.pedido_id,
       produto_id: item.produto_id,
       quantidade: item.quantidade,
-      vr_unit: item.preco_venda1,
-      vr_item: item.preco_venda1 * item.quantidade,
+      vr_unit: item.vr_unit,
+      vr_item: item.vr_unit * item.quantidade,
     }));
 
     const { error: itensError } = await supabase
@@ -188,10 +180,10 @@ export function Cart({
                 >
                   {/* <div className="w-16 h-16 bg-gray-200 rounded-lg" /> */}
                   <div className="flex-1">
-                    <h4 className="text-sm font-medium">{item.dsc_produto}</h4>
+                    <h4 className="text-sm font-medium">{item.produtos.dsc_produto}</h4>
                     <div className="flex justify-between items-center mt-1">
                       <span className="text-black-600 font-bold">
-                        R$ {item.preco_venda1.toFixed(2)}
+                        R$ {item.vr_unit.toFixed(2)}
                       </span>
                       <span className="text-sm text-gray-500">
                         {item.quantidade}x

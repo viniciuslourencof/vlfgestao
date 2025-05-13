@@ -8,6 +8,7 @@ import { CategoriasViewPage } from "./pages/CategoriasViewPage";
 import { FormasPagamentoViewPage } from "./pages/FormasPagamentoViewPage";
 import { PedidosViewPage } from "./pages/PedidosViewPage";
 import { LoginPage } from "./pages/LoginPage"; // Página de login
+// import { Footer } from "./components/footer";
 
 // App.tsx
 export function App() {
@@ -56,7 +57,8 @@ export function App() {
                   </Routes>
                 </main>
               </div>
-            </div>
+              {/* <Footer></Footer> */}
+            </div>            
           </>
         ) : (
           <Routes>
