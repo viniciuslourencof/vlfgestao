@@ -23,17 +23,17 @@ interface CarrinhoItem {
 interface CartProps {
   carrinho: CarrinhoItem[];
   onRemoveItem: (produtoId: number) => void;
-  minimized: boolean;
+  carrinhoMinimizado: boolean;
   setMinimized: (minimized: boolean) => void;
-  resetCarrinho: () => void; // <- nova prop
+  limpaCarrinho: () => void; // 
 }
 
 export function Cart({
   carrinho,
   onRemoveItem,
-  minimized,
+  carrinhoMinimizado: minimized,
   setMinimized,
-  resetCarrinho,
+  limpaCarrinho: resetCarrinho,
 }: CartProps) {
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");

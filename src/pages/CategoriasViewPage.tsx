@@ -5,67 +5,59 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { supabase } from "../lib/subabase";
-import { Confirmation } from "@/components/confirmation";
+import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-
-type CategoriaType = {
-  categoria_id: string;
-  dsc_categoria: string;
-};
+import { CategoriaType } from "../types/categoria";
+import { CategoriaServices } from "../services/categoriaServices";
 
 export function CategoriasViewPage() {
   const [categorias, setCategorias] = useState<CategoriaType[]>([]);
-  const [categoriaEditando, setCategoriaEditando] =
-    useState<CategoriaType | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [categoriaIdToDelete, setCategoriaIdToDelete] = useState<string | null>(
+  const [categoriaEditando, setCategoriaEditando] = useState<CategoriaType | null>(null);
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+  const [categoriaIdADeletar, setCategoriaIdADeletar] = useState<number | null>(
     null
   );
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [textoPesquisa, setTextoPesquisa] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
 
-  useEffect(() => {
-    getCategorias();
-  }, []);
-
-  async function getCategorias() {
-    const { data } = await supabase
-      .from("categorias")
-      .select("*")
-      .order("categoria_id", { ascending: false });
-
-    if (data) setCategorias(data);
-  }
-
-  const handleNew = () => {
-    setCategoriaEditando({ categoria_id: "0", dsc_categoria: "" });
+  const carregarCategorias = async () => {
+    const resultado = await CategoriaServices.buscarCategorias();
+    setCategorias(resultado);
   };
 
-  const handleEdit = (categoria: CategoriaType) => {
+  useEffect(() => {
+    carregarCategorias();
+  }, [carregarCategorias()]);
+
+  const aoInserir = () => {
+    setCategoriaEditando({ categoria_id: 0, dsc_categoria: "" });
+  };
+
+  const aoEditar = (categoria: CategoriaType) => {
     setCategoriaEditando(categoria);
   };
 
-  const handleCloseForm = () => {
+  const aoFecharFormulario = () => {
     setCategoriaEditando(null);
   };
 
-  const handleDeleteClick = (categoria_id: string) => {
-    setCategoriaIdToDelete(categoria_id);
-    setShowConfirmation(true);
+  const aoClicarEmDeletar = (categoria_id: number) => {
+    setCategoriaIdADeletar(categoria_id);
+    setMostrarConfirmacao(true);
   };
 
-  const handleDelete = async () => {
-    if (!categoriaIdToDelete) return;
+  const aoDeletar = async () => {
+    if (!categoriaIdADeletar) return;
 
     const { error } = await supabase
       .from("categorias")
       .delete()
-      .eq("categoria_id", categoriaIdToDelete);
+      .eq("categoria_id", categoriaIdADeletar);
 
     if (error) {
-      setMensagemAviso("Erro ao apagar categoria: " + error.message);
+      setMensagemAviso("Erro ao apagar registro: " + error.message);
       setMostrarAviso(true);
 
       return;
@@ -73,13 +65,14 @@ export function CategoriasViewPage() {
 
     toast.success("Registro apagado com sucesso!");
 
-    setShowConfirmation(false);
-    getCategorias();
+    setMostrarConfirmacao(false);
+    carregarCategorias();
   };
 
-  // Filtrando os produtos com base na busca (searchQuery)
   const categoriasFiltradas = categorias.filter((categoria) =>
-    categoria.dsc_categoria.toLowerCase().includes(searchQuery.toLowerCase())
+    categoria.dsc_categoria
+      .toLowerCase()
+      .includes(textoPesquisa.toLowerCase())
   );
 
   return (
@@ -88,7 +81,7 @@ export function CategoriasViewPage() {
         <Card className=" w-full h-full mx-auto p-6">
           <CardHeader>
             <CardTitle className="text-xl font-semibold">
-              {categoriaEditando.categoria_id === "0"
+              {categoriaEditando.categoria_id === 0
                 ? "Novo Registro"
                 : "Editar Registro"}
             </CardTitle>
@@ -110,7 +103,7 @@ export function CategoriasViewPage() {
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={handleCloseForm}
+                onClick={aoFecharFormulario}
                 className="cursor-pointer"
               >
                 Cancelar
@@ -124,14 +117,14 @@ export function CategoriasViewPage() {
                     return;
                   }
 
-                  if (categoriaEditando.categoria_id === "0") {
+                  if (categoriaEditando.categoria_id === 0) {
                     const { error } = await supabase.from("categorias").insert({
                       dsc_categoria: categoriaEditando.dsc_categoria,
                     });
 
                     if (error) {
                       setMensagemAviso(
-                        "Erro ao criar categoria: " + error.message
+                        "Erro ao inserir registro: " + error.message
                       );
                       setMostrarAviso(true);
                       return;
@@ -146,7 +139,7 @@ export function CategoriasViewPage() {
 
                     if (error) {
                       setMensagemAviso(
-                        "Erro ao atualizar categoria: " + error.message
+                        "Erro ao atualizar registro: " + error.message
                       );
                       setMostrarAviso(true);
                       return;
@@ -154,8 +147,8 @@ export function CategoriasViewPage() {
                   }
 
                   toast.success("Registro salvo com sucesso!");
-                  getCategorias();
-                  handleCloseForm();
+                  carregarCategorias();
+                  aoFecharFormulario();
                 }}
               >
                 Salvar
@@ -170,15 +163,15 @@ export function CategoriasViewPage() {
             type="text"
             placeholder="Pesquisar registros..."
             className="w-full my-4 bg-white"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={textoPesquisa}
+            onChange={(e) => setTextoPesquisa(e.target.value)}
           />
           <div className="flex items-center mb-4">
             <div className="flex gap-2">
-              <Button onClick={handleNew} className="cursor-pointer">
+              <Button onClick={aoInserir} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
               </Button>
-              <Button onClick={getCategorias} className="cursor-pointer">
+              <Button onClick={carregarCategorias} className="cursor-pointer">
                 <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
                 <span className="max-[400px]:hidden">Atualizar</span>
               </Button>
@@ -203,7 +196,7 @@ export function CategoriasViewPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEdit(categoria)}
+                    onClick={() => aoEditar(categoria)}
                     className="cursor-pointer"
                   >
                     <Pencil className="w-4 h-4 mr-1" /> Editar
@@ -211,7 +204,7 @@ export function CategoriasViewPage() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDeleteClick(categoria.categoria_id)}
+                    onClick={() => aoClicarEmDeletar(categoria.categoria_id)}
                     className="cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4 mr-1" /> Apagar
@@ -222,10 +215,10 @@ export function CategoriasViewPage() {
           </div>
         </>
       )}
-      <Confirmation
-        open={showConfirmation}
-        onCancel={() => setShowConfirmation(false)}
-        onConfirm={handleDelete}
+      <ModalConfirmacao
+        open={mostrarConfirmacao}
+        onCancel={() => setMostrarConfirmacao(false)}
+        onConfirm={aoDeletar}
       />
       <ModalAviso
         open={mostrarAviso}

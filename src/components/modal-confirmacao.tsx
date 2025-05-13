@@ -15,7 +15,7 @@ import {
     onConfirm: () => void
   }
   
-  export function Confirmation({ open, onCancel, onConfirm }: Props) {
+  export function ModalConfirmacao({ open, onCancel, onConfirm }: Props) {
     return (
       <AlertDialog open={open} onOpenChange={() => {}}>
         <AlertDialogContent>

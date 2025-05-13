@@ -5,61 +5,62 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { supabase } from "../lib/subabase";
-import { Confirmation } from "@/components/confirmation";
+import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-
-type FormaPagamentoType = {
-  forma_pagamento_id: string;
-  dsc_forma_pagamento: string;
-};
+import { FormaPagamentoType } from "../types/formaPagamento";
+import { FormaPagamentoServices } from "../services/formaPagamentoServices";
 
 export function FormasPagamentoViewPage() {
-  const [formas, setFormas] = useState<FormaPagamentoType[]>([]);
-  const [editando, setEditando] = useState<FormaPagamentoType | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>(""); // Aqui você gerencia o valor de busca
+  const [formasPagamento, setFormasPagamento] = useState<FormaPagamentoType[]>(
+    []
+  );
+  const [formaPagamentoEditando, setFormaPagamentoEditando] =
+    useState<FormaPagamentoType | null>(null);
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+  const [formaPagamentoIDADeletar, setformaPagamentoIDADeletar] = useState<
+    number | null
+  >(null);
+  const [textoPesquisa, setTextoPesquisa] = useState<string>(""); // Aqui você gerencia o valor de busca
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
 
+  const carregarFormasPagamento = async () => {
+    const resultado = await FormaPagamentoServices.buscarFormasPagamento();
+    setFormasPagamento(resultado);
+  };
+
   useEffect(() => {
-    getFormas();
-  }, []);
+    carregarFormasPagamento();
+  }, [carregarFormasPagamento()]);
 
-  async function getFormas() {
-    const { data } = await supabase
-      .from("formas_pagamento")
-      .select("*")
-      .order("forma_pagamento_id", { ascending: false });
-
-    if (data) setFormas(data);
-  }
-
-  const handleNew = () => {
-    setEditando({ forma_pagamento_id: "0", dsc_forma_pagamento: "" });
+  const aoInserir = () => {
+    setFormaPagamentoEditando({
+      forma_pagamento_id: 0,
+      dsc_forma_pagamento: "",
+    });
   };
 
-  const handleEdit = (forma: FormaPagamentoType) => {
-    setEditando(forma);
+  const aoEditar = (forma: FormaPagamentoType) => {
+    setFormaPagamentoEditando(forma);
   };
 
-  const handleCloseForm = () => {
-    setEditando(null);
+  const aoFecharForm = () => {
+    setFormaPagamentoEditando(null);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setIdToDelete(id);
-    setShowConfirmation(true);
+  const aoClicarEmDeletar = (id: number) => {
+    setformaPagamentoIDADeletar(id);
+    setMostrarConfirmacao(true);
   };
 
-  const handleDelete = async () => {
-    if (!idToDelete) return;
+  const aoDeletar = async () => {
+    if (!formaPagamentoIDADeletar) return;
 
     const { error } = await supabase
       .from("formas_pagamento")
       .delete()
-      .eq("forma_pagamento_id", idToDelete);
+      .eq("forma_pagamento_id", formaPagamentoIDADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar: " + error.message);
@@ -68,21 +69,21 @@ export function FormasPagamentoViewPage() {
     }
 
     toast.success("Registro apagado com sucesso!");
-    setShowConfirmation(false);
-    getFormas();
+    setMostrarConfirmacao(false);
+    carregarFormasPagamento();
   };
 
-  const formasFiltradas = formas.filter((e) =>
-    e.dsc_forma_pagamento.toLowerCase().includes(searchQuery.toLowerCase())
+  const formasFiltradas = formasPagamento.filter((e) =>
+    e.dsc_forma_pagamento.toLowerCase().includes(textoPesquisa.toLowerCase())
   );
 
   return (
     <div className="p-6">
-      {editando ? (
+      {formaPagamentoEditando ? (
         <Card className="w-full h-full mx-auto p-6">
           <CardHeader>
             <CardTitle className="text-xl font-semibold">
-              {editando.forma_pagamento_id === "0"
+              {formaPagamentoEditando.forma_pagamento_id === 0
                 ? "Novo Registro"
                 : "Editar Registro"}
             </CardTitle>
@@ -92,9 +93,9 @@ export function FormasPagamentoViewPage() {
               <Label htmlFor="descricao">Descrição</Label>
               <Input
                 id="descricao"
-                value={editando.dsc_forma_pagamento}
+                value={formaPagamentoEditando.dsc_forma_pagamento}
                 onChange={(e) =>
-                  setEditando((prev) =>
+                  setFormaPagamentoEditando((prev) =>
                     prev
                       ? { ...prev, dsc_forma_pagamento: e.target.value }
                       : prev
@@ -106,7 +107,7 @@ export function FormasPagamentoViewPage() {
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={handleCloseForm}
+                onClick={aoFecharForm}
                 className="cursor-pointer"
               >
                 Cancelar
@@ -114,42 +115,53 @@ export function FormasPagamentoViewPage() {
               <Button
                 className="cursor-pointer"
                 onClick={async () => {
-                  if (!editando.dsc_forma_pagamento.trim()) {
+                  if (!formaPagamentoEditando.dsc_forma_pagamento.trim()) {
                     setMensagemAviso("Descrição não pode estar vazia.");
                     setMostrarAviso(true);
                     return;
                   }
 
-                  if (editando.forma_pagamento_id === "0") {
+                  console.log(formaPagamentoEditando)
+
+                  if (formaPagamentoEditando.forma_pagamento_id === 0) {
                     const { error } = await supabase
-                      .from("forma_pagamento")
+                      .from("formas_pagamento")
                       .insert({
-                        dsc_forma_documento: editando.dsc_forma_pagamento,
+                        dsc_forma_pagamento:
+                          formaPagamentoEditando.dsc_forma_pagamento,
                       });
 
                     if (error) {
-                      setMensagemAviso("Erro ao criar: " + error.message);
+                      setMensagemAviso(
+                        "Erro ao inserir registro: " + error.message
+                      );
                       setMostrarAviso(true);
                       return;
                     }
                   } else {
                     const { error } = await supabase
-                      .from("forma_pagamento")
+                      .from("formas_pagamento")
                       .update({
-                        dsc_forma_documento: editando.dsc_forma_pagamento,
+                        dsc_forma_pagamento:
+                          formaPagamentoEditando.dsc_forma_pagamento,
                       })
-                      .eq("forma_pagamento_id", editando.forma_pagamento_id);
+                      .eq(
+                        "forma_pagamento_id",
+                        formaPagamentoEditando.forma_pagamento_id
+                      );
 
                     if (error) {
-                      setMensagemAviso("Erro ao atualizar: " + error.message);
+                      setMensagemAviso(
+                        "Erro ao atualizar registro: " + error.message
+                      );
                       setMostrarAviso(true);
                       return;
                     }
                   }
 
                   toast.success("Registro salvo com sucesso!");
-                  getFormas();
-                  handleCloseForm();
+                  carregarFormasPagamento();
+                  aoFecharForm();
                 }}
               >
                 Salvar
@@ -164,16 +176,19 @@ export function FormasPagamentoViewPage() {
             type="text"
             placeholder="Pesquisar registros..."
             className="w-full my-4 bg-white"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={textoPesquisa}
+            onChange={(e) => setTextoPesquisa(e.target.value)}
           />
 
           <div className="flex items-center mb-4">
             <div className="flex gap-2">
-              <Button onClick={handleNew} className="cursor-pointer">
+              <Button onClick={aoInserir} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2" /> Novo
               </Button>
-              <Button onClick={getFormas} className="cursor-pointer">
+              <Button
+                onClick={carregarFormasPagamento}
+                className="cursor-pointer"
+              >
                 <RefreshCcw className="w-4 h-4 mr-2" />
                 <span className="max-[400px]:hidden">Atualizar</span>
               </Button>
@@ -199,7 +214,7 @@ export function FormasPagamentoViewPage() {
                     className="cursor-pointer"
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEdit(forma)}
+                    onClick={() => aoEditar(forma)}
                   >
                     <Pencil className="w-4 h-4 mr-1" /> Editar
                   </Button>
@@ -207,7 +222,7 @@ export function FormasPagamentoViewPage() {
                     className="cursor-pointer"
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDeleteClick(forma.forma_pagamento_id)}
+                    onClick={() => aoClicarEmDeletar(forma.forma_pagamento_id)}
                   >
                     <Trash2 className="w-4 h-4 mr-1" /> Apagar
                   </Button>
@@ -218,10 +233,10 @@ export function FormasPagamentoViewPage() {
         </>
       )}
 
-      <Confirmation
-        open={showConfirmation}
-        onCancel={() => setShowConfirmation(false)}
-        onConfirm={handleDelete}
+      <ModalConfirmacao
+        open={mostrarConfirmacao}
+        onCancel={() => setMostrarConfirmacao(false)}
+        onConfirm={aoDeletar}
       />
       <ModalAviso
         open={mostrarAviso}

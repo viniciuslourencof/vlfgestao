@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ProdutosPage } from "./ProdutosPage";
 import { supabase } from "../lib/subabase";
-import { Confirmation } from "@/components/confirmation";
+import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import { toast } from "sonner";
 import ModalAviso from "@/components/modal-aviso";
 
@@ -255,7 +255,7 @@ export function ProdutosViewPage() {
           </div>
         </>
       )}
-      <Confirmation
+      <ModalConfirmacao
         open={showConfirmation}
         onCancel={() => setShowConfirmation(false)}
         onConfirm={handleDelete}

@@ -2,102 +2,63 @@ import { useEffect, useState } from "react";
 import { CategoryFilter } from "../components/category-filter";
 import { Cart } from "../components/cart"; // Importando o componente Cart
 import { ShoppingCart } from "lucide-react";
-import { supabase } from "../lib/subabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import ModalAviso from "@/components/modal-aviso";
-
-interface CategoriaInterface {
-  categoria_id: number | null;
-  dsc_categoria: string;
-}
-
-interface ProdutoInterface {
-  produto_id: number;
-  dsc_produto: string;
-  preco_venda1: number;
-  desconto: number;
-}
-
-interface CarrinhoItemInterface {
-  produto_id: number;
-  dsc_produto: string;
-  preco_venda1: number;
-  quantidade: number;
-}
+import { ProdutoInterface } from "../types/produto";
+import { CategoriaInterface } from "../types/categoria";
+import { CarrinhoItemInterface } from "../types/pedido";
+import { CategoriaServices } from "../services/categoriaServices";
+import { ProdutoServices } from "../services/produtoServices";
+import { PedidoServices } from "@/services/pedidoServices";
 
 export function HomePage() {
   const [categorias, setCategorias] = useState<CategoriaInterface[]>([]);
   const [produtos, setProdutos] = useState<ProdutoInterface[]>([]);
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState<
+  const [categoriaSelecionadaID, setCategoriaSelecionada] = useState<
     number | null
   >(null);
   const [carrinho, setCarrinho] = useState<CarrinhoItemInterface[]>([]); // Inicialização correta
-  const [minimized, setMinimized] = useState(true);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [mostrarAviso, setMostrarAviso] = useState(false);
-  const [mensagemAviso, setMensagemAviso] = useState("");
+  const [carrinhoMinimizado, setCarrinhoMinimizado] = useState(true);
+  const [textoPesquisa, setTextoPesquisa] = useState<string>("");
 
-  function resetCarrinho() {
+  function limpaCarrinho() {
     setCarrinho([]);
   }
 
+  const FiltrarProdutos = async () => {
+    const resultado = await ProdutoServices.buscaProdutosPorCategoria(
+      categoriaSelecionadaID
+    );
+    setProdutos(resultado);
+  };
+
+  const carregarCategorias = async () => {
+    const resultado = await CategoriaServices.buscarCategorias();
+
+    if (resultado) {
+      setCategorias([
+        { categoria_id: null, dsc_categoria: "Todos" },
+        ...resultado,
+      ]);
+    }
+  };
+
   useEffect(() => {
-    async function fetchCategorias() {
-      const { data, error } = await supabase.from("categorias").select("*");
-      if (data) {
-        setCategorias([
-          { categoria_id: null, dsc_categoria: "Todos" },
-          ...data,
-        ]);
-      } else {
-        setMensagemAviso("Erro ao carregar categorias: " + error.message);
-        setMostrarAviso(true);
-      }
-    }
-
-    fetchCategorias();
-    selecionarCategoria(categoriaSelecionada); // Filtro inicial
-  }, [categoriaSelecionada]); // Dependendo da categoria e busca
-
-  async function selecionarCategoria(categoria_id: number | null) {
-    let query = supabase
-      .from("produtos")
-      .select("produto_id, dsc_produto, preco_venda1, desconto");
-
-    if (categoria_id) {
-      query = query.eq("categoria_id", categoria_id);
-    }
-
-    const { data } = await query;
-    if (data) {
-      setProdutos(data);
-    } else {
-      console.error("Erro ao carregar registros");
-    }
-  }
+    carregarCategorias();
+    FiltrarProdutos();
+  }, [categoriaSelecionadaID]); // Dependendo da categoria e busca
 
   function adicionarAoCarrinho(produto: ProdutoInterface) {
     setCarrinho((prevCarrinho) => {
-      const produtoExistente = prevCarrinho.find(
-        (item) => item.produto_id === produto.produto_id
-      );
+      const novoCarrinho = PedidoServices.adicionar(prevCarrinho, produto);
 
-      if (produtoExistente) {
-        return prevCarrinho.map((item) =>
-          item.produto_id === produto.produto_id
-            ? { ...item, quantidade: item.quantidade + 1 }
-            : item
-        );
-      } else {
-        return [...prevCarrinho, { ...produto, quantidade: 1 }];
+      if (screen.width > 640 && screen.height > 480) {
+        setCarrinhoMinimizado(false);
       }
-    });
 
-    if (screen.width > 640 && screen.height > 480) {
-      setMinimized(false); // <-- abre o carrinho se não tiver no mobile
-    }
+      return novoCarrinho;
+    });
   }
 
   function removerDoCarrinho(produtoId: number) {
@@ -107,7 +68,7 @@ export function HomePage() {
   }
 
   const produtosFiltrados = produtos.filter((produto) =>
-    produto.dsc_produto.toLowerCase().includes(searchQuery.toLowerCase())
+    produto.dsc_produto.toLowerCase().includes(textoPesquisa.toLowerCase())
   );
 
   return (
@@ -118,18 +79,18 @@ export function HomePage() {
           type="text"
           placeholder="Pesquisar registros..."
           className="w-full my-4 bg-white "
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={textoPesquisa}
+          onChange={(e) => setTextoPesquisa(e.target.value)}
         />
         <CategoryFilter
           categorias={categorias}
-          categoriaSelecionada={categoriaSelecionada}
+          categoriaSelecionadaID={categoriaSelecionadaID}
           onSelectCategoria={setCategoriaSelecionada} // Passa a função para atualizar categoria
         />
       </div>
       <div
         className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${
-          !minimized ? "xl:pr-[400px]" : ""
+          !carrinhoMinimizado ? "xl:pr-[400px]" : ""
         }`}
       >
         {produtosFiltrados.map((produto) => (
@@ -168,17 +129,17 @@ export function HomePage() {
         <Cart
           carrinho={carrinho}
           onRemoveItem={removerDoCarrinho}
-          minimized={minimized}
-          setMinimized={setMinimized}
-          resetCarrinho={resetCarrinho}
+          carrinhoMinimizado={carrinhoMinimizado}
+          setMinimized={setCarrinhoMinimizado}
+          limpaCarrinho={limpaCarrinho}
         />
       </div>
 
-      {minimized && (
+      {carrinhoMinimizado && (
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setMinimized(false)}
+          onClick={() => setCarrinhoMinimizado(false)}
           className="fixed top-20 right-4 z-50 bg-gray-300 w-11 h-11 shadow-lg hover:bg-gray-400 cursor-pointer flex items-center justify-center"
         >
           <ShoppingCart className="w-8 h-8 text-gray-600" />
@@ -188,12 +149,7 @@ export function HomePage() {
             </span>
           )}
         </Button>
-      )}
-      <ModalAviso
-        open={mostrarAviso}
-        onClose={setMostrarAviso}
-        mensagem={mensagemAviso}
-      />
+      )}      
     </>
   );
 }
