@@ -7,13 +7,13 @@ import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { FormaPagamentoType } from "../types/formaPagamento";
-import { FormaPagamentoServices } from "../services/formaPagamentoServices";
+import { CategoriaType } from "../types/categoria";
+import { CategoriaServices } from "../services/categoriaServices";
 
-export function FormasPagamentoViewPage() {
-  const [registros, setRegistros] = useState<FormaPagamentoType[]>([]);
+export function CategoriasPage() {
+  const [registros, setRegistros] = useState<CategoriaType[]>([]);
   const [registroEditando, setRegistroEditando] =
-    useState<FormaPagamentoType | null>(null);
+    useState<CategoriaType | null>(null);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -23,19 +23,19 @@ export function FormasPagamentoViewPage() {
   const [mensagemAviso, setMensagemAviso] = useState("");
 
   const carregarRegistros = useCallback(async () => {
-    const resultado = await FormaPagamentoServices.buscarRegistros();
+    const resultado = await CategoriaServices.buscarRegistros();
     setRegistros(resultado);
-  }, []);
+  }, []); 
 
   useEffect(() => {
     carregarRegistros();
   }, [carregarRegistros]);
 
   const aoInserir = () => {
-    setRegistroEditando({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
+    setRegistroEditando({ categoria_id: 0, dsc_categoria: "" });
   };
 
-  const aoEditar = (p_registro: FormaPagamentoType) => {
+  const aoEditar = (p_registro: CategoriaType) => {
     setRegistroEditando(p_registro);
   };
 
@@ -53,16 +53,14 @@ export function FormasPagamentoViewPage() {
 
     setMostrarConfirmacao(false);
 
-    const emUso = await FormaPagamentoServices.registroEmUso(
-      registroIdADeletar
-    );
+    const emUso = await CategoriaServices.registroEmUso(registroIdADeletar);
     if (emUso) {
-      setMensagemAviso("Registro em uso dentro de Pedidos, verifique!");
+      setMensagemAviso("Registro em uso dentro de Produtos, verifique!");
       setMostrarAviso(true);
       return;
     }
 
-    const error = await FormaPagamentoServices.deletar(registroIdADeletar);
+    const error = await CategoriaServices.deletar(registroIdADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
@@ -71,20 +69,21 @@ export function FormasPagamentoViewPage() {
     }
 
     toast.success("Registro apagado com sucesso!");
+    
     carregarRegistros();
   };
 
   const aoSalvar = async () => {
     if (!registroEditando) return;
 
-    if (!registroEditando.dsc_forma_pagamento.trim()) {
+    if (!registroEditando.dsc_categoria.trim()) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
 
-    const duplicado = await FormaPagamentoServices.verificaDuplicidade(
-      registroEditando.dsc_forma_pagamento
+    const duplicado = await CategoriaServices.verificaDuplicidade(
+      registroEditando.dsc_categoria
     );
     if (duplicado) {
       setMensagemAviso("Descrição já cadastrada, verifique.");
@@ -92,9 +91,9 @@ export function FormasPagamentoViewPage() {
       return;
     }
 
-    if (registroEditando.forma_pagamento_id === 0) {
-      const error = await FormaPagamentoServices.inserir(
-        registroEditando.dsc_forma_pagamento
+    if (registroEditando.categoria_id === 0) {
+      const error = await CategoriaServices.inserir(
+        registroEditando.dsc_categoria
       );
 
       if (error) {
@@ -103,9 +102,9 @@ export function FormasPagamentoViewPage() {
         return;
       }
     } else {
-      const error = await FormaPagamentoServices.atualizar(
-        registroEditando.forma_pagamento_id,
-        registroEditando.dsc_forma_pagamento
+      const error = await CategoriaServices.atualizar(
+        registroEditando.categoria_id,
+        registroEditando.dsc_categoria
       );
 
       if (error) {
@@ -121,9 +120,7 @@ export function FormasPagamentoViewPage() {
   };
 
   const registrosFiltrados = registros.filter((registro) =>
-    registro.dsc_forma_pagamento
-      .toLowerCase()
-      .includes(textoPesquisa.toLowerCase())
+    registro.dsc_categoria.toLowerCase().includes(textoPesquisa.toLowerCase())
   );
 
   function ListaRegistros() {
@@ -152,15 +149,15 @@ export function FormasPagamentoViewPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {registrosFiltrados.map((registro) => (
             <Card
-              key={registro.forma_pagamento_id}
+              key={registro.categoria_id}
               className="p-4 flex flex-col justify-between"
             >
               <div>
                 <h2 className="font-semibold text-lg">
-                  {registro.dsc_forma_pagamento}
+                  {registro.dsc_categoria}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Código: {registro.forma_pagamento_id}
+                  Código: {registro.categoria_id}
                 </p>
               </div>
               <div className="flex gap-2 mt-4">
@@ -175,7 +172,7 @@ export function FormasPagamentoViewPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => antesDeDeletar(registro.forma_pagamento_id)}
+                  onClick={() => antesDeDeletar(registro.categoria_id)}
                   className="cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-1" /> Apagar
@@ -195,23 +192,23 @@ export function FormasPagamentoViewPage() {
           <Card className=" w-full h-full mx-auto p-6">
             <CardHeader>
               <CardTitle className="text-xl font-semibold">
-                {registroEditando.forma_pagamento_id === 0
+                {registroEditando.categoria_id === 0
                   ? "Novo Registro"
                   : "Editar Registro"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição da categoria</Label>
+                <Label htmlFor="descricao">Descrição da Categoria</Label>
                 <Input
                   id="descricao"
-                  value={registroEditando.dsc_forma_pagamento}
+                  value={registroEditando.dsc_categoria}
                   onChange={(e) =>
                     setRegistroEditando((prev) =>
-                      prev ? { ...prev, dsc_forma_pagamento: e.target.value } : prev
+                      prev ? { ...prev, dsc_categoria: e.target.value } : prev
                     )
                   }
-                  placeholder="Ex: Cartão de Débito, Dinheiro, etc."
+                  placeholder="Ex: Bebidas, Alimentos, etc."
                 />
               </div>
               <div className="flex justify-end gap-2">

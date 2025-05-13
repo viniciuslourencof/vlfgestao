@@ -27,7 +27,7 @@ import {
 import { formatarData } from "@/lib/formatarData";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
 
-export function PedidosViewPage() {
+export function PedidosPage() {
   const [registros, setRegistros] = useState<PedidoType[]>([]);
   const [registroEditando, setRegistroEditando] = useState<PedidoType | null>(
     null
@@ -139,6 +139,8 @@ export function PedidosViewPage() {
   const aoSalvar = async () => {
     if (!registroEditando) return;
 
+    registroEditando.forma_pagamento_id = formaPagamento.forma_pagamento_id;
+
     if (registroEditando.pedido_id === 0) {
       const error = await PedidoServices.inserir(
         registroEditando.vr_liquido,
@@ -155,7 +157,7 @@ export function PedidosViewPage() {
         registroEditando.pedido_id,
         registroEditando.vr_liquido,
         registroEditando.forma_pagamento_id
-      );
+      );      
 
       if (error) {
         setMensagemAviso("Erro ao atualizar registro: " + error);
@@ -204,13 +206,13 @@ export function PedidosViewPage() {
             >
               <div>
                 <h2 className="font-semibold text-lg">
-                  Pedido #{pedido.pedido_id}
+                  PEDIDO #{pedido.pedido_id}
                 </h2>
                 <p className="text-sm mt-1 text-gray-600">
                   Data: {formatarData(pedido.dt_inc)}
                 </p>
 
-                <p className="text-sm ">
+                <p className="text-sm mt-1 ">
                   Vr. Pedido: {pedido.vr_liquido.toFixed(2)}
                 </p>
 

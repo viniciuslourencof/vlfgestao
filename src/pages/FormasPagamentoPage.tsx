@@ -7,13 +7,13 @@ import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { FornecedorType } from "../types/fornecedor";
-import { FornecedorServices } from "../services/fornecedorServices";
+import { FormaPagamentoType } from "../types/formaPagamento";
+import { FormaPagamentoServices } from "../services/formaPagamentoServices";
 
-export function FornecedoresViewPage() {
-  const [registros, setRegistros] = useState<FornecedorType[]>([]);
+export function FormasPagamentoPage() {
+  const [registros, setRegistros] = useState<FormaPagamentoType[]>([]);
   const [registroEditando, setRegistroEditando] =
-    useState<FornecedorType | null>(null);
+    useState<FormaPagamentoType | null>(null);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -23,7 +23,7 @@ export function FornecedoresViewPage() {
   const [mensagemAviso, setMensagemAviso] = useState("");
 
   const carregarRegistros = useCallback(async () => {
-    const resultado = await FornecedorServices.buscarRegistros();
+    const resultado = await FormaPagamentoServices.buscarRegistros();
     setRegistros(resultado);
   }, []);
 
@@ -32,14 +32,10 @@ export function FornecedoresViewPage() {
   }, [carregarRegistros]);
 
   const aoInserir = () => {
-    setRegistroEditando({
-      fornecedor_id: 0,
-      dsc_razao_social: "",
-      dsc_nome_fantasia: "",
-    });
+    setRegistroEditando({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
   };
 
-  const aoEditar = (p_registro: FornecedorType) => {
+  const aoEditar = (p_registro: FormaPagamentoType) => {
     setRegistroEditando(p_registro);
   };
 
@@ -57,14 +53,16 @@ export function FornecedoresViewPage() {
 
     setMostrarConfirmacao(false);
 
-    // const emUso = await FornecedorServices.registroEmUso(registroIdADeletar);
-    // if (emUso) {
-    //   setMensagemAviso("Registro em uso dentro de Produtos, verifique!");
-    //   setMostrarAviso(true);
-    //   return;
-    // }
+    const emUso = await FormaPagamentoServices.registroEmUso(
+      registroIdADeletar
+    );
+    if (emUso) {
+      setMensagemAviso("Registro em uso dentro de Pedidos, verifique!");
+      setMostrarAviso(true);
+      return;
+    }
 
-    const error = await FornecedorServices.deletar(registroIdADeletar);
+    const error = await FormaPagamentoServices.deletar(registroIdADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
@@ -73,32 +71,30 @@ export function FornecedoresViewPage() {
     }
 
     toast.success("Registro apagado com sucesso!");
-
     carregarRegistros();
   };
 
   const aoSalvar = async () => {
     if (!registroEditando) return;
 
-    if (!registroEditando.dsc_razao_social.trim()) {
-      setMensagemAviso("Razão Social não pode estar vazia.");
+    if (!registroEditando.dsc_forma_pagamento.trim()) {
+      setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
 
-    const duplicado = await FornecedorServices.verificaDuplicidade(
-      registroEditando.dsc_razao_social
+    const duplicado = await FormaPagamentoServices.verificaDuplicidade(
+      registroEditando.dsc_forma_pagamento
     );
     if (duplicado) {
-      setMensagemAviso("Razão Social já cadastrada, verifique.");
+      setMensagemAviso("Descrição já cadastrada, verifique.");
       setMostrarAviso(true);
       return;
     }
 
-    if (registroEditando.fornecedor_id === 0) {
-      const error = await FornecedorServices.inserir(
-        registroEditando.dsc_razao_social,
-        registroEditando.dsc_nome_fantasia
+    if (registroEditando.forma_pagamento_id === 0) {
+      const error = await FormaPagamentoServices.inserir(
+        registroEditando.dsc_forma_pagamento
       );
 
       if (error) {
@@ -107,10 +103,9 @@ export function FornecedoresViewPage() {
         return;
       }
     } else {
-      const error = await FornecedorServices.atualizar(
-        registroEditando.fornecedor_id,
-        registroEditando.dsc_razao_social,
-        registroEditando.dsc_nome_fantasia
+      const error = await FormaPagamentoServices.atualizar(
+        registroEditando.forma_pagamento_id,
+        registroEditando.dsc_forma_pagamento
       );
 
       if (error) {
@@ -126,7 +121,7 @@ export function FornecedoresViewPage() {
   };
 
   const registrosFiltrados = registros.filter((registro) =>
-    registro.dsc_razao_social
+    registro.dsc_forma_pagamento
       .toLowerCase()
       .includes(textoPesquisa.toLowerCase())
   );
@@ -134,7 +129,7 @@ export function FornecedoresViewPage() {
   function ListaRegistros() {
     return (
       <>
-        <h1 className="text-2xl font-bold">Fornecedores</h1>
+        <h1 className="text-2xl font-bold">Formas de Pagamento</h1>
         <Input
           type="text"
           placeholder="Pesquisar registros..."
@@ -157,15 +152,15 @@ export function FornecedoresViewPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {registrosFiltrados.map((registro) => (
             <Card
-              key={registro.fornecedor_id}
+              key={registro.forma_pagamento_id}
               className="p-4 flex flex-col justify-between"
             >
               <div>
                 <h2 className="font-semibold text-lg">
-                  {registro.dsc_razao_social}
+                  {registro.dsc_forma_pagamento}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Código: {registro.fornecedor_id}
+                  Código: {registro.forma_pagamento_id}
                 </p>
               </div>
               <div className="flex gap-2 mt-4">
@@ -180,7 +175,7 @@ export function FornecedoresViewPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => antesDeDeletar(registro.fornecedor_id)}
+                  onClick={() => antesDeDeletar(registro.forma_pagamento_id)}
                   className="cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-1" /> Apagar
@@ -200,35 +195,23 @@ export function FornecedoresViewPage() {
           <Card className=" w-full h-full mx-auto p-6">
             <CardHeader>
               <CardTitle className="text-xl font-semibold">
-                {registroEditando.fornecedor_id === 0
+                {registroEditando.forma_pagamento_id === 0
                   ? "Novo Registro"
                   : "Editar Registro"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="descricao">Razão Social</Label>
+                <Label htmlFor="dsc_forma_pagamento">Descrição da Forma de Pagamento</Label>
                 <Input
-                  id="descricao"
-                  value={registroEditando.dsc_razao_social}
+                  id="dsc_forma_pagamento"
+                  value={registroEditando.dsc_forma_pagamento}
                   onChange={(e) =>
                     setRegistroEditando((prev) =>
-                      prev ? { ...prev, dsc_razao_social: e.target.value } : prev
+                      prev ? { ...prev, dsc_forma_pagamento: e.target.value } : prev
                     )
                   }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Nome Fantasia</Label>
-                <Input
-                  id="descricao"
-                  value={registroEditando.dsc_nome_fantasia}
-                  onChange={(e) =>
-                    setRegistroEditando((prev) =>
-                      prev ? { ...prev, dsc_nome_fantasia: e.target.value } : prev
-                    )
-                  }
-                  placeholder=""
+                  placeholder="Ex: Cartão de Débito, Dinheiro, etc."
                 />
               </div>
               <div className="flex justify-end gap-2">

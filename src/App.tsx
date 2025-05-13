@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { SidebarNav } from "./components/sidebar-nav";
 import { Header } from "./components/header";
 import { Routes, Route, useNavigate } from "react-router-dom";
-import { HomePage } from "./pages/HomePage";
+import { PDVPage } from "./pages/PDVPage";
 import { ProdutosViewPage } from "./pages/ProdutosViewPage";
-import { CategoriasViewPage } from "./pages/CategoriasViewPage";
-import { FormasPagamentoViewPage } from "./pages/FormasPagamentoViewPage";
-import { PedidosViewPage } from "./pages/PedidosViewPage";
-import { FornecedoresViewPage } from "./pages/FornecedoresViewPage";
+import { CategoriasPage } from "./pages/CategoriasPage";
+import { FormasPagamentoPage } from "./pages/FormasPagamentoPage";
+import { PedidosPage } from "./pages/PedidosPage";
+import { FornecedoresPage } from "./pages/FornecedoresPage";
 import { LoginPage } from "./pages/LoginPage"; // Página de login
 // import { Footer } from "./components/footer";
 
@@ -44,18 +44,18 @@ export function App() {
               <div className="flex-1 flex overflow-hidden">
                 <main className="flex-1 overflow-auto p-4">
                   <Routes>
-                    <Route path="/" element={<HomePage />} />
+                    <Route path="/" element={<PDVPage />} />
                     <Route path="/produtos" element={<ProdutosViewPage />} />
                     <Route
                       path="/categorias"
-                      element={<CategoriasViewPage />}
+                      element={<CategoriasPage />}
                     />
                     <Route
                       path="/formasPagamento"
-                      element={<FormasPagamentoViewPage />}
+                      element={<FormasPagamentoPage />}
                     />
-                    <Route path="/pedidos" element={<PedidosViewPage />} />
-                    <Route path="/fornecedores" element={<FornecedoresViewPage />} />
+                    <Route path="/pedidos" element={<PedidosPage />} />
+                    <Route path="/fornecedores" element={<FornecedoresPage />} />
                   </Routes>
                 </main>
               </div>

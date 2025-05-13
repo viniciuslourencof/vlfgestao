@@ -12,7 +12,7 @@ import { CategoriaServices } from "../services/categoriaServices";
 import { ProdutoServices } from "../services/produtoServices";
 import { PedidoItemServices } from "@/services/pedidoItemServices";
 
-export function HomePage() {
+export function PDVPage() {
   const [categorias, setCategorias] = useState<CategoriaType[]>([]);
   const [produtos, setProdutos] = useState<ProdutoInterface[]>([]);
   const [categoriaSelecionadaID, setCategoriaSelecionada] = useState<
