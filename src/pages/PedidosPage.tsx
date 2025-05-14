@@ -3,11 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, RefreshCcw, Search } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  RefreshCcw,
+  Search,
+  ClipboardList,
+} from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
+import ModalRelProdutosVendidos from "@/components/modal-rel-produtos-vendidos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import {
@@ -26,6 +34,24 @@ import {
 } from "@/components/ui/table";
 import { formatarData } from "@/lib/formatarData";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+const frameworks = [
+  {
+    value: "Vendas por Produtos por Período",
+    label: "Vendas por Produtos por Período",
+  },
+];
 
 export function PedidosPage() {
   const [registros, setRegistros] = useState<PedidoType[]>([]);
@@ -46,6 +72,15 @@ export function PedidosPage() {
   });
   const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
     useState(false);
+  const [abrirModalRelProdutosVendidos, setAbrirModalRelProdutosVendidos] =
+    useState(false);
+  const [filtro, setFiltro] = useState<{
+    dataInicio?: Date;
+    dataFim?: Date;
+    opcao: string;
+  }>({
+    opcao: "todos",
+  });
 
   const carregarRegistros = useCallback(async () => {
     const resultado = await PedidoServices.buscarRegistros();
@@ -157,7 +192,7 @@ export function PedidosPage() {
         registroEditando.pedido_id,
         registroEditando.vr_liquido,
         registroEditando.forma_pagamento_id
-      );      
+      );
 
       if (error) {
         setMensagemAviso("Erro ao atualizar registro: " + error);
@@ -195,6 +230,39 @@ export function PedidosPage() {
               <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
               <span className="max-[400px]:hidden">Atualizar</span>
             </Button>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  role="combobox"
+                  className="w-auto justify-between h-full cursor-pointer"
+                >
+                  <ClipboardList></ClipboardList>
+                  Relatórios
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className=" w-auto p-0" align="start">
+                <Command className="">
+                  <CommandList>
+                    <CommandGroup>
+                      {frameworks.map((framework) => (
+                        <CommandItem
+                          key={framework.value}
+                          value={framework.value}
+                          className="cursor-pointer"
+                          onSelect={() =>
+                            setAbrirModalRelProdutosVendidos(true)
+                          }
+                        >
+                          {framework.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -208,7 +276,7 @@ export function PedidosPage() {
                 <h2 className="font-semibold text-lg">
                   PEDIDO #{registro.pedido_id}
                 </h2>
-                <p className="text-sm mt-1 text-gray-600">
+                <p className="text-muted-foreground text-sm text-gray-600">
                   Data: {formatarData(registro.dt_inc)}
                 </p>
 
@@ -297,7 +365,7 @@ export function PedidosPage() {
                     </div>
                   </div>
 
-                  <Card className="p-4">
+                  <Card className="p-4 gap-3">
                     <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
                       Forma de Pagamento
                     </h3>
@@ -431,6 +499,14 @@ export function PedidosPage() {
             forma_pagamento_id: forma_pagamento.forma_pagamento_id,
             dsc_forma_pagamento: forma_pagamento.dsc_forma_pagamento,
           }));
+        }}
+      />
+      <ModalRelProdutosVendidos
+        open={abrirModalRelProdutosVendidos}
+        onClose={() => setAbrirModalRelProdutosVendidos(false)}
+        onConfirm={(data) => {
+          setFiltro(data);
+          console.log(filtro);
         }}
       />
     </div>

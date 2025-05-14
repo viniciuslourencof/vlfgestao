@@ -6,15 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
-import { toast } from "sonner";
-import { FormaPagamentoType } from "../types/formaPagamento";
-import { FormaPagamentoServices } from "../services/formaPagamentoServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { ClienteType } from "../types/cliente";
+import { ClienteServices } from "../services/clienteServices";
 
-export function FormasPagamentoPage() {
-  const [registros, setRegistros] = useState<FormaPagamentoType[]>([]);
+export function ClientesPage() {
+  const [registros, setRegistros] = useState<ClienteType[]>([]);
   const [registroEditando, setRegistroEditando] =
-    useState<FormaPagamentoType | null>(null);
+    useState<ClienteType | null>(null);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -24,7 +24,7 @@ export function FormasPagamentoPage() {
   const [mensagemAviso, setMensagemAviso] = useState("");
 
   const carregarRegistros = useCallback(async () => {
-    const resultado = await FormaPagamentoServices.buscarRegistros();
+    const resultado = await ClienteServices.buscarRegistros();
     setRegistros(resultado);
   }, []);
 
@@ -33,10 +33,14 @@ export function FormasPagamentoPage() {
   }, [carregarRegistros]);
 
   const aoInserir = () => {
-    setRegistroEditando({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
+    setRegistroEditando({
+      cliente_id: 0,
+      dsc_razao_social: "",
+      dsc_nome_fantasia: "",
+    });
   };
 
-  const aoEditar = (p_registro: FormaPagamentoType) => {
+  const aoEditar = (p_registro: ClienteType) => {
     setRegistroEditando(p_registro);
   };
 
@@ -54,16 +58,14 @@ export function FormasPagamentoPage() {
 
     setMostrarConfirmacao(false);
 
-    const emUso = await FormaPagamentoServices.registroEmUso(
-      registroIdADeletar
-    );
+    const emUso = await ClienteServices.registroEmUso(registroIdADeletar);
     if (emUso) {
-      setMensagemAviso("Registro em uso dentro de Pedidos, verifique!");
+      setMensagemAviso("Registro em uso dentro de Contas a Receber, verifique!");
       setMostrarAviso(true);
       return;
     }
 
-    const error = await FormaPagamentoServices.deletar(registroIdADeletar);
+    const error = await ClienteServices.deletar(registroIdADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
@@ -72,31 +74,33 @@ export function FormasPagamentoPage() {
     }
 
     toast.success("Registro apagado com sucesso!");
+
     carregarRegistros();
   };
 
   const aoSalvar = async () => {
     if (!registroEditando) return;
 
-    if (!registroEditando.dsc_forma_pagamento.trim()) {
-      setMensagemAviso("Descrição não pode estar vazia.");
+    if (!registroEditando.dsc_razao_social.trim()) {
+      setMensagemAviso("Razão Social não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
 
-    const duplicado = await FormaPagamentoServices.verificaDuplicidade(
-      registroEditando.forma_pagamento_id,
-      registroEditando.dsc_forma_pagamento
+    const duplicado = await ClienteServices.verificaDuplicidade(
+      registroEditando.cliente_id,
+      registroEditando.dsc_razao_social
     );
     if (duplicado) {
-      setMensagemAviso("Descrição já cadastrada, verifique.");
+      setMensagemAviso("Razão Social já cadastrada, verifique.");
       setMostrarAviso(true);
       return;
     }
 
-    if (registroEditando.forma_pagamento_id === 0) {
-      const error = await FormaPagamentoServices.inserir(
-        registroEditando.dsc_forma_pagamento
+    if (registroEditando.cliente_id === 0) {
+      const error = await ClienteServices.inserir(
+        registroEditando.dsc_razao_social,
+        registroEditando.dsc_nome_fantasia
       );
 
       if (error) {
@@ -105,9 +109,10 @@ export function FormasPagamentoPage() {
         return;
       }
     } else {
-      const error = await FormaPagamentoServices.atualizar(
-        registroEditando.forma_pagamento_id,
-        registroEditando.dsc_forma_pagamento
+      const error = await ClienteServices.atualizar(
+        registroEditando.cliente_id,
+        registroEditando.dsc_razao_social,
+        registroEditando.dsc_nome_fantasia
       );
 
       if (error) {
@@ -123,7 +128,7 @@ export function FormasPagamentoPage() {
   };
 
   const registrosFiltrados = registros.filter((registro) =>
-    registro.dsc_forma_pagamento
+    registro.dsc_razao_social
       .toLowerCase()
       .includes(textoPesquisa.toLowerCase())
   );
@@ -131,7 +136,7 @@ export function FormasPagamentoPage() {
   function ListaRegistros() {
     return (
       <>
-        <h1 className="text-2xl font-bold">Formas de Pagamento</h1>
+        <h1 className="text-2xl font-bold">Clientes</h1>
         <Input
           type="text"
           placeholder="Pesquisar registros..."
@@ -154,15 +159,18 @@ export function FormasPagamentoPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {registrosFiltrados.map((registro) => (
             <Card
-              key={registro.forma_pagamento_id}
+              key={registro.cliente_id}
               className="p-4 flex flex-col justify-between"
             >
               <div>
                 <h2 className="font-semibold text-lg">
-                  {registro.dsc_forma_pagamento}
+                  {registro.dsc_razao_social}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Código: {registro.forma_pagamento_id}
+                  Código: {registro.cliente_id}
+                </p>
+                <p className="text-sm text mt-1">
+                  Nome Fantasia: {registro.dsc_nome_fantasia}
                 </p>
               </div>
               <div className="flex gap-2 mt-4">
@@ -177,7 +185,7 @@ export function FormasPagamentoPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => antesDeDeletar(registro.forma_pagamento_id)}
+                  onClick={() => antesDeDeletar(registro.cliente_id)}
                   className="cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-1" /> Apagar
@@ -206,32 +214,45 @@ export function FormasPagamentoPage() {
               <Card className=" w-full h-full mx-auto p-6">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
-                    {registroEditando.forma_pagamento_id === 0
+                    {registroEditando.cliente_id === 0
                       ? "Novo Registro"
                       : "Editar Registro"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="dsc_forma_pagamento">
-                      Descrição da Forma de Pagamento
-                    </Label>
+                    <Label htmlFor="descricao">Razão Social</Label>
                     <Input
-                      id="dsc_forma_pagamento"
-                      value={registroEditando.dsc_forma_pagamento}
+                      id="descricao"
+                      value={registroEditando.dsc_razao_social}
                       onChange={(e) =>
                         setRegistroEditando((prev) =>
                           prev
-                            ? { ...prev, dsc_forma_pagamento: e.target.value }
+                            ? { ...prev, dsc_razao_social: e.target.value }
                             : prev
                         )
                       }
-                      placeholder="Ex: Cartão de Débito, Dinheiro, etc."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Nome Fantasia</Label>
+                    <Input
+                      id="descricao"
+                      value={registroEditando.dsc_nome_fantasia}
+                      onChange={(e) =>
+                        setRegistroEditando((prev) =>
+                          prev
+                            ? { ...prev, dsc_nome_fantasia: e.target.value }
+                            : prev
+                        )
+                      }
+                      placeholder=""
                     />
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
+
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"

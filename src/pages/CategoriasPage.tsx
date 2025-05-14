@@ -9,6 +9,7 @@ import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 import { CategoriaType } from "../types/categoria";
 import { CategoriaServices } from "../services/categoriaServices";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function CategoriasPage() {
   const [registros, setRegistros] = useState<CategoriaType[]>([]);
@@ -25,7 +26,7 @@ export function CategoriasPage() {
   const carregarRegistros = useCallback(async () => {
     const resultado = await CategoriaServices.buscarRegistros();
     setRegistros(resultado);
-  }, []); 
+  }, []);
 
   useEffect(() => {
     carregarRegistros();
@@ -69,7 +70,7 @@ export function CategoriasPage() {
     }
 
     toast.success("Registro apagado com sucesso!");
-    
+
     carregarRegistros();
   };
 
@@ -131,7 +132,7 @@ export function CategoriasPage() {
         <Input
           type="text"
           placeholder="Pesquisar registros..."
-          className="w-full my-4 bg-white"
+          className="w-full my-4"
           value={textoPesquisa}
           onChange={(e) => setTextoPesquisa(e.target.value)}
         />
@@ -190,42 +191,60 @@ export function CategoriasPage() {
     return (
       <>
         {registroEditando ? (
-          <Card className=" w-full h-full mx-auto p-6">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold">
-                {registroEditando.categoria_id === 0
-                  ? "Novo Registro"
-                  : "Editar Registro"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição da Categoria</Label>
-                <Input
-                  id="descricao"
-                  value={registroEditando.dsc_categoria}
-                  onChange={(e) =>
-                    setRegistroEditando((prev) =>
-                      prev ? { ...prev, dsc_categoria: e.target.value } : prev
-                    )
-                  }
-                  placeholder="Ex: Bebidas, Alimentos, etc."
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={aoFecharFormulario}
-                  className="cursor-pointer"
-                >
-                  Cancelar
-                </Button>
-                <Button className="cursor-pointer" onClick={aoSalvar}>
-                  Salvar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+
+        
+
+        
+
+          <Tabs
+            defaultValue="geral"
+            className="w-full h-full max-w-none mx-auto"
+          >
+            <TabsList className="flex space-x-2 bg-muted p-1 rounded-xl shadow-inner border">
+              <TabsTrigger value="geral">Geral</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="geral">
+              <Card className=" w-full h-full mx-auto p-6">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">
+                    {registroEditando.categoria_id === 0
+                      ? "Novo Registro"
+                      : "Editar Registro"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Descrição da Categoria</Label>
+                    <Input
+                      id="descricao"
+                      value={registroEditando.dsc_categoria}
+                      onChange={(e) =>
+                        setRegistroEditando((prev) =>
+                          prev
+                            ? { ...prev, dsc_categoria: e.target.value }
+                            : prev
+                        )
+                      }
+                      placeholder="Ex: Bebidas, Alimentos, etc."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={aoFecharFormulario}
+                className="cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button className="cursor-pointer" onClick={aoSalvar}>
+                Salvar
+              </Button>
+            </div>
+          </Tabs>        
         ) : null}
       </>
     );

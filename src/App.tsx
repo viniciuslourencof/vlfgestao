@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { SidebarNav } from "./components/sidebar-nav";
+import { MenuLateral } from "./components/menu-lateral";
 import { Header } from "./components/header";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { PDVPage } from "./pages/PDVPage";
@@ -10,6 +10,8 @@ import { PedidosPage } from "./pages/PedidosPage";
 import { FornecedoresPage } from "./pages/FornecedoresPage";
 import { ContasPagarPage } from "./pages/ContasPagarPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ContasReceberPage } from "./pages/ContasReceberPage";
+import { ClientesPage } from "./pages/ClientesPage";
 // import { Footer } from "./components/footer";
 
 // App.tsx
@@ -33,7 +35,7 @@ export function App() {
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       {isLoggedIn ? (
         <>
-          <SidebarNav
+          <MenuLateral
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />
@@ -54,6 +56,8 @@ export function App() {
                   <Route path="/pedidos" element={<PedidosPage />} />
                   <Route path="/fornecedores" element={<FornecedoresPage />} />
                   <Route path="/contasPagar" element={<ContasPagarPage />} />
+                  <Route path="/contasReceber" element={<ContasReceberPage />} />
+                  <Route path="/clientes" element={<ClientesPage />} />
                 </Routes>
               </main>
             </div>

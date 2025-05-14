@@ -9,22 +9,22 @@ import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ContaPagarType,
-  ContaPagarComRelacionamentoType,
-} from "../types/contasPagar";
-import { ContasPagarServices } from "../services/contasPagarServices";
+  ContaReceberType,
+  ContaReceberComRelacionamentoType,
+} from "../types/contaReceber";
+import { ContasReceberServices } from "../services/contaReceberServices";
 import { formatarData } from "@/lib/formatarData";
+import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
-import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
-import { FornecedorType } from "@/types/fornecedor";
-import { FornecedorServices } from "@/services/fornecedorServices";
-import ModalBuscaFornecedor from "@/components/modal-busca-fornecedor";
+import { ClienteType } from "@/types/cliente";
+import { ClienteServices } from "@/services/clienteServices";
+import ModalBuscaCliente from "@/components/modal-busca-cliente";
 
-export function ContasPagarPage() {
-  const [registros, setRegistros] = useState<ContaPagarType[]>([]);
+export function ContasReceberPage() {
+  const [registros, setRegistros] = useState<ContaReceberType[]>([]);
   const [registroEditando, setRegistroEditando] =
-    useState<ContaPagarType | null>(null);
+    useState<ContaReceberType | null>(null);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -34,30 +34,29 @@ export function ContasPagarPage() {
   const [mensagemAviso, setMensagemAviso] = useState("");
   const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
     useState(false);
-  const [abrirModalBuscaFornecedor, setAbrirModalBuscaFornecedor] =
-    useState(false);
+  const [abrirModalBuscaCliente, setAbrirModalBuscaCliente] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamentoType>({
     forma_pagamento_id: 0,
     dsc_forma_pagamento: "",
   });
-  const [fornecedor, setFornecedor] = useState<FornecedorType>({
-    fornecedor_id: 0,
+  const [cliente, setCliente] = useState<ClienteType>({
+    cliente_id: 0,
     dsc_razao_social: "",
     dsc_nome_fantasia: "",
   });
 
   const carregarRegistros = useCallback(async () => {
-    const resultado = await ContasPagarServices.buscarRegistros();
+    const resultado = await ContasReceberServices.buscarRegistros();
 
-    const resultadosFormatado: ContaPagarType[] = resultado.map(
-      (contaPagar: ContaPagarComRelacionamentoType) => ({
-        conta_pagar_id: contaPagar.conta_pagar_id,
-        fornecedor_id: contaPagar.fornecedor_id,
-        forma_pagamento_id: contaPagar.forma_pagamento_id,
-        vr_liquido: contaPagar.vr_liquido,
-        dt_inc: contaPagar.dt_inc,
-        dsc_forma_pagamento: contaPagar.formas_pagamento?.dsc_forma_pagamento,
-        dsc_razao_social: contaPagar.fornecedores?.dsc_razao_social,
+    const resultadosFormatado: ContaReceberType[] = resultado.map(
+      (contaReceber: ContaReceberComRelacionamentoType) => ({
+        conta_receber_id: contaReceber.conta_receber_id,
+        forma_pagamento_id: contaReceber.forma_pagamento_id,
+        cliente_id: contaReceber.cliente_id,
+        vr_liquido: contaReceber.vr_liquido,
+        dt_inc: contaReceber.dt_inc,
+        dsc_forma_pagamento: contaReceber.formas_pagamento?.dsc_forma_pagamento,
+        dsc_razao_social: contaReceber.clientes?.dsc_razao_social,
       })
     );
 
@@ -70,8 +69,8 @@ export function ContasPagarPage() {
 
   const aoInserir = () => {
     setRegistroEditando({
-      conta_pagar_id: 0,
-      fornecedor_id: 0,
+      conta_receber_id: 0,
+      cliente_id: 0,
       forma_pagamento_id: 0,
       vr_liquido: 0.0,
       dt_inc: new Date().toISOString(),
@@ -79,14 +78,14 @@ export function ContasPagarPage() {
 
     setFormaPagamento({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
 
-    setFornecedor({
-      fornecedor_id: 0,
+    setCliente({
+      cliente_id: 0,
       dsc_razao_social: "",
       dsc_nome_fantasia: "",
     });
   };
 
-  const aoEditar = async (p_registro: ContaPagarType) => {
+  const aoEditar = async (p_registro: ContaReceberType) => {
     setRegistroEditando(p_registro);
 
     if (p_registro.forma_pagamento_id !== 0) {
@@ -96,11 +95,11 @@ export function ContasPagarPage() {
       setFormaPagamento(formaPagamento);
     }
 
-    if (p_registro.fornecedor_id !== 0) {
-      const fornecedor = await FornecedorServices.buscarRegistro(
-        Number(p_registro.fornecedor_id)
+    if (p_registro.cliente_id !== 0) {
+      const cliente = await ClienteServices.buscarRegistro(
+        Number(p_registro.cliente_id)
       );
-      setFornecedor(fornecedor);
+      setCliente(cliente);
     }
   };
 
@@ -118,7 +117,7 @@ export function ContasPagarPage() {
 
     setMostrarConfirmacao(false);
 
-    // const emUso = await ContasPagarServices.registroEmUso(
+    // const emUso = await ContasReceberServices.registroEmUso(
     //   registroIdADeletar
     // );
     // if (emUso) {
@@ -127,9 +126,7 @@ export function ContasPagarPage() {
     //   return;
     // }
 
-    const error = await ContasPagarServices.deletar(registroIdADeletar);
-
-    console.log("oi");
+    const error = await ContasReceberServices.deletar(registroIdADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
@@ -148,21 +145,20 @@ export function ContasPagarPage() {
       setMensagemAviso("Valor da Conta não pode ser zero.");
       setMostrarAviso(true);
       return;
-    }    
+    }
 
+    if (cliente.cliente_id === 0) {
+      setMensagemAviso("Cliente não pode estar vazio.");
+      setMostrarAviso(true);
+      return;
+    }
     if (formaPagamento.forma_pagamento_id === 0) {
       setMensagemAviso("Forma de Pagamento não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
 
-    if (fornecedor.fornecedor_id === 0) {
-      setMensagemAviso("Fornecedor não pode estar vazio.");
-      setMostrarAviso(true);
-      return;
-    }
-
-    // const duplicado = await ContasPagarServices.verificaDuplicidade(
+    // const duplicado = await ContasReceberServices.verificaDuplicidade(
     //   registroEditando.forma_pagamento_id,
     //   registroEditando.dsc_forma_pagamento
     // );
@@ -173,11 +169,11 @@ export function ContasPagarPage() {
     // }
 
     registroEditando.forma_pagamento_id = formaPagamento.forma_pagamento_id;
-    registroEditando.fornecedor_id = fornecedor.fornecedor_id;
+    registroEditando.cliente_id = cliente.cliente_id;
 
-    if (registroEditando.conta_pagar_id === 0) {
-      const error = await ContasPagarServices.inserir(
-        registroEditando.fornecedor_id,
+    if (registroEditando.conta_receber_id === 0) {
+      const error = await ContasReceberServices.inserir(
+        registroEditando.cliente_id,
         registroEditando.forma_pagamento_id,
         Number(registroEditando.vr_liquido)
       );
@@ -188,9 +184,9 @@ export function ContasPagarPage() {
         return;
       }
     } else {
-      const error = await ContasPagarServices.atualizar(
-        registroEditando.conta_pagar_id,
-        registroEditando.fornecedor_id,
+      const error = await ContasReceberServices.atualizar(
+        registroEditando.conta_receber_id,
+        registroEditando.cliente_id,
         registroEditando.forma_pagamento_id,
         Number(registroEditando.vr_liquido)
       );
@@ -210,13 +206,13 @@ export function ContasPagarPage() {
   };
 
   const registrosFiltrados = registros.filter((registro) =>
-    registro.conta_pagar_id.toString().includes(textoPesquisa.toLowerCase())
+    registro.conta_receber_id.toString().includes(textoPesquisa.toLowerCase())
   );
 
   function ListaRegistros() {
     return (
       <>
-        <h1 className="text-2xl font-bold">Contas a Pagar</h1>
+        <h1 className="text-2xl font-bold">Contas a Receber</h1>
         <Input
           type="text"
           placeholder="Pesquisar registros..."
@@ -239,12 +235,12 @@ export function ContasPagarPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {registrosFiltrados.map((registro) => (
             <Card
-              key={registro.conta_pagar_id}
+              key={registro.conta_receber_id}
               className="p-4 flex flex-col justify-between"
             >
               <div>
                 <h2 className="font-semibold text-lg">
-                  CONTA #{registro.conta_pagar_id}
+                  CONTA #{registro.conta_receber_id}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   Data Emissão: {formatarData(registro.dt_inc)}
@@ -257,9 +253,7 @@ export function ContasPagarPage() {
                 <p className="text-sm ">
                   Forma de Pagamento: {registro.dsc_forma_pagamento}
                 </p>
-                <p className="text-sm ">
-                  Fornecedor: {registro.dsc_razao_social}
-                </p>
+                <p className="text-sm ">Cliente: {registro.dsc_razao_social}</p>
               </div>
               <div className="flex gap-2 mt-4">
                 <Button
@@ -273,7 +267,7 @@ export function ContasPagarPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => antesDeDeletar(registro.conta_pagar_id)}
+                  onClick={() => antesDeDeletar(registro.conta_receber_id)}
                   className="cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-1" /> Apagar
@@ -302,7 +296,7 @@ export function ContasPagarPage() {
               <Card className="w-full h-full mx-auto">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
-                    {registroEditando.conta_pagar_id === 0
+                    {registroEditando.conta_receber_id === 0
                       ? "Novo Registro"
                       : "Editar Registro"}
                   </CardTitle>
@@ -313,7 +307,7 @@ export function ContasPagarPage() {
                       <Label htmlFor="pedido_id">Código da Conta</Label>
                       <Input
                         id="pedido_id"
-                        value={registroEditando.conta_pagar_id}
+                        value={registroEditando.conta_receber_id}
                         readOnly
                       />
                     </div>
@@ -348,6 +342,44 @@ export function ContasPagarPage() {
 
                   <Card className="p-4 gap-3">
                     <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
+                      Cliente
+                    </h3>
+                    <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
+                      <div className="space-y-2 w-32">
+                        <Label htmlFor="cliente_id">Código</Label>
+                        <Input
+                          id="cliente_id"
+                          name="cliente_id"
+                          value={cliente.cliente_id}
+                          readOnly
+                        />
+                      </div>
+
+                      <div className="space-y-2 w-10">
+                        <Label className="invisible">Buscar</Label>
+                        <button
+                          onClick={() => setAbrirModalBuscaCliente(true)}
+                          type="button"
+                          className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
+                        >
+                          <Search className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="dsc_razao_social">Descrição</Label>
+                        <Input
+                          id="dsc_razao_social"
+                          name="dsc_razao_social"
+                          value={cliente.dsc_razao_social || ""}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-4 gap-3">
+                    <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
                       Forma de Pagamento
                     </h3>
                     <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
@@ -378,43 +410,6 @@ export function ContasPagarPage() {
                           id="dsc_forma_pagamento"
                           name="dsc_forma_pagamento"
                           value={formaPagamento.dsc_forma_pagamento || ""}
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-4 gap-3">
-                    <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
-                      Fornecedor
-                    </h3>
-                    <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
-                      <div className="space-y-2 w-32">
-                        <Label htmlFor="fornecedor_id">Código</Label>
-                        <Input
-                          id="fornecedor_id"
-                          name="fornecedor_id"
-                          value={fornecedor.fornecedor_id}
-                          readOnly
-                        />
-                      </div>
-
-                      <div className="space-y-2 w-10">
-                        <Label className="invisible">Buscar</Label>
-                        <button
-                          onClick={() => setAbrirModalBuscaFornecedor(true)}
-                          type="button"
-                          className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
-                        >
-                          <Search className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="dsc_forma_pagamento">Descrição</Label>
-                        <Input
-                          id="dsc_forma_pagamento"
-                          name="dsc_forma_pagamento"
-                          value={fornecedor.dsc_razao_social || ""}
                           readOnly
                         />
                       </div>
@@ -465,15 +460,16 @@ export function ContasPagarPage() {
           }));
         }}
       />
-      <ModalBuscaFornecedor
-        open={abrirModalBuscaFornecedor}
-        onClose={() => setAbrirModalBuscaFornecedor(false)}
-        onSelect={(fornecedor) => {
-          setFornecedor((prev) => ({
+
+      <ModalBuscaCliente
+        open={abrirModalBuscaCliente}
+        onClose={() => setAbrirModalBuscaCliente(false)}
+        onSelect={(cliente) => {
+          setCliente((prev) => ({
             ...prev,
-            fornecedor_id: fornecedor.fornecedor_id,
-            dsc_razao_social: fornecedor.dsc_razao_social,
-            dsc_nome_fantasia: fornecedor.dsc_nome_fantasia,
+            cliente_id: cliente.cliente_id,
+            dsc_razao_social: cliente.dsc_razao_social,
+            dsc_nome_fantasia: cliente.dsc_nome_fantasia,
           }));
         }}
       />

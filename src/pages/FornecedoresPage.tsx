@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { FornecedorType } from "../types/fornecedor";
 import { FornecedorServices } from "../services/fornecedorServices";
@@ -36,7 +37,7 @@ export function FornecedoresPage() {
       fornecedor_id: 0,
       dsc_razao_social: "",
       dsc_nome_fantasia: "",
-    });    
+    });
   };
 
   const aoEditar = (p_registro: FornecedorType) => {
@@ -57,12 +58,12 @@ export function FornecedoresPage() {
 
     setMostrarConfirmacao(false);
 
-    // const emUso = await FornecedorServices.registroEmUso(registroIdADeletar);
-    // if (emUso) {
-    //   setMensagemAviso("Registro em uso dentro de Produtos, verifique!");
-    //   setMostrarAviso(true);
-    //   return;
-    // }
+    const emUso = await FornecedorServices.registroEmUso(registroIdADeletar);
+    if (emUso) {
+      setMensagemAviso("Registro em uso dentro de Contas a Pagar, verifique!");
+      setMostrarAviso(true);
+      return;
+    }
 
     const error = await FornecedorServices.deletar(registroIdADeletar);
 
@@ -201,54 +202,70 @@ export function FornecedoresPage() {
     return (
       <>
         {registroEditando ? (
-          <Card className=" w-full h-full mx-auto p-6">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold">
-                {registroEditando.fornecedor_id === 0
-                  ? "Novo Registro"
-                  : "Editar Registro"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Razão Social</Label>
-                <Input
-                  id="descricao"
-                  value={registroEditando.dsc_razao_social}
-                  onChange={(e) =>
-                    setRegistroEditando((prev) =>
-                      prev ? { ...prev, dsc_razao_social: e.target.value } : prev
-                    )
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Nome Fantasia</Label>
-                <Input
-                  id="descricao"
-                  value={registroEditando.dsc_nome_fantasia}
-                  onChange={(e) =>
-                    setRegistroEditando((prev) =>
-                      prev ? { ...prev, dsc_nome_fantasia: e.target.value } : prev
-                    )
-                  }
-                  placeholder=""
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={aoFecharFormulario}
-                  className="cursor-pointer"
-                >
-                  Cancelar
-                </Button>
-                <Button className="cursor-pointer" onClick={aoSalvar}>
-                  Salvar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <Tabs
+            defaultValue="geral"
+            className="w-full h-full max-w-none mx-auto"
+          >
+            <TabsList className="flex space-x-2 bg-muted p-1 rounded-xl shadow-inner border">
+              <TabsTrigger value="geral">Geral</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="geral">
+              <Card className=" w-full h-full mx-auto p-6">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">
+                    {registroEditando.fornecedor_id === 0
+                      ? "Novo Registro"
+                      : "Editar Registro"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Razão Social</Label>
+                    <Input
+                      id="descricao"
+                      value={registroEditando.dsc_razao_social}
+                      onChange={(e) =>
+                        setRegistroEditando((prev) =>
+                          prev
+                            ? { ...prev, dsc_razao_social: e.target.value }
+                            : prev
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Nome Fantasia</Label>
+                    <Input
+                      id="descricao"
+                      value={registroEditando.dsc_nome_fantasia}
+                      onChange={(e) =>
+                        setRegistroEditando((prev) =>
+                          prev
+                            ? { ...prev, dsc_nome_fantasia: e.target.value }
+                            : prev
+                        )
+                      }
+                      placeholder=""
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={aoFecharFormulario}
+                className="cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button className="cursor-pointer" onClick={aoSalvar}>
+                Salvar
+              </Button>
+            </div>
+          </Tabs>
         ) : null}
       </>
     );

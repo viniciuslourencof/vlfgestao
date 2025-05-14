@@ -1,45 +1,64 @@
-import { Cuboid, LogOut, Store, Group, CreditCard, ShoppingCartIcon, ContactRound, BanknoteArrowDown } from "lucide-react";
+import {
+  Cuboid,
+  LogOut,
+  Store,
+  Group,
+  CreditCard,
+  ShoppingCartIcon,
+  ContactRound,
+  BanknoteArrowDown,
+  BanknoteArrowUp,  
+  Handshake,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 const navItems = [
-  { icon: Store, 
-    label: "PDV",     
-    path: "/" },
+  { icon: Store, label: "PDV", path: "/" },
   {
     icon: Cuboid,
-    label: "Produtos",    
+    label: "Produtos",
     path: "/produtos",
   },
   {
     icon: Group,
-    label: "Categorias",    
+    label: "Categorias",
     path: "/categorias",
   },
-    {
+  {
     icon: CreditCard,
-    label: "Formas de Pagamento",    
+    label: "Formas de Pagamento",
     path: "/formasPagamento",
-  },  
-    {
+  },
+  {
     icon: ShoppingCartIcon,
-    label: "Pedidos",    
+    label: "Pedidos",
     path: "/pedidos",
   },
-    {
+  {
     icon: ContactRound,
-    label: "Fornecedores",    
+    label: "Fornecedores",
     path: "/fornecedores",
   },
-    {
+  {
+    icon: Handshake,
+    label: "Clientes",
+    path: "/clientes",
+  },
+  {
     icon: BanknoteArrowDown,
-    label: "Contas a Pagar",    
+    label: "Contas a Pagar",
     path: "/contasPagar",
+  },
+  {
+    icon: BanknoteArrowUp,
+    label: "Contas a Receber",
+    path: "/contasReceber",
   },
 ];
 
-export function SidebarNav({
+export function MenuLateral({
   isOpen,
   onClose,
 }: {

@@ -138,7 +138,7 @@ export function Cart({
               </div>
             </div>
 
-            <Card className="p-4 mb-4">
+            <Card className="p-4 gap-3 mb-4">
               <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
                 Forma de Pagamento
               </h3>
@@ -159,7 +159,7 @@ export function Cart({
                   <button
                     onClick={() => setAbrirModalBuscaFormaPagamento(true)}
                     type="button"
-                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
+                    className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
                   >
                     <Search className="w-4 h-4" />
                   </button>
