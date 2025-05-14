@@ -217,7 +217,7 @@ export function PedidosPage() {
         <Input
           type="text"
           placeholder="Pesquisar registros..."
-          className="w-full my-4 bg-white"
+          className="w-full my-4"
           value={textoConsulta}
           onChange={(e) => setTextoConsulta(e.target.value)}
         />

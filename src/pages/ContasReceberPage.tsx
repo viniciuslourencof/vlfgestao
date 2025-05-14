@@ -205,6 +205,24 @@ export function ContasReceberPage() {
     aoFecharFormulario();
   };
 
+  const aoEditarCampoNumerico = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let novoValor = e.target.value
+      .replace(/[^0-9.,]/g, "") // Remove letras e símbolos inválidos
+      .replace(",", "."); // Converte vírgula para ponto
+
+    if (novoValor.includes(".")) {
+      const [inteiro, decimal] = novoValor.split(".");
+      novoValor = inteiro + "." + decimal.slice(0, 2); // Limita a 2 casas decimais
+    }
+
+    if (registroEditando) {
+      setRegistroEditando({
+        ...registroEditando,
+        vr_liquido: novoValor,
+      });
+    }
+  };
+
   const registrosFiltrados = registros.filter((registro) =>
     registro.conta_receber_id.toString().includes(textoPesquisa.toLowerCase())
   );
@@ -216,7 +234,7 @@ export function ContasReceberPage() {
         <Input
           type="text"
           placeholder="Pesquisar registros..."
-          className="w-full my-4 bg-white"
+          className="w-full my-4"
           value={textoPesquisa}
           onChange={(e) => setTextoPesquisa(e.target.value)}
         />
@@ -327,15 +345,7 @@ export function ContasReceberPage() {
                         id="vr_liquido"
                         name="vr_liquido"
                         value={registroEditando.vr_liquido ?? ""}
-                        onChange={(e) => {
-                          const valor = e.target.value.replace(",", ".");
-                          if (registroEditando) {
-                            setRegistroEditando({
-                              ...registroEditando,
-                              vr_liquido: valor,
-                            });
-                          }
-                        }}
+                        onChange={aoEditarCampoNumerico}
                       />
                     </div>
                   </div>

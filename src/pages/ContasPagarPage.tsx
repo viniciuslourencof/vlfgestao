@@ -148,7 +148,7 @@ export function ContasPagarPage() {
       setMensagemAviso("Valor da Conta não pode ser zero.");
       setMostrarAviso(true);
       return;
-    }    
+    }
 
     if (formaPagamento.forma_pagamento_id === 0) {
       setMensagemAviso("Forma de Pagamento não pode estar vazia.");
@@ -209,6 +209,24 @@ export function ContasPagarPage() {
     aoFecharFormulario();
   };
 
+  const aoEditarCampoNumerico = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let novoValor = e.target.value
+      .replace(/[^0-9.,]/g, "") // Remove letras e símbolos inválidos
+      .replace(",", "."); // Converte vírgula para ponto
+
+    if (novoValor.includes(".")) {
+      const [inteiro, decimal] = novoValor.split(".");
+      novoValor = inteiro + "." + decimal.slice(0, 2); // Limita a 2 casas decimais
+    }
+
+    if (registroEditando) {
+      setRegistroEditando({
+        ...registroEditando,
+        vr_liquido: novoValor,
+      });
+    }
+  };
+
   const registrosFiltrados = registros.filter((registro) =>
     registro.conta_pagar_id.toString().includes(textoPesquisa.toLowerCase())
   );
@@ -220,7 +238,7 @@ export function ContasPagarPage() {
         <Input
           type="text"
           placeholder="Pesquisar registros..."
-          className="w-full my-4 bg-white"
+          className="w-full my-4"
           value={textoPesquisa}
           onChange={(e) => setTextoPesquisa(e.target.value)}
         />
@@ -333,15 +351,7 @@ export function ContasPagarPage() {
                         id="vr_liquido"
                         name="vr_liquido"
                         value={registroEditando.vr_liquido ?? ""}
-                        onChange={(e) => {
-                          const valor = e.target.value.replace(",", ".");
-                          if (registroEditando) {
-                            setRegistroEditando({
-                              ...registroEditando,
-                              vr_liquido: valor,
-                            });
-                          }
-                        }}
+                        onChange={aoEditarCampoNumerico}
                       />
                     </div>
                   </div>

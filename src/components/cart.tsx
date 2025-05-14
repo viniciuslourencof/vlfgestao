@@ -56,7 +56,7 @@ export function Cart({
 
   return (
     <div
-      className={`bg-white border-t md:border-l flex flex-col h-[600px] md:h-full transition-all duration-300 ${
+      className={`bg-background border-t md:border-l flex flex-col h-[600px] md:h-full transition-all duration-300 ${
         minimized ? "w-0 md:w-0" : "w-full md:w-[380px]"
       }`}
     >

@@ -177,7 +177,7 @@ export function ProdutosViewPage() {
           <Input
             type="text"
             placeholder="Pesquisar registros..."
-            className="w-full my-4 bg-white"
+            className="w-full my-4"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

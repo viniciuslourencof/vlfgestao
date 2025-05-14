@@ -9,6 +9,7 @@ import {
   BanknoteArrowDown,
   BanknoteArrowUp,  
   Handshake,
+  ChartColumn
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -55,6 +56,11 @@ const navItems = [
     icon: BanknoteArrowUp,
     label: "Contas a Receber",
     path: "/contasReceber",
+  },
+    {
+    icon: ChartColumn,
+    label: "Resumo Financeiro",
+    path: "/resumoFinanceiro",
   },
 ];
 

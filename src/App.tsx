@@ -12,6 +12,7 @@ import { ContasPagarPage } from "./pages/ContasPagarPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ContasReceberPage } from "./pages/ContasReceberPage";
 import { ClientesPage } from "./pages/ClientesPage";
+import { ResumoFinanceiroPage } from "./pages/ResumoFinanceiroPage";
 // import { Footer } from "./components/footer";
 
 // App.tsx
@@ -58,6 +59,7 @@ export function App() {
                   <Route path="/contasPagar" element={<ContasPagarPage />} />
                   <Route path="/contasReceber" element={<ContasReceberPage />} />
                   <Route path="/clientes" element={<ClientesPage />} />
+                  <Route path="/resumoFinanceiro" element={<ResumoFinanceiroPage />} />
                 </Routes>
               </main>
             </div>

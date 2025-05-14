@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CategoryFilter } from "../components/category-filter";
+import { CategoryFilter } from "../components/filtros-categorias";
 import { Cart } from "../components/cart"; // Importando o componente Cart
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,7 @@ export function PDVPage() {
           <Input
             type="text"
             placeholder="Pesquisar registros..."
-            className="w-full my-4 bg-white "
+            className="w-full my-4"
             value={textoPesquisa}
             onChange={(e) => setTextoPesquisa(e.target.value)}
           />
@@ -91,14 +91,14 @@ export function PDVPage() {
         </div>
 
         <div
-          className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${
+          className={`transition-all duration-300 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6 ${
             !carrinhoMinimizado ? "xl:pr-[400px]" : ""
           }`}
         >
           {produtosFiltrados.map((produto) => (
             <Card
               key={produto.produto_id}
-              className="bg-white rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer p-0"
+              className="rounded-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 cursor-pointer p-0"
               onClick={() => adicionarAoCarrinho(produto)}
             >
               <div className="p-4">

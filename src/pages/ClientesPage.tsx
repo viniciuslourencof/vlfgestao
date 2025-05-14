@@ -140,7 +140,7 @@ export function ClientesPage() {
         <Input
           type="text"
           placeholder="Pesquisar registros..."
-          className="w-full my-4 bg-white"
+          className="w-full my-4"
           value={textoPesquisa}
           onChange={(e) => setTextoPesquisa(e.target.value)}
         />
