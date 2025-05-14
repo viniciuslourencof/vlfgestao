@@ -627,7 +627,7 @@ export function ProdutosPage({
                   <button
                     onClick={() => setAbrirModalBuscaCategoria(true)}
                     type="button"
-                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
+                    className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
                   >
                     <Search className="w-4 h-4" />
                   </button>
@@ -763,7 +763,7 @@ export function ProdutosPage({
                   <button
                     onClick={() => setAbrirModalBusca(true)}
                     type="button"
-                    className="w-10 h-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
+                    className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
                   >
                     <Search className="w-4 h-4" />
                   </button>
@@ -853,7 +853,7 @@ export function ProdutosPage({
 
                 {/* Conteúdo do grid ou tabela aqui */}
                 <Table>
-                  <TableHeader className="p-2 border rounded-md bg-gray-50">
+                  <TableHeader className="p-2 border rounded-md bg-gray-100">
                     <TableRow>
                       <TableCell className="font-semibold text-left px-4 py-2 text-gray-800">
                         Código
@@ -900,7 +900,7 @@ export function ProdutosPage({
                     ))}
                   </TableBody>
                 </Table>
-                <div className="mt-6 p-2 border rounded-md flex flex-wrap items-center gap-4 justify-between bg-gray-50">
+                <div className="mt-6 p-2 border rounded-md flex flex-wrap items-center gap-4 justify-between bg-gray-100">
                   <div className="text-sm font-medium">
                     Somatória do Custo:{" "}
                     <span className="text-base font-bold text-gray-800">

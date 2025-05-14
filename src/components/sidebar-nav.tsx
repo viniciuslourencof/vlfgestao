@@ -1,11 +1,11 @@
-import { Cuboid, LogOut, Home, Group, CreditCard, ShoppingCartIcon, ContactRound } from "lucide-react";
+import { Cuboid, LogOut, Store, Group, CreditCard, ShoppingCartIcon, ContactRound, BanknoteArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 const navItems = [
-  { icon: Home, 
-    label: "Inicio",     
+  { icon: Store, 
+    label: "PDV",     
     path: "/" },
   {
     icon: Cuboid,
@@ -31,6 +31,11 @@ const navItems = [
     icon: ContactRound,
     label: "Fornecedores",    
     path: "/fornecedores",
+  },
+    {
+    icon: BanknoteArrowDown,
+    label: "Contas a Pagar",    
+    path: "/contasPagar",
   },
 ];
 

@@ -84,6 +84,7 @@ export function FormasPagamentoPage() {
     }
 
     const duplicado = await FormaPagamentoServices.verificaDuplicidade(
+      registroEditando.forma_pagamento_id,
       registroEditando.dsc_forma_pagamento
     );
     if (duplicado) {

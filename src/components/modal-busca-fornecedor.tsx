@@ -7,45 +7,45 @@ import {
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/subabase";
-import { FormaPagamentoType, ModalBuscaFormaPagamentoPropsType } from "../types/formaPagamento";
+import { FornecedorType, ModalBuscaFornecedorPropsType } from "../types/fornecedor";
 
-export default function ModalBuscaFormaPagamento({
+export default function ModalBuscaFornecedor({
   open,
   onClose,
   onSelect,
-}: ModalBuscaFormaPagamentoPropsType) {
+}: ModalBuscaFornecedorPropsType) {
   const [termo, setTermo] = useState("");
-  const [resultados, setResultados] = useState<FormaPagamentoType[]>([]);
+  const [resultados, setResultados] = useState<FornecedorType[]>([]);
   const [focoIndex, setFocoIndex] = useState(0);
 
   useEffect(() => {
-    const fetchFormasPagamento = async (termo: string) => {
+    const fetchFornecedores = async (termo: string) => {
       const query = supabase
-        .from("formas_pagamento")
-        .select("forma_pagamento_id, dsc_forma_pagamento")
-        .order("dsc_forma_pagamento", { ascending: true });
+        .from("fornecedores")
+        .select("*")
+        .order("dsc_razao_social", { ascending: true });
 
       if (termo) {
-        query.ilike("dsc_forma_pagamento", `%${termo}%`);
+        query.ilike("dsc_razao_social", `%${termo}%`);
       }
 
       const { data, error } = await query;
 
       if (!error) {
         setResultados(data);
-        setFocoIndex(0); // resetar foco
+        setFocoIndex(0);
       }
     };
 
     if (open) {
-      fetchFormasPagamento(""); // busca inicial
+      fetchFornecedores("");
     }
 
     const delayDebounce = setTimeout(() => {
       if (termo.length > 1) {
-        fetchFormasPagamento(termo);
+        fetchFornecedores(termo);
       } else {
-        fetchFormasPagamento("");
+        fetchFornecedores("");
       }
     }, 400);
 
@@ -69,11 +69,11 @@ export default function ModalBuscaFormaPagamento({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Buscar Forma de Pagamento</DialogTitle>
+          <DialogTitle>Buscar Fornecedor</DialogTitle>
         </DialogHeader>
 
         <Input
-          placeholder="Digite o nome da forma de pagamento"
+          placeholder="Digite o nome do fornecedor"
           value={termo}
           onChange={(e) => setTermo(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -81,11 +81,11 @@ export default function ModalBuscaFormaPagamento({
 
         <div className="space-y-2 mt-4 max-h-[420px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-rounded-md scrollbar-thumb-gray-400 scrollbar-track-gray-200">
           {resultados.length > 0 ? (
-            resultados.map((forma, index) => (
+            resultados.map((fornecedor, index) => (
               <div
-                key={forma.forma_pagamento_id}
+                key={fornecedor.fornecedor_id}
                 onDoubleClick={() => {
-                  onSelect(forma);
+                  onSelect(fornecedor);
                   onClose(false);
                 }}
                 className={`p-3 rounded-md border cursor-pointer hover:bg-accent transition ${
@@ -94,17 +94,15 @@ export default function ModalBuscaFormaPagamento({
                 onMouseEnter={() => setFocoIndex(index)}
                 onClick={() => setFocoIndex(index)}
               >
-                <div className="font-semibold">
-                  {forma.dsc_forma_pagamento}
-                </div>
+                <div className="font-semibold">{fornecedor.dsc_razao_social}</div>
                 <div className="text-sm text-muted-foreground">
-                  Código: {forma.forma_pagamento_id}
+                  Código: {fornecedor.fornecedor_id}
                 </div>
               </div>
             ))
           ) : (
             <div className="p-3 text-center text-muted-foreground">
-              Nenhuma forma de pagamento encontrada
+              Nenhum fornecedor encontrado
             </div>
           )}
         </div>

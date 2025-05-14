@@ -29,7 +29,7 @@ export class FormaPagamentoServices {
   static async buscarRegistros(): Promise<FormaPagamentoType[]> {
     const { data, error } = await supabase
       .from("formas_pagamento")
-      .select("forma_pagamento_id, dsc_forma_pagamento")
+      .select("*")
       .order("dsc_forma_pagamento", { ascending: true });
 
     if (error || !data) {
@@ -39,11 +39,12 @@ export class FormaPagamentoServices {
     return data;
   }
 
-  static async verificaDuplicidade(p_dsc: string): Promise<boolean> {
+  static async verificaDuplicidade(p_id: number, p_dsc: string): Promise<boolean> {
     const { data, error } = await supabase
       .from("formas_pagamento")
       .select("forma_pagamento_id")
-      .eq("dsc_forma_pagamento", p_dsc);
+      .eq("dsc_forma_pagamento", p_dsc)
+      .neq("forma_pagamento_id", p_id);
 
     if (error) {
       return false;

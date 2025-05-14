@@ -83,6 +83,7 @@ export function CategoriasPage() {
     }
 
     const duplicado = await CategoriaServices.verificaDuplicidade(
+      registroEditando.categoria_id,
       registroEditando.dsc_categoria
     );
     if (duplicado) {

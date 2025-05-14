@@ -36,7 +36,7 @@ export function FornecedoresPage() {
       fornecedor_id: 0,
       dsc_razao_social: "",
       dsc_nome_fantasia: "",
-    });
+    });    
   };
 
   const aoEditar = (p_registro: FornecedorType) => {
@@ -87,6 +87,7 @@ export function FornecedoresPage() {
     }
 
     const duplicado = await FornecedorServices.verificaDuplicidade(
+      registroEditando.fornecedor_id,
       registroEditando.dsc_razao_social
     );
     if (duplicado) {
@@ -166,6 +167,9 @@ export function FornecedoresPage() {
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   Código: {registro.fornecedor_id}
+                </p>
+                <p className="text-sm text mt-1">
+                  Nome Fantasia: {registro.dsc_nome_fantasia}
                 </p>
               </div>
               <div className="flex gap-2 mt-4">

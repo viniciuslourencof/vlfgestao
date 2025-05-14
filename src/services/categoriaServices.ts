@@ -13,7 +13,7 @@ export class CategoriaServices {
     const { data, error } = await supabase
       .from("categorias")
       .select("categoria_id, dsc_categoria")
-      .eq("categoria_id", p_id)
+      .eq("categoria_id", p_id)      
       .single();
 
     if (error || !data) {
@@ -29,7 +29,7 @@ export class CategoriaServices {
   static async buscarRegistros(): Promise<CategoriaType[]> {
     const { data, error } = await supabase
       .from("categorias")
-      .select("categoria_id, dsc_categoria")
+      .select("*")
       .order("dsc_categoria", { ascending: true });
 
     if (error || !data) {
@@ -39,11 +39,12 @@ export class CategoriaServices {
     return data;
   }
 
-  static async verificaDuplicidade(p_dsc: string): Promise<boolean> {
+  static async verificaDuplicidade(p_id: number, p_dsc: string): Promise<boolean> {
     const { data, error } = await supabase
       .from("categorias")
       .select("categoria_id")
-      .eq("dsc_categoria", p_dsc);
+      .eq("dsc_categoria", p_dsc)
+      .neq("categoria_id", p_id); 
 
     if (error) {
       return false;

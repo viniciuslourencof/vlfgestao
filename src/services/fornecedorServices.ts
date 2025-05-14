@@ -21,7 +21,7 @@ export class FornecedorServices {
       return {
         fornecedor_id: 0,
         dsc_razao_social: "",
-        dsc_nome_fantasia: ""
+        dsc_nome_fantasia: "",
       };
     }
 
@@ -41,11 +41,12 @@ export class FornecedorServices {
     return data;
   }
 
-  static async verificaDuplicidade(p_dsc: string): Promise<boolean> {
+  static async verificaDuplicidade(p_id: number, p_dsc: string): Promise<boolean> {
     const { data, error } = await supabase
       .from("fornecedores")
       .select("fornecedor_id")
-      .eq("dsc_razao_social", p_dsc);
+      .eq("dsc_razao_social", p_dsc)
+      .neq("fornecedor_id", p_id); 
 
     if (error) {
       return false;
@@ -54,24 +55,30 @@ export class FornecedorServices {
     return data.length > 0;
   }
 
-//   static async registroEmUso(p_id: number): Promise<boolean> {
-//     const { data, error } = await supabase
-//       .from("produtos")
-//       .select("produto_id")
-//       .eq("fornecedor_id", p_id)
-//       .limit(1); // Só precisamos saber se existe pelo menos um
+  //   static async registroEmUso(p_id: number): Promise<boolean> {
+  //     const { data, error } = await supabase
+  //       .from("produtos")
+  //       .select("produto_id")
+  //       .eq("fornecedor_id", p_id)
+  //       .limit(1); // Só precisamos saber se existe pelo menos um
 
-//     if (error) {
-//       return false;
-//     }
+  //     if (error) {
+  //       return false;
+  //     }
 
-//     return data.length > 0;
-//   }
+  //     return data.length > 0;
+  //   }
 
-  static async inserir(p_dsc_razao_social: string, p_dsc_nome_fantasia: string): Promise<string | null> {
+  static async inserir(
+    p_dsc_razao_social: string,
+    p_dsc_nome_fantasia: string
+  ): Promise<string | null> {
     const { error } = await supabase
       .from("fornecedores")
-      .insert({ dsc_razao_social: p_dsc_razao_social, dsc_nome_fantasia: p_dsc_nome_fantasia });
+      .insert({
+        dsc_razao_social: p_dsc_razao_social,
+        dsc_nome_fantasia: p_dsc_nome_fantasia,
+      });
 
     if (error) {
       return error.message;
@@ -100,7 +107,10 @@ export class FornecedorServices {
   ): Promise<string | null> {
     const { error } = await supabase
       .from("fornecedores")
-      .update({ dsc_razao_social: p_dsc_razao_social, dsc_nome_fantasia: p_dsc_nome_fantasia })
+      .update({
+        dsc_razao_social: p_dsc_razao_social,
+        dsc_nome_fantasia: p_dsc_nome_fantasia,
+      })
       .eq("fornecedor_id", p_fornecedor_id);
 
     if (error) {
