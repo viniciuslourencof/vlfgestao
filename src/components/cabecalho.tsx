@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 // import { blueTheme } from "../themes/blueTheme";
 // import { useState } from "react";
 
-export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
+export function Cabecalho({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   // const [isAlt, setIsAlt] = useState(false);
 
   // const applyTheme = (theme) => {

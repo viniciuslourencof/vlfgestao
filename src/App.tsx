@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { MenuLateral } from "./components/menu-lateral";
-import { Header } from "./components/header";
+import { Cabecalho } from "./components/cabecalho";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { PDVPage } from "./pages/PDVPage";
 import { ProdutosViewPage } from "./pages/ProdutosViewPage";
@@ -42,7 +42,7 @@ export function App() {
           />
 
           <div className="flex-1 flex flex-col overflow-hidden">
-            <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <Cabecalho onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
             <div className="flex-1 flex overflow-hidden">
               <main className="flex-1 overflow-auto p-4">
