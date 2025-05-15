@@ -109,7 +109,7 @@ export function GridRegistros({
     },
     {
       field: "clientes.dsc_razao_social",
-      headerName: "Fornecedor",
+      headerName: "Cliente",
       editable: false,
       filter: "agTextColumnFilter",
     },

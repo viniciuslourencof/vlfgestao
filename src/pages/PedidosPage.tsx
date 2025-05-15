@@ -55,6 +55,9 @@ export function PedidosPage() {
       const resultadoItens = await PedidoItemServices.buscarRegistros(
         registroEditando?.pedido_id
       );
+
+      console.log(resultadoItens)
+
       setitensPedido(resultadoItens);
     }
   }, []);

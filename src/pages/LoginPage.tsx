@@ -67,7 +67,7 @@ export function LoginPage() {
 
         {/* Formulário à direita */}
         <div className="basis-full md:basis-1/2 flex items-center justify-center">
-          <Card className="w-full border-none shadow-none px-6">
+          <Card className="w-full bg-white border-none shadow-none px-6">
             <div className="mb-4 block md:hidden">
               <img
                 src="vlf.png"
