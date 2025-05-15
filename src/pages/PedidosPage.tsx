@@ -1,133 +1,86 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Pencil,
-  Trash2,
-  Plus,
-  RefreshCcw,
-  Search,
-  ClipboardList,
-} from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
-import ModalRelProdutosVendidos from "@/components/modal-rel-produtos-vendidos";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FormaPagamentoType } from "../types/formaPagamento";
-import {
-  PedidoType,
-  PedidoItemType,
-  PedidoComRelacionamentoType,
-} from "../types/pedido";
-import { PedidoItemServices } from "../services/pedidoItemServices";
+import { PedidoType, PedidoPayloadType, PedidoItemType } from "../types/pedido";
 import { PedidoServices } from "../services/pedidoServices";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GridRegistros } from "../components/grid-pedidos";
+import { GridRegistrosDetail } from "../components/grid-pedidos-itens";
 import { formatarData } from "@/lib/formatarData";
+import { FormaPagamentoType } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
-const frameworks = [
-  {
-    value: "Vendas por Produtos por Período",
-    label: "Vendas por Produtos por Período",
-  },
-];
+import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
+import { ClienteType } from "@/types/cliente";
+import { ClienteServices } from "@/services/clienteServices";
+import ModalBuscaCliente from "@/components/modal-busca-cliente";
+import { Search, Plus, RefreshCcw } from "lucide-react";
+import { PedidoItemServices } from "@/services/pedidoItemServices";
 
 export function PedidosPage() {
   const [registros, setRegistros] = useState<PedidoType[]>([]);
   const [registroEditando, setRegistroEditando] = useState<PedidoType | null>(
     null
   );
-  const [itensPedido, setItensPedido] = useState<PedidoItemType[]>([]);
+  const [itensPedido, setitensPedido] = useState<PedidoItemType[]>([]);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
   );
-  const [textoConsulta, setTextoConsulta] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamentoType>({
     forma_pagamento_id: 0,
     dsc_forma_pagamento: "",
   });
+  const [cliente, setCliente] = useState<ClienteType>({
+    cliente_id: 0,
+    dsc_razao_social: "",
+    dsc_nome_fantasia: "",
+  });
   const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
     useState(false);
-  const [abrirModalRelProdutosVendidos, setAbrirModalRelProdutosVendidos] =
-    useState(false);
-  const [filtro, setFiltro] = useState<{
-    dataInicio?: Date;
-    dataFim?: Date;
-    opcao: string;
-  }>({
-    opcao: "todos",
-  });
+  const [abrirModalBuscaCliente, setAbrirModalBuscaCliente] = useState(false);
 
   const carregarRegistros = useCallback(async () => {
     const resultado = await PedidoServices.buscarRegistros();
+    setRegistros(resultado);
 
-    const resultadosFormatado: PedidoType[] = resultado.map(
-      (pedido: PedidoComRelacionamentoType) => ({
-        pedido_id: pedido.pedido_id,
-        vr_liquido: pedido.vr_liquido,
-        forma_pagamento_id: pedido.forma_pagamento_id,
-        dt_inc: pedido.dt_inc,
-        dsc_forma_pagamento: pedido.formas_pagamento?.dsc_forma_pagamento ?? "",
-      })
-    );
-
-    setRegistros(resultadosFormatado);
+    if (registroEditando) {
+      const resultadoItens = await PedidoItemServices.buscarRegistros(
+        registroEditando?.pedido_id
+      );
+      setitensPedido(resultadoItens);
+    }
   }, []);
 
-  const carregarItensDoPedido = useCallback(async () => {
-    if (!registroEditando) return;
-
-    const resultado = await PedidoItemServices.buscarRegistros(
-      registroEditando.pedido_id
-    );
-
-    setItensPedido(resultado);
-  }, [registroEditando]);
-
   useEffect(() => {
-    const carregarDados = async () => {
-      // Sempre carrega os registros principais
-      await carregarRegistros();
-
-      // Se estiver editando um registro válido, carrega os dados detalhados
-      if (registroEditando && registroEditando.pedido_id > 0) {
-        await carregarItensDoPedido(); // ou o nome da função de detalhe correspondente
-      }
-    };
-
-    carregarDados();
-  }, [registroEditando, carregarRegistros, carregarItensDoPedido]);
+    carregarRegistros();
+  }, [carregarRegistros]);
 
   const aoInserir = () => {
     setRegistroEditando({
       pedido_id: 0,
-      vr_liquido: 0.0,
+      cliente_id: 0,
       forma_pagamento_id: 0,
-      dt_inc: "",
+      vr_liquido: 0.0,
+      dt_inc: new Date().toISOString(),
+    });
+
+    setCliente({
+      cliente_id: 0,
+      dsc_razao_social: "",
+      dsc_nome_fantasia: "",
+    });
+
+    setFormaPagamento({
+      forma_pagamento_id: 0,
+      dsc_forma_pagamento: "",
     });
   };
 
@@ -140,14 +93,21 @@ export function PedidosPage() {
       );
       setFormaPagamento(formaPagamento);
     }
+
+    if (p_registro.cliente_id !== 0) {
+      const cliente = await ClienteServices.buscarRegistro(
+        Number(p_registro.cliente_id)
+      );
+      setCliente(cliente);
+    }
   };
 
   const aoFecharFormulario = () => {
     setRegistroEditando(null);
   };
 
-  const aoClicarEmDeletar = (p_id: number) => {
-    setRegistroIdADeletar(p_id);
+  const antesDeDeletar = (p_registro: PedidoType) => {
+    setRegistroIdADeletar(p_registro.pedido_id);
     setMostrarConfirmacao(true);
   };
 
@@ -156,31 +116,73 @@ export function PedidosPage() {
 
     setMostrarConfirmacao(false);
 
+    // const emUso = await PedidoServices.registroEmUso(registroIdADeletar);
+    // if (emUso) {
+    //   setMensagemAviso(
+    //     "Registro em uso dentro de Contas a Receber, verifique!"
+    //   );
+    //   setMostrarAviso(true);
+    //   return;
+    // }
+
     const error = await PedidoServices.deletar(registroIdADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
       setMostrarAviso(true);
-
       return;
     }
 
     toast.success("Registro apagado com sucesso!");
 
-    setMostrarConfirmacao(false);
     carregarRegistros();
   };
 
-  const aoSalvar = async () => {
-    if (!registroEditando) return;
+  const aoSalvar = async (payload: PedidoPayloadType) => {
+    if (!registroEditando) {
+      setMensagemAviso("Erro inesperado ao salvar. Tente novamente.");
+      setMostrarAviso(true);
+      return;
+    }
 
-    registroEditando.forma_pagamento_id = formaPagamento.forma_pagamento_id;
+    const registroParaSalvar: PedidoType = {
+      ...registroEditando, // Mantém quaisquer outros campos de registroEditando
+      ...payload, // sobrescreve os campos definidos em payload
+    };
 
-    if (registroEditando.pedido_id === 0) {
-      const error = await PedidoServices.inserir(
-        registroEditando.vr_liquido,
-        registroEditando.forma_pagamento_id
-      );
+    if (!registroParaSalvar.vr_liquido) {
+      setMensagemAviso("Valor da Conta não pode estar vazio.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    if (!registroParaSalvar.forma_pagamento_id) {
+      setMensagemAviso("Forma de Pagamento não pode estar vazia.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    if (!registroParaSalvar.cliente_id) {
+      setMensagemAviso("Cliente não pode estar vazio.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    // // Verificação de duplicidade usando registroParaSalvar
+    // const duplicado = await PedidoServices.verificaDuplicidade(
+    //   registroParaSalvar.cliente_id,
+    //   registroParaSalvar.dsc_razao_social
+    // );
+    // if (duplicado) {
+    //   setMensagemAviso("Descrição já cadastrada, verifique.");
+    //   setMostrarAviso(true);
+    //   return;
+    // }
+
+    // Lógica de inserção ou atualização usando registroParaSalvar
+    if (registroParaSalvar.pedido_id === 0) {
+      // Novo registro
+      const error = await PedidoServices.inserir(payload);
 
       if (error) {
         setMensagemAviso("Erro ao inserir registro: " + error);
@@ -188,10 +190,10 @@ export function PedidosPage() {
         return;
       }
     } else {
+      // Edição de registro existente
       const error = await PedidoServices.atualizar(
-        registroEditando.pedido_id,
-        registroEditando.vr_liquido,
-        registroEditando.forma_pagamento_id
+        payload,
+        registroEditando.pedido_id
       );
 
       if (error) {
@@ -206,114 +208,38 @@ export function PedidosPage() {
     aoFecharFormulario();
   };
 
-  const registrosFiltrados = registros.filter((registro) =>
-    registro.pedido_id.toString().includes(textoConsulta)
-  );
+  const aoEditarCampoNumerico = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let novoValor = e.target.value
+      .replace(/[^0-9.,]/g, "") // Remove letras e símbolos inválidos
+      .replace(",", "."); // Converte vírgula para ponto
 
-  function ListaRegistros() {
-    return (
-      <>
-        <h1 className="text-2xl font-bold">Pedidos</h1>
-        <Input
-          type="text"
-          placeholder="Pesquisar registros..."
-          className="w-full my-4"
-          value={textoConsulta}
-          onChange={(e) => setTextoConsulta(e.target.value)}
-        />
-        <div className="flex items-center mb-4">
-          <div className="flex gap-2">
-            <Button onClick={aoInserir} className="cursor-pointer hidden">
-              <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
-            </Button>
-            <Button onClick={carregarRegistros} className="cursor-pointer">
-              <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
-              <span className="max-[400px]:hidden">Atualizar</span>
-            </Button>
+    if (novoValor.includes(".")) {
+      const [inteiro, decimal] = novoValor.split(".");
+      novoValor = inteiro + "." + decimal.slice(0, 2); // Limita a 2 casas decimais
+    }
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  role="combobox"
-                  className="w-auto justify-between h-full cursor-pointer"
-                >
-                  <ClipboardList></ClipboardList>
-                  Relatórios
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className=" w-auto p-0" align="start">
-                <Command className="">
-                  <CommandList>
-                    <CommandGroup>
-                      {frameworks.map((framework) => (
-                        <CommandItem
-                          key={framework.value}
-                          value={framework.value}
-                          className="cursor-pointer"
-                          onSelect={() =>
-                            setAbrirModalRelProdutosVendidos(true)
-                          }
-                        >
-                          {framework.label}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {registrosFiltrados.map((registro) => (
-            <Card
-              key={registro.pedido_id}
-              className="p-4 flex flex-col justify-between"
-            >
-              <div>
-                <h2 className="font-semibold text-lg">
-                  PEDIDO #{registro.pedido_id}
-                </h2>
-                <p className="text-muted-foreground text-sm text-gray-600">
-                  Data: {formatarData(registro.dt_inc)}
-                </p>
-
-                <p className="text-sm mt-1 ">
-                  Vr. Pedido: {registro.vr_liquido.toFixed(2)}
-                </p>
-
-                <p className="text-sm ">
-                  Forma de Pagamento: {registro.dsc_forma_pagamento}
-                </p>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => aoEditar(registro)}
-                  className="cursor-pointer"
-                >
-                  <Pencil className="w-4 h-4 mr-1" /> Editar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => aoClicarEmDeletar(registro.pedido_id)}
-                  className="cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" /> Apagar
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </>
-    );
-  }
+    if (registroEditando) {
+      setRegistroEditando({
+        ...registroEditando,
+        vr_liquido: novoValor,
+      });
+    }
+  };
 
   function FormularioRegistro() {
+    // Estado locais
+    const [vr_liquido, setVrLiquido] = useState(
+      registroEditando?.vr_liquido ?? ""
+    );
+
+    // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
+    useEffect(() => {
+      setVrLiquido(registroEditando?.vr_liquido ?? "");
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, [registroEditando]);
+
     return (
       <>
         {registroEditando ? (
@@ -327,7 +253,7 @@ export function PedidosPage() {
             </TabsList>
 
             <TabsContent value="geral">
-              <Card className="w-full h-full mx-auto">
+              <Card className=" w-full h-full mx-auto p-6">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
                     {registroEditando.pedido_id === 0
@@ -347,7 +273,7 @@ export function PedidosPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="dt_inc">Data de Efetivação</Label>
+                      <Label htmlFor="dt_inc">Data de Emissão</Label>
                       <Input
                         id="dt_inc"
                         value={formatarData(registroEditando.dt_inc)}
@@ -356,10 +282,13 @@ export function PedidosPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="vr_liquido">Vr. Liquido</Label>
+                      <Label htmlFor="vr_liquido">Vr. Líquido</Label>
                       <Input
                         id="vr_liquido"
-                        value={(registroEditando.vr_liquido ?? 0).toFixed(2)}
+                        name="vr_liquido"
+                        value={vr_liquido}
+                        onChange={aoEditarCampoNumerico}
+                        ref={inputRef}
                         readOnly
                       />
                     </div>
@@ -371,10 +300,10 @@ export function PedidosPage() {
                     </h3>
                     <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
                       <div className="space-y-2 w-32">
-                        <Label htmlFor="categoria_id">Código</Label>
+                        <Label htmlFor="forma_pagamento_id">Código</Label>
                         <Input
-                          id="categoria_id"
-                          name="categoria_id"
+                          id="forma_pagamento_id"
+                          name="forma_pagamento_id"
                           value={formaPagamento.forma_pagamento_id}
                           readOnly
                         />
@@ -392,11 +321,49 @@ export function PedidosPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="dsc_categoria">Descrição</Label>
+                        <Label htmlFor="dsc_forma_pagamento">Descrição</Label>
                         <Input
-                          id="dsc_categoria"
-                          name="dsc_categoria"
+                          id="dsc_forma_pagamento"
+                          name="dsc_forma_pagamento"
                           value={formaPagamento.dsc_forma_pagamento || ""}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-4 gap-3">
+                    <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
+                      Cliente
+                    </h3>
+                    <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
+                      <div className="space-y-2 w-32">
+                        <Label htmlFor="cliente_id">Código</Label>
+                        <Input
+                          id="cliente_id"
+                          name="cliente_id"
+                          value={cliente.cliente_id}
+                          readOnly
+                        />
+                      </div>
+
+                      <div className="space-y-2 w-10">
+                        <Label className="invisible">Buscar</Label>
+                        <button
+                          onClick={() => setAbrirModalBuscaCliente(true)}
+                          type="button"
+                          className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
+                        >
+                          <Search className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="dsc_forma_pagamento">Descrição</Label>
+                        <Input
+                          id="dsc_forma_pagamento"
+                          name="dsc_forma_pagamento"
+                          value={cliente.dsc_razao_social || ""}
                           readOnly
                         />
                       </div>
@@ -406,58 +373,13 @@ export function PedidosPage() {
               </Card>
             </TabsContent>
             <TabsContent value="itens">
-              <Card className="w-full h-full mx-auto">
-                <CardHeader>
-                  <CardTitle className="text-xl font-semibold">
-                    Itens do Pedido
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader className="p-2 border rounded-md bg-gray-50">
-                      <TableRow>
-                        <TableCell className="font-semibold px-4 py-2">
-                          Código
-                        </TableCell>
-                        <TableCell className="font-semibold px-4 py-2">
-                          Descrição
-                        </TableCell>
-                        <TableCell className="font-semibold px-4 py-2">
-                          Quantidade
-                        </TableCell>
-                        <TableCell className="font-semibold px-4 py-2">
-                          Valor Unitário
-                        </TableCell>
-                        <TableCell className="font-semibold px-4 py-2">
-                          Valor Total
-                        </TableCell>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {itensPedido.map((item) => (
-                        <TableRow key={item.pedido_item_id}>
-                          <TableCell className="px-4 py-2">
-                            {item.produto_id}
-                          </TableCell>
-                          <TableCell className="px-4 py-2">
-                            {item.produtos?.dsc_produto}
-                          </TableCell>
-                          <TableCell className="px-4 py-2">
-                            {item.quantidade}
-                          </TableCell>
-                          <TableCell className="px-4 py-2">
-                            R$ {item.vr_unit.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="px-4 py-2">
-                            R$ {item.vr_item.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <GridRegistrosDetail
+                registros={itensPedido}
+                // aoEditar={aoEditar}
+                // antesDeDeletar={antesDeDeletar}
+              ></GridRegistrosDetail>
             </TabsContent>
+
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
@@ -466,7 +388,16 @@ export function PedidosPage() {
               >
                 Cancelar
               </Button>
-              <Button className="cursor-pointer" onClick={aoSalvar}>
+              <Button
+                className="cursor-pointer"
+                onClick={() => {
+                  aoSalvar({
+                    cliente_id: cliente.cliente_id,
+                    forma_pagamento_id: formaPagamento.forma_pagamento_id,
+                    vr_liquido: vr_liquido,
+                  });
+                }}
+              >
                 Salvar
               </Button>
             </div>
@@ -478,8 +409,28 @@ export function PedidosPage() {
 
   return (
     <div className="p-6">
-      {registroEditando ? FormularioRegistro() : ListaRegistros()}
+      <h1 className="text-2xl font-bold mb-4">Pedidos</h1>
+      <div className="flex items-center mb-4">
+        <div className="flex gap-2">
+          <Button onClick={aoInserir} className="cursor-pointer hidden">
+            <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
+          </Button>
+          <Button onClick={carregarRegistros} className="cursor-pointer">
+            <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
+            <span className="max-[400px]:hidden">Atualizar</span>
+          </Button>
+        </div>
+      </div>
 
+      {registroEditando ? (
+        <FormularioRegistro />
+      ) : (
+        <GridRegistros
+          registros={registros}
+          aoEditar={aoEditar}
+          antesDeDeletar={antesDeDeletar}
+        />
+      )}
       <ModalConfirmacao
         open={mostrarConfirmacao}
         onCancel={() => setMostrarConfirmacao(false)}
@@ -501,12 +452,16 @@ export function PedidosPage() {
           }));
         }}
       />
-      <ModalRelProdutosVendidos
-        open={abrirModalRelProdutosVendidos}
-        onClose={() => setAbrirModalRelProdutosVendidos(false)}
-        onConfirm={(data) => {
-          setFiltro(data);
-          console.log(filtro);
+      <ModalBuscaCliente
+        open={abrirModalBuscaCliente}
+        onClose={() => setAbrirModalBuscaCliente(false)}
+        onSelect={(cliente) => {
+          setCliente((prev) => ({
+            ...prev,
+            cliente_id: cliente.cliente_id,
+            dsc_razao_social: cliente.dsc_razao_social,
+            dsc_nome_fantasia: cliente.dsc_nome_fantasia,
+          }));
         }}
       />
     </div>

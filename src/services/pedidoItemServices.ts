@@ -1,18 +1,10 @@
 import { ProdutoInterface } from "@/types/produto";
 import { supabase } from "../lib/subabase";
-import { PedidoItemType } from "@/types/pedido";
+import { PedidoItemType, PedidoItemPayloadType } from "@/types/pedido";
 
 export class PedidoItemServices {
-  static async inserir(itens: PedidoItemType[]): Promise<string | null> {
-    const { error } = await supabase.from("pedidos_itens").insert(
-      itens.map((item) => ({
-        pedido_id: item.pedido_id,
-        produto_id: item.produto_id,
-        quantidade: item.quantidade,
-        vr_unit: item.vr_unit,
-        vr_item: item.vr_item,
-      }))
-    );
+  static async inserir(payload: PedidoItemPayloadType[]): Promise<string | null> {
+    const { error } = await supabase.from("pedidos_itens").insert(payload);
 
     if (error) {
       return error.message;

@@ -1,12 +1,12 @@
 import { supabase } from "../lib/subabase";
-import { PedidoItemType, PedidoType } from "@/types/pedido";
+import { PedidoItemPayloadType, PedidoPayloadType, PedidoType } from "@/types/pedido";
 import { PedidoItemServices } from "./pedidoItemServices";
 
 export class PedidoServices {
   static async buscarRegistros(): Promise<PedidoType[]> {
     const { data, error } = await supabase
       .from("pedidos")
-      .select("*, formas_pagamento(dsc_forma_pagamento)")
+      .select("*, formas_pagamento(dsc_forma_pagamento), clientes(dsc_razao_social)")
       .order("pedido_id", { ascending: false });
 
     if (error || !data) {
@@ -17,14 +17,8 @@ export class PedidoServices {
     return data;
   }
 
-  static async inserir(
-    p_vr_liquido: number,
-    p_forma_pagamento_id: number
-  ): Promise<string | null> {
-    const { error } = await supabase.from("pedidos").insert({
-      vr_liquido: p_vr_liquido,
-      forma_pagamento_id: p_forma_pagamento_id,
-    });
+  static async inserir(payload: PedidoPayloadType): Promise<string | null> {
+    const { error } = await supabase.from("pedidos").insert(payload);
 
     if (error) {
       return error.message;
@@ -34,15 +28,11 @@ export class PedidoServices {
   }
 
   static async inserirComRetorno(
-    p_vr_liquido: number,
-    p_forma_pagamento_id: number
+    payload: PedidoPayloadType
   ): Promise<{ pedido?: PedidoType; erro?: string | null }> {
     const { data, error } = await supabase
       .from("pedidos")
-      .insert({
-        vr_liquido: p_vr_liquido,
-        forma_pagamento_id: p_forma_pagamento_id,
-      })
+      .insert(payload)
       .select("*") // ou selecione campos específicos se preferir
       .single();
 
@@ -54,16 +44,12 @@ export class PedidoServices {
   }
 
   static async atualizar(
-    p_pedido_id: number,
-    p_vr_liquido: number,
-    p_forma_pagamento_id: number
+    payload: PedidoPayloadType,
+    p_pedido_id: number
   ): Promise<string | null> {
     const { error } = await supabase
       .from("pedidos")
-      .update({
-        vr_liquido: p_vr_liquido,
-        forma_pagamento_id: p_forma_pagamento_id,
-      })
+      .update(payload)
       .eq("pedido_id", p_pedido_id);
 
     if (error) {
@@ -87,14 +73,17 @@ export class PedidoServices {
   }
 
   static async efetivarPedido(
-    carrinho: PedidoItemType[],
-    forma_pagamento_id: number
+    carrinho: PedidoItemPayloadType[],
+    payloadPedido: PedidoPayloadType
   ): Promise<{ erro: string | null; pedido_id?: number }> {
     if (!carrinho || carrinho.length === 0) {
       return { erro: "Nenhum item encontrado no pedido." };
     }
 
-    if (!forma_pagamento_id || forma_pagamento_id === 0) {
+    if (
+      !payloadPedido.forma_pagamento_id ||
+      payloadPedido.forma_pagamento_id === 0
+    ) {
       return { erro: "Forma de Pagamento não selecionada, verifique." };
     }
 
@@ -103,16 +92,17 @@ export class PedidoServices {
       0
     );
 
+    payloadPedido.vr_liquido = subtotal;
+
     const { pedido, erro } = await PedidoServices.inserirComRetorno(
-      subtotal,
-      forma_pagamento_id
+      payloadPedido
     );
 
     if (erro || !pedido) {
       return { erro: "Erro ao inserir pedido: " + erro };
     }
 
-    const itens = carrinho.map((item) => ({
+    const itens: PedidoItemPayloadType[] = carrinho.map((item): PedidoItemPayloadType => ({ 
       pedido_id: pedido.pedido_id,
       produto_id: item.produto_id,
       quantidade: item.quantidade,

@@ -21,3 +21,8 @@ export type ContaReceberComRelacionamentoType = {
     dsc_razao_social: string;
   };
 };
+
+export type ContaReceberPayloadType = Pick<
+  ContaReceberType,
+  'cliente_id' | 'forma_pagamento_id' | 'vr_liquido' 
+>;

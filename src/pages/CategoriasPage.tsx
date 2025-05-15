@@ -1,15 +1,16 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { CategoriaType } from "../types/categoria";
+import { CategoriaPayloadType, CategoriaType } from "../types/categoria";
 import { CategoriaServices } from "../services/categoriaServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GridRegistros } from "../components/grid-categorias"; 
+import { Plus, RefreshCcw } from "lucide-react";
 
 export function CategoriasPage() {
   const [registros, setRegistros] = useState<CategoriaType[]>([]);
@@ -19,9 +20,10 @@ export function CategoriasPage() {
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
   );
-  const [textoPesquisa, setTextoPesquisa] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const carregarRegistros = useCallback(async () => {
     const resultado = await CategoriaServices.buscarRegistros();
@@ -44,8 +46,8 @@ export function CategoriasPage() {
     setRegistroEditando(null);
   };
 
-  const antesDeDeletar = (p_registro_id: number) => {
-    setRegistroIdADeletar(p_registro_id);
+  const antesDeDeletar = (p_registro: CategoriaType) => {
+    setRegistroIdADeletar(p_registro.categoria_id);
     setMostrarConfirmacao(true);
   };
 
@@ -74,29 +76,37 @@ export function CategoriasPage() {
     carregarRegistros();
   };
 
-  const aoSalvar = async () => {
-    if (!registroEditando) return;
-
-    if (!registroEditando.dsc_categoria.trim()) {
-      setMensagemAviso("Descrição não pode estar vazia.");
+  const aoSalvar = async (payload: CategoriaPayloadType) => {
+    if (!registroEditando) {
+      setMensagemAviso("Erro inesperado ao salvar. Tente novamente.");
       setMostrarAviso(true);
       return;
     }
 
+    const registroParaSalvar: CategoriaType = {
+      ...registroEditando, // Mantém categoria_id e quaisquer outros campos de registroEditando
+      ...payload,
+    };
+    
+    if (!registroParaSalvar.dsc_categoria) {
+      setMensagemAviso("Descrição não pode estar vazia.");
+      setMostrarAviso(true);
+      return;
+    }
+    
     const duplicado = await CategoriaServices.verificaDuplicidade(
-      registroEditando.categoria_id,
-      registroEditando.dsc_categoria
+      registroParaSalvar.categoria_id,
+      registroParaSalvar.dsc_categoria
     );
     if (duplicado) {
       setMensagemAviso("Descrição já cadastrada, verifique.");
       setMostrarAviso(true);
       return;
     }
-
-    if (registroEditando.categoria_id === 0) {
-      const error = await CategoriaServices.inserir(
-        registroEditando.dsc_categoria
-      );
+    
+    if (registroParaSalvar.categoria_id === 0) {
+      // Novo registro
+      const error = await CategoriaServices.inserir(payload);
 
       if (error) {
         setMensagemAviso("Erro ao inserir registro: " + error);
@@ -104,9 +114,10 @@ export function CategoriasPage() {
         return;
       }
     } else {
+      // Edição de registro existente
       const error = await CategoriaServices.atualizar(
-        registroEditando.categoria_id,
-        registroEditando.dsc_categoria
+        registroParaSalvar.categoria_id,
+        payload
       );
 
       if (error) {
@@ -117,85 +128,27 @@ export function CategoriasPage() {
     }
 
     toast.success("Registro salvo com sucesso!");
-    carregarRegistros();
-    aoFecharFormulario();
+    carregarRegistros(); // Recarrega a lista de registros
+    aoFecharFormulario(); // Fecha o formulário e limpa registroEditando
   };
 
-  const registrosFiltrados = registros.filter((registro) =>
-    registro.dsc_categoria.toLowerCase().includes(textoPesquisa.toLowerCase())
-  );
-
-  function ListaRegistros() {
-    return (
-      <>
-        <h1 className="text-2xl font-bold">Categorias</h1>
-        <Input
-          type="text"
-          placeholder="Pesquisar registros..."
-          className="w-full my-4"
-          value={textoPesquisa}
-          onChange={(e) => setTextoPesquisa(e.target.value)}
-        />
-        <div className="flex items-center mb-4">
-          <div className="flex gap-2">
-            <Button onClick={aoInserir} className="cursor-pointer">
-              <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
-            </Button>
-            <Button onClick={carregarRegistros} className="cursor-pointer">
-              <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
-              <span className="max-[400px]:hidden">Atualizar</span>
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {registrosFiltrados.map((registro) => (
-            <Card
-              key={registro.categoria_id}
-              className="p-4 flex flex-col justify-between"
-            >
-              <div>
-                <h2 className="font-semibold text-lg">
-                  {registro.dsc_categoria}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Código: {registro.categoria_id}
-                </p>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => aoEditar(registro)}
-                  className="cursor-pointer"
-                >
-                  <Pencil className="w-4 h-4 mr-1" /> Editar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => antesDeDeletar(registro.categoria_id)}
-                  className="cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" /> Apagar
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </>
-    );
-  }
-
   function FormularioRegistro() {
+    // Estado local só para o campo descrição
+    const [dsc_categoria, setDscCategoria] = useState(
+      registroEditando?.dsc_categoria ?? ""
+    );
+
+    // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
+    useEffect(() => {
+      setDscCategoria(registroEditando?.dsc_categoria ?? "");
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, [registroEditando]);
+
     return (
       <>
         {registroEditando ? (
-
-        
-
-        
-
           <Tabs
             defaultValue="geral"
             className="w-full h-full max-w-none mx-auto"
@@ -218,20 +171,16 @@ export function CategoriasPage() {
                     <Label htmlFor="descricao">Descrição da Categoria</Label>
                     <Input
                       id="descricao"
-                      value={registroEditando.dsc_categoria}
-                      onChange={(e) =>
-                        setRegistroEditando((prev) =>
-                          prev
-                            ? { ...prev, dsc_categoria: e.target.value }
-                            : prev
-                        )
-                      }
+                      value={dsc_categoria}
+                      onChange={(e) => setDscCategoria(e.target.value)}
                       placeholder="Ex: Bebidas, Alimentos, etc."
+                      ref={inputRef}
                     />
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
+
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
@@ -240,11 +189,16 @@ export function CategoriasPage() {
               >
                 Cancelar
               </Button>
-              <Button className="cursor-pointer" onClick={aoSalvar}>
+              <Button
+                className="cursor-pointer"
+                onClick={() => {
+                  aoSalvar({ dsc_categoria });
+                }}
+              >
                 Salvar
               </Button>
             </div>
-          </Tabs>        
+          </Tabs>
         ) : null}
       </>
     );
@@ -252,7 +206,27 @@ export function CategoriasPage() {
 
   return (
     <div className="p-6">
-      {registroEditando ? FormularioRegistro() : ListaRegistros()}
+      <h1 className="text-2xl font-bold mb-4">Categorias</h1>
+      <div className="flex items-center mb-4">
+        <div className="flex gap-2">
+          <Button onClick={aoInserir} className="cursor-pointer">
+            <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
+          </Button>
+          <Button onClick={carregarRegistros} className="cursor-pointer">
+            <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
+            <span className="max-[400px]:hidden">Atualizar</span>
+          </Button>
+        </div>
+      </div>
+      {registroEditando ? (
+        <FormularioRegistro />
+      ) : (
+        <GridRegistros
+          registros={registros}                    
+          aoEditar={aoEditar}
+          antesDeDeletar={antesDeDeletar}
+        />
+      )}
       <ModalConfirmacao
         open={mostrarConfirmacao}
         onCancel={() => setMostrarConfirmacao(false)}

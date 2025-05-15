@@ -1,5 +1,5 @@
 import { supabase } from "../lib/subabase";
-import { ContaPagarType } from "@/types/contasPagar";
+import { ContaPagarType, ContaPagarPayloadType } from "@/types/contasPagar";
 
 export class ContasPagarServices {
   static async buscarRegistro(p_id: number) {
@@ -32,8 +32,10 @@ export class ContasPagarServices {
 
   static async buscarRegistros(): Promise<ContaPagarType[]> {
     const { data, error } = await supabase
-      .from("contas_pagar")      
-      .select('*, formas_pagamento(dsc_forma_pagamento), fornecedores(dsc_razao_social)')
+      .from("contas_pagar")
+      .select(
+        "*, formas_pagamento(dsc_forma_pagamento), fornecedores(dsc_razao_social)"
+      )
       .order("conta_pagar_id", { ascending: false });
 
     if (error || !data) {
@@ -57,16 +59,8 @@ export class ContasPagarServices {
   //     return data.length > 0;
   //   }
 
-  static async inserir(
-    p_fornecedor_id: number,
-    p_forma_pagamento_id: number,
-    p_vr_liquido: number
-  ): Promise<string | null> {
-    const { error } = await supabase.from("contas_pagar").insert({
-      fornecedor_id: p_fornecedor_id,
-      forma_pagamento_id: p_forma_pagamento_id,
-      vr_liquido: p_vr_liquido,
-    });
+  static async inserir(payload: ContaPagarPayloadType): Promise<string | null> {
+    const { error } = await supabase.from("contas_pagar").insert(payload);
 
     if (error) {
       return error.message;
@@ -83,25 +77,19 @@ export class ContasPagarServices {
 
     if (error) {
       return error.message;
-    }    
+    }
 
     return null;
   }
 
   static async atualizar(
-    p_conta_pagar_id: number,
-    p_fornecedor_id: number,
-    p_forma_pagamento_id: number,
-    p_vr_liquido: number
+    payload: ContaPagarPayloadType,
+    p_id: number,
   ): Promise<string | null> {
     const { error } = await supabase
       .from("contas_pagar")
-      .update({
-        fornecedor_id: p_fornecedor_id,
-        forma_pagamento_id: p_forma_pagamento_id,
-        vr_liquido: p_vr_liquido,
-      })
-      .eq("conta_pagar_id", p_conta_pagar_id);
+      .update(payload)
+      .eq("conta_pagar_id", p_id);
 
     if (error) {
       return error.message;

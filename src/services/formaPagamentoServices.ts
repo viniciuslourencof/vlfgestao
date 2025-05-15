@@ -1,5 +1,8 @@
 import { supabase } from "../lib/subabase";
-import { FormaPagamentoType } from "@/types/formaPagamento";
+import {
+  FormaPagamentoPayloadType,
+  FormaPagamentoType,
+} from "@/types/formaPagamento";
 
 export class FormaPagamentoServices {
   static async buscarRegistro(p_id: number) {
@@ -39,7 +42,10 @@ export class FormaPagamentoServices {
     return data;
   }
 
-  static async verificaDuplicidade(p_id: number, p_dsc: string): Promise<boolean> {
+  static async verificaDuplicidade(
+    p_id: number,
+    p_dsc: string
+  ): Promise<boolean> {
     const { data, error } = await supabase
       .from("formas_pagamento")
       .select("forma_pagamento_id")
@@ -67,10 +73,10 @@ export class FormaPagamentoServices {
     return data.length > 0;
   }
 
-  static async inserir(p_dsc_forma_pagamento: string): Promise<string | null> {
-    const { error } = await supabase
-      .from("formas_pagamento")
-      .insert({ dsc_forma_pagamento: p_dsc_forma_pagamento });
+  static async inserir(
+    payload: FormaPagamentoPayloadType
+  ): Promise<string | null> {
+    const { error } = await supabase.from("formas_pagamento").insert(payload);
 
     if (error) {
       return error.message;
@@ -94,11 +100,11 @@ export class FormaPagamentoServices {
 
   static async atualizar(
     p_forma_pagamento_id: number,
-    p_dsc_forma_pagamento: string
+    payload: FormaPagamentoPayloadType
   ): Promise<string | null> {
     const { error } = await supabase
       .from("formas_pagamento")
-      .update({ dsc_forma_pagamento: p_dsc_forma_pagamento })
+      .update(payload)
       .eq("forma_pagamento_id", p_forma_pagamento_id);
 
     if (error) {

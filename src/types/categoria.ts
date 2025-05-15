@@ -9,3 +9,8 @@ export type CategoryFilterPropsType = {
   categoriaSelecionadaID: number | null;
   onSelectCategoria: (categoria_id: number | null) => void;
 }
+
+export type CategoriaPayloadType = Pick<
+  CategoriaType,
+  'dsc_categoria'
+>;

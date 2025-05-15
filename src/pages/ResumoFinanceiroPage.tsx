@@ -12,6 +12,7 @@ import {
 
 import { ContasReceberServices } from "../services/contaReceberServices";
 import { ContasPagarServices } from "@/services/contasPagarServices"; // supondo que existe
+import { Card } from "@/components/ui/card";
 
 type MonthData = {
   month: string;
@@ -21,9 +22,8 @@ type MonthData = {
 
 type RegistroFinanceiro = {
   dt_inc: string;
-    vr_liquido: string | number;
+  vr_liquido: string | number;
 };
-
 
 const chartConfig = {
   receber: {
@@ -45,13 +45,14 @@ function monthAbbr(dateStr: string): string {
 function agruparPorMes(dados: RegistroFinanceiro[]): Record<string, number> {
   return dados.reduce((acc, cur) => {
     const mes = monthAbbr(cur.dt_inc);
-    const valor = typeof cur.vr_liquido === "string" ? parseFloat(cur.vr_liquido) : cur.vr_liquido;
+    const valor =
+      typeof cur.vr_liquido === "string"
+        ? parseFloat(cur.vr_liquido)
+        : cur.vr_liquido;
     acc[mes] = (acc[mes] || 0) + (isNaN(valor) ? 0 : valor);
     return acc;
   }, {} as Record<string, number>);
 }
-
-
 
 export function ResumoFinanceiroPage() {
   const [chartData, setChartData] = useState<MonthData[]>([]);
@@ -103,23 +104,28 @@ export function ResumoFinanceiroPage() {
   }, []);
 
   return (
-    <ChartContainer
-      config={chartConfig}
-      className="min-h-[200px] w-[400px] mx-auto"
-    >
-      <BarChart accessibilityLayer data={chartData}>
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="month"
-          tickLine={false}
-          tickMargin={10}
-          axisLine={false}
-        />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="receber" fill="var(--color-receber)" radius={4} />
-        <Bar dataKey="pagar" fill="var(--color-pagar)" radius={4} />
-      </BarChart>
-    </ChartContainer>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Resumo Financeiro</h1>
+      <Card>
+        <ChartContainer
+          config={chartConfig}
+          className="min-h-[200px] w-[400px] mx-auto"
+        >
+          <BarChart accessibilityLayer data={chartData}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="month"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Bar dataKey="receber" fill="var(--color-receber)" radius={4} />
+            <Bar dataKey="pagar" fill="var(--color-pagar)" radius={4} />
+          </BarChart>
+        </ChartContainer>
+      </Card>
+    </div>
   );
 }

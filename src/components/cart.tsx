@@ -9,12 +9,13 @@ import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import { CartPropsType } from "../types/pedido";
 import { PedidoServices } from "@/services/pedidoServices";
+import { ClienteType } from "@/types/cliente";
 
 export function Cart({
   carrinho,
   onRemoveItem,
-  carrinhoMinimizado: minimized,
-  setMinimized,
+  carrinhoMinimizado,
+  setCarrinhoMinimizado,
   limpaCarrinho: resetCarrinho,
 }: CartPropsType) {
   const [mostrarAviso, setMostrarAviso] = useState(false);
@@ -22,6 +23,11 @@ export function Cart({
   const [formaPagamento, setformaPagamento] = useState<FormaPagamentoType>({
     forma_pagamento_id: 0,
     dsc_forma_pagamento: "",
+  });
+  const [cliente] = useState<ClienteType>({
+    cliente_id: 2,
+    dsc_razao_social: "",
+    dsc_nome_fantasia: ""
   });
 
   const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
@@ -37,10 +43,11 @@ export function Cart({
   const total = subtotal;
 
   const aoFinalizar = async () => {
-    const resultado = await PedidoServices.efetivarPedido(
-      carrinho,
-      formaPagamento.forma_pagamento_id
-    );
+    const resultado = await PedidoServices.efetivarPedido(carrinho, {
+      vr_liquido: 0.0,
+      cliente_id: cliente.cliente_id,
+      forma_pagamento_id: formaPagamento.forma_pagamento_id,
+    });
 
     if (resultado.erro) {
       setMensagemAviso(resultado.erro);
@@ -57,12 +64,12 @@ export function Cart({
   return (
     <div
       className={`bg-background border-t md:border-l flex flex-col h-[600px] md:h-full transition-all duration-300 ${
-        minimized ? "w-0 md:w-0" : "w-full md:w-[380px]"
+        carrinhoMinimizado ? "w-0 md:w-0" : "w-full md:w-[380px]"
       }`}
     >
       {/* Top bar com botão de minimizar */}
       <div className="p-4 border-b flex justify-between items-center">
-        {!minimized ? (
+        {!carrinhoMinimizado ? (
           <>
             <div>
               <h2 className="text-xl font-bold">Pedido</h2>
@@ -72,7 +79,7 @@ export function Cart({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setMinimized(true)}
+                onClick={() => setCarrinhoMinimizado(true)}
                 className="cursor-pointer"
               >
                 <ChevronsRight className="h-5 w-5" />
@@ -83,14 +90,14 @@ export function Cart({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setMinimized(false)}
+            onClick={() => setCarrinhoMinimizado(false)}
           >
             <ChevronsLeft className="h-5 w-5" />
           </Button>
         )}
       </div>
 
-      {!minimized && (
+      {!carrinhoMinimizado && (
         <>
           <div className="flex-1 overflow-auto p-4">
             {carrinho.length === 0 ? (
@@ -145,9 +152,9 @@ export function Cart({
 
               <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
                 <div className="space-y-2 w-12">
-                  <Label htmlFor="categoria_id">Código</Label>
+                  <Label htmlFor="1oria_id">Código</Label>
                   <Input
-                    id="categoria_id"
+                    id="56oria_id"
                     name="categoria_id"
                     value={formaPagamento?.forma_pagamento_id || ""}
                     readOnly

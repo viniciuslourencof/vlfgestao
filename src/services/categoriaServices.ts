@@ -1,5 +1,5 @@
 import { supabase } from "../lib/subabase";
-import { CategoriaType } from "@/types/categoria";
+import { CategoriaPayloadType, CategoriaType } from "@/types/categoria";
 
 export class CategoriaServices {
   static async buscarRegistro(p_id: number) {
@@ -13,7 +13,7 @@ export class CategoriaServices {
     const { data, error } = await supabase
       .from("categorias")
       .select("categoria_id, dsc_categoria")
-      .eq("categoria_id", p_id)      
+      .eq("categoria_id", p_id)
       .single();
 
     if (error || !data) {
@@ -39,12 +39,15 @@ export class CategoriaServices {
     return data;
   }
 
-  static async verificaDuplicidade(p_id: number, p_dsc: string): Promise<boolean> {
+  static async verificaDuplicidade(
+    p_id: number,
+    p_dsc: string
+  ): Promise<boolean> {
     const { data, error } = await supabase
       .from("categorias")
       .select("categoria_id")
       .eq("dsc_categoria", p_dsc)
-      .neq("categoria_id", p_id); 
+      .neq("categoria_id", p_id);
 
     if (error) {
       return false;
@@ -67,10 +70,8 @@ export class CategoriaServices {
     return data.length > 0;
   }
 
-  static async inserir(p_dsc_categoria: string): Promise<string | null> {
-    const { error } = await supabase
-      .from("categorias")
-      .insert({ dsc_categoria: p_dsc_categoria });
+  static async inserir(payload: CategoriaPayloadType): Promise<string | null> {
+    const { error } = await supabase.from("categorias").insert(payload);
 
     if (error) {
       return error.message;
@@ -94,11 +95,11 @@ export class CategoriaServices {
 
   static async atualizar(
     p_categoria_id: number,
-    p_dsc_categoria: string
+    payload: CategoriaPayloadType
   ): Promise<string | null> {
     const { error } = await supabase
       .from("categorias")
-      .update({ dsc_categoria: p_dsc_categoria })
+      .update(payload)
       .eq("categoria_id", p_categoria_id);
 
     if (error) {

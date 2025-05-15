@@ -1,5 +1,5 @@
 import { supabase } from "../lib/subabase";
-import { FornecedorType } from "@/types/fornecedor";
+import { FornecedorPayloadType, FornecedorType } from "@/types/fornecedor";
 
 export class FornecedorServices {
   static async buscarRegistro(p_id: number) {
@@ -41,12 +41,15 @@ export class FornecedorServices {
     return data;
   }
 
-  static async verificaDuplicidade(p_id: number, p_dsc: string): Promise<boolean> {
+  static async verificaDuplicidade(
+    p_id: number,
+    p_dsc: string
+  ): Promise<boolean> {
     const { data, error } = await supabase
       .from("fornecedores")
       .select("fornecedor_id")
       .eq("dsc_razao_social", p_dsc)
-      .neq("fornecedor_id", p_id); 
+      .neq("fornecedor_id", p_id);
 
     if (error) {
       return false;
@@ -55,30 +58,22 @@ export class FornecedorServices {
     return data.length > 0;
   }
 
-    static async registroEmUso(p_id: number): Promise<boolean> {
-      const { data, error } = await supabase
-        .from("contas_pagar")
-        .select("conta_pagar_id")
-        .eq("fornecedor_id", p_id)
-        .limit(1); // Só precisamos saber se existe pelo menos um
+  static async registroEmUso(p_id: number): Promise<boolean> {
+    const { data, error } = await supabase
+      .from("contas_pagar")
+      .select("conta_pagar_id")
+      .eq("fornecedor_id", p_id)
+      .limit(1); // Só precisamos saber se existe pelo menos um
 
-      if (error) {
-        return false;
-      }
-
-      return data.length > 0;
+    if (error) {
+      return false;
     }
 
-  static async inserir(
-    p_dsc_razao_social: string,
-    p_dsc_nome_fantasia: string
-  ): Promise<string | null> {
-    const { error } = await supabase
-      .from("fornecedores")
-      .insert({
-        dsc_razao_social: p_dsc_razao_social,
-        dsc_nome_fantasia: p_dsc_nome_fantasia,
-      });
+    return data.length > 0;
+  }
+
+  static async inserir(payload: FornecedorPayloadType): Promise<string | null> {
+    const { error } = await supabase.from("fornecedores").insert(payload);
 
     if (error) {
       return error.message;
@@ -101,16 +96,12 @@ export class FornecedorServices {
   }
 
   static async atualizar(
-    p_fornecedor_id: number,
-    p_dsc_razao_social: string,
-    p_dsc_nome_fantasia: string
+    payload: FornecedorPayloadType,
+    p_fornecedor_id: number
   ): Promise<string | null> {
     const { error } = await supabase
       .from("fornecedores")
-      .update({
-        dsc_razao_social: p_dsc_razao_social,
-        dsc_nome_fantasia: p_dsc_nome_fantasia,
-      })
+      .update(payload)
       .eq("fornecedor_id", p_fornecedor_id);
 
     if (error) {

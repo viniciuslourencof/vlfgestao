@@ -1,27 +1,30 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, RefreshCcw } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ClienteType } from "../types/cliente";
+import { ClientePayloadType, ClienteType } from "../types/cliente";
 import { ClienteServices } from "../services/clienteServices";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GridRegistros } from "../components/grid-clientes";
+import { Plus, RefreshCcw } from "lucide-react";
 
 export function ClientesPage() {
   const [registros, setRegistros] = useState<ClienteType[]>([]);
-  const [registroEditando, setRegistroEditando] =
-    useState<ClienteType | null>(null);
+  const [registroEditando, setRegistroEditando] = useState<ClienteType | null>(
+    null
+  );
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
   );
-  const [textoPesquisa, setTextoPesquisa] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const carregarRegistros = useCallback(async () => {
     const resultado = await ClienteServices.buscarRegistros();
@@ -48,8 +51,8 @@ export function ClientesPage() {
     setRegistroEditando(null);
   };
 
-  const antesDeDeletar = (p_registro_id: number) => {
-    setRegistroIdADeletar(p_registro_id);
+  const antesDeDeletar = (p_registro: ClienteType) => {
+    setRegistroIdADeletar(p_registro.cliente_id);
     setMostrarConfirmacao(true);
   };
 
@@ -60,7 +63,9 @@ export function ClientesPage() {
 
     const emUso = await ClienteServices.registroEmUso(registroIdADeletar);
     if (emUso) {
-      setMensagemAviso("Registro em uso dentro de Contas a Receber, verifique!");
+      setMensagemAviso(
+        "Registro em uso dentro de Contas a Receber, verifique!"
+      );
       setMostrarAviso(true);
       return;
     }
@@ -78,30 +83,40 @@ export function ClientesPage() {
     carregarRegistros();
   };
 
-  const aoSalvar = async () => {
-    if (!registroEditando) return;
-
-    if (!registroEditando.dsc_razao_social.trim()) {
-      setMensagemAviso("Razão Social não pode estar vazia.");
+  const aoSalvar = async (payload: ClientePayloadType) => {
+    if (!registroEditando) {
+      setMensagemAviso("Erro inesperado ao salvar. Tente novamente.");
       setMostrarAviso(true);
       return;
     }
 
+    const registroParaSalvar: ClienteType = {
+      ...registroEditando, // Mantém quaisquer outros campos de registroEditando
+      ...payload, // sobrescreve os campos definidos em payload
+    };
+
+    // Validação usando o registroParaSalvar que contém a descrição correta
+    if (!registroParaSalvar.dsc_razao_social) {
+      setMensagemAviso("Descrição não pode estar vazia.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    // Verificação de duplicidade usando registroParaSalvar
     const duplicado = await ClienteServices.verificaDuplicidade(
-      registroEditando.cliente_id,
-      registroEditando.dsc_razao_social
+      registroParaSalvar.cliente_id,
+      registroParaSalvar.dsc_razao_social
     );
     if (duplicado) {
-      setMensagemAviso("Razão Social já cadastrada, verifique.");
+      setMensagemAviso("Descrição já cadastrada, verifique.");
       setMostrarAviso(true);
       return;
     }
 
-    if (registroEditando.cliente_id === 0) {
-      const error = await ClienteServices.inserir(
-        registroEditando.dsc_razao_social,
-        registroEditando.dsc_nome_fantasia
-      );
+    // Lógica de inserção ou atualização usando registroParaSalvar
+    if (registroParaSalvar.cliente_id === 0) {
+      // Novo registro
+      const error = await ClienteServices.inserir(payload);
 
       if (error) {
         setMensagemAviso("Erro ao inserir registro: " + error);
@@ -109,10 +124,10 @@ export function ClientesPage() {
         return;
       }
     } else {
+      // Edição de registro existente
       const error = await ClienteServices.atualizar(
-        registroEditando.cliente_id,
-        registroEditando.dsc_razao_social,
-        registroEditando.dsc_nome_fantasia
+        payload,
+        registroParaSalvar.cliente_id
       );
 
       if (error) {
@@ -123,82 +138,29 @@ export function ClientesPage() {
     }
 
     toast.success("Registro salvo com sucesso!");
-    carregarRegistros();
-    aoFecharFormulario();
+    carregarRegistros(); // Recarrega a lista de registros
+    aoFecharFormulario(); // Fecha o formulário e limpa registroEditando
   };
 
-  const registrosFiltrados = registros.filter((registro) =>
-    registro.dsc_razao_social
-      .toLowerCase()
-      .includes(textoPesquisa.toLowerCase())
-  );
-
-  function ListaRegistros() {
-    return (
-      <>
-        <h1 className="text-2xl font-bold">Clientes</h1>
-        <Input
-          type="text"
-          placeholder="Pesquisar registros..."
-          className="w-full my-4"
-          value={textoPesquisa}
-          onChange={(e) => setTextoPesquisa(e.target.value)}
-        />
-        <div className="flex items-center mb-4">
-          <div className="flex gap-2">
-            <Button onClick={aoInserir} className="cursor-pointer">
-              <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
-            </Button>
-            <Button onClick={carregarRegistros} className="cursor-pointer">
-              <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
-              <span className="max-[400px]:hidden">Atualizar</span>
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {registrosFiltrados.map((registro) => (
-            <Card
-              key={registro.cliente_id}
-              className="p-4 flex flex-col justify-between"
-            >
-              <div>
-                <h2 className="font-semibold text-lg">
-                  {registro.dsc_razao_social}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Código: {registro.cliente_id}
-                </p>
-                <p className="text-sm text mt-1">
-                  Nome Fantasia: {registro.dsc_nome_fantasia}
-                </p>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => aoEditar(registro)}
-                  className="cursor-pointer"
-                >
-                  <Pencil className="w-4 h-4 mr-1" /> Editar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => antesDeDeletar(registro.cliente_id)}
-                  className="cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" /> Apagar
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </>
-    );
-  }
-
   function FormularioRegistro() {
+    // Estados locais
+    const [dsc_razao_social, setDscRazaoSocial] = useState(
+      registroEditando?.dsc_razao_social ?? ""
+    );
+
+    const [dsc_nome_fantasia, setDscNomeFantasia] = useState(
+      registroEditando?.dsc_nome_fantasia ?? ""
+    );
+
+    // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
+    useEffect(() => {
+      setDscRazaoSocial(registroEditando?.dsc_razao_social ?? "");
+      setDscNomeFantasia(registroEditando?.dsc_nome_fantasia ?? "");
+      if (inputRef.current) {
+        inputRef.current.focus();        
+      }
+    }, [registroEditando]);
+
     return (
       <>
         {registroEditando ? (
@@ -221,32 +183,20 @@ export function ClientesPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="descricao">Razão Social</Label>
+                    <Label htmlFor="dsc_razao_social">Razão Social</Label>
                     <Input
-                      id="descricao"
-                      value={registroEditando.dsc_razao_social}
-                      onChange={(e) =>
-                        setRegistroEditando((prev) =>
-                          prev
-                            ? { ...prev, dsc_razao_social: e.target.value }
-                            : prev
-                        )
-                      }
+                      id="dsc_razao_social"
+                      value={dsc_razao_social}
+                      onChange={(e) => setDscRazaoSocial(e.target.value)}
+                      ref={inputRef}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="descricao">Nome Fantasia</Label>
+                    <Label htmlFor="dsc_nome_fantasia">Nome Fantasia</Label>
                     <Input
-                      id="descricao"
-                      value={registroEditando.dsc_nome_fantasia}
-                      onChange={(e) =>
-                        setRegistroEditando((prev) =>
-                          prev
-                            ? { ...prev, dsc_nome_fantasia: e.target.value }
-                            : prev
-                        )
-                      }
-                      placeholder=""
+                      id="dsc_nome_fantasia"
+                      value={dsc_nome_fantasia}
+                      onChange={(e) => setDscNomeFantasia(e.target.value)}
                     />
                   </div>
                 </CardContent>
@@ -261,7 +211,12 @@ export function ClientesPage() {
               >
                 Cancelar
               </Button>
-              <Button className="cursor-pointer" onClick={aoSalvar}>
+              <Button
+                className="cursor-pointer"
+                onClick={() => {
+                  aoSalvar({ dsc_razao_social, dsc_nome_fantasia });
+                }}
+              >
                 Salvar
               </Button>
             </div>
@@ -273,7 +228,27 @@ export function ClientesPage() {
 
   return (
     <div className="p-6">
-      {registroEditando ? FormularioRegistro() : ListaRegistros()}
+      <h1 className="text-2xl font-bold mb-4">Clientes</h1>
+      <div className="flex items-center mb-4">
+        <div className="flex gap-2">
+          <Button onClick={aoInserir} className="cursor-pointer">
+            <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
+          </Button>
+          <Button onClick={carregarRegistros} className="cursor-pointer">
+            <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
+            <span className="max-[400px]:hidden">Atualizar</span>
+          </Button>
+        </div>
+      </div>
+      {registroEditando ? (
+        <FormularioRegistro />
+      ) : (
+        <GridRegistros
+          registros={registros}
+          aoEditar={aoEditar}
+          antesDeDeletar={antesDeDeletar}
+        />
+      )}
       <ModalConfirmacao
         open={mostrarConfirmacao}
         onCancel={() => setMostrarConfirmacao(false)}

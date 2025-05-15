@@ -21,3 +21,9 @@ export type ContaPagarComRelacionamentoType = {
     dsc_razao_social: string;
   };
 };
+
+export type ContaPagarPayloadType = Pick<
+  ContaPagarType,
+  'fornecedor_id' | 'forma_pagamento_id' | 'vr_liquido' 
+>;
+

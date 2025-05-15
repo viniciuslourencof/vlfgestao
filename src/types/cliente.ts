@@ -9,3 +9,8 @@ export type ModalBuscaClientePropsType = {
   onClose: (open: boolean) => void;
   onSelect: (cliente: ClienteType) => void;
 };
+
+export type ClientePayloadType = Pick<
+  ClienteType,
+  'dsc_razao_social' | 'dsc_nome_fantasia'
+>;

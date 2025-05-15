@@ -1,18 +1,15 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, RefreshCcw, Search } from "lucide-react";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ContaPagarType,
-  ContaPagarComRelacionamentoType,
-} from "../types/contasPagar";
+import { ContaPagarType, ContaPagarPayloadType } from "../types/contasPagar";
 import { ContasPagarServices } from "../services/contasPagarServices";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GridRegistros } from "../components/grid-contas-pagar"; // caminho correto do arquivo
 import { formatarData } from "@/lib/formatarData";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
@@ -20,6 +17,7 @@ import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
 import { FornecedorType } from "@/types/fornecedor";
 import { FornecedorServices } from "@/services/fornecedorServices";
 import ModalBuscaFornecedor from "@/components/modal-busca-fornecedor";
+import { Search, Plus, RefreshCcw } from "lucide-react";
 
 export function ContasPagarPage() {
   const [registros, setRegistros] = useState<ContaPagarType[]>([]);
@@ -29,13 +27,9 @@ export function ContasPagarPage() {
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
   );
-  const [textoPesquisa, setTextoPesquisa] = useState<string>("");
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
-  const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
-    useState(false);
-  const [abrirModalBuscaFornecedor, setAbrirModalBuscaFornecedor] =
-    useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamentoType>({
     forma_pagamento_id: 0,
     dsc_forma_pagamento: "",
@@ -45,23 +39,14 @@ export function ContasPagarPage() {
     dsc_razao_social: "",
     dsc_nome_fantasia: "",
   });
+  const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
+    useState(false);
+  const [abrirModalBuscaFornecedor, setAbrirModalBuscaFornecedor] =
+    useState(false);
 
   const carregarRegistros = useCallback(async () => {
     const resultado = await ContasPagarServices.buscarRegistros();
-
-    const resultadosFormatado: ContaPagarType[] = resultado.map(
-      (contaPagar: ContaPagarComRelacionamentoType) => ({
-        conta_pagar_id: contaPagar.conta_pagar_id,
-        fornecedor_id: contaPagar.fornecedor_id,
-        forma_pagamento_id: contaPagar.forma_pagamento_id,
-        vr_liquido: contaPagar.vr_liquido,
-        dt_inc: contaPagar.dt_inc,
-        dsc_forma_pagamento: contaPagar.formas_pagamento?.dsc_forma_pagamento,
-        dsc_razao_social: contaPagar.fornecedores?.dsc_razao_social,
-      })
-    );
-
-    setRegistros(resultadosFormatado);
+    setRegistros(resultado);
   }, []);
 
   useEffect(() => {
@@ -77,12 +62,15 @@ export function ContasPagarPage() {
       dt_inc: new Date().toISOString(),
     });
 
-    setFormaPagamento({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
-
     setFornecedor({
       fornecedor_id: 0,
       dsc_razao_social: "",
       dsc_nome_fantasia: "",
+    });
+
+    setFormaPagamento({
+      forma_pagamento_id: 0,
+      dsc_forma_pagamento: "",
     });
   };
 
@@ -108,8 +96,8 @@ export function ContasPagarPage() {
     setRegistroEditando(null);
   };
 
-  const antesDeDeletar = (p_registro_id: number) => {
-    setRegistroIdADeletar(p_registro_id);
+  const antesDeDeletar = (p_registro: ContaPagarType) => {
+    setRegistroIdADeletar(p_registro.conta_pagar_id);
     setMostrarConfirmacao(true);
   };
 
@@ -118,18 +106,16 @@ export function ContasPagarPage() {
 
     setMostrarConfirmacao(false);
 
-    // const emUso = await ContasPagarServices.registroEmUso(
-    //   registroIdADeletar
-    // );
+    // const emUso = await ContasPagarServices.registroEmUso(registroIdADeletar);
     // if (emUso) {
-    //   setMensagemAviso("Registro em uso dentro de Pedidos, verifique!");
+    //   setMensagemAviso(
+    //     "Registro em uso dentro de Contas a Receber, verifique!"
+    //   );
     //   setMostrarAviso(true);
     //   return;
     // }
 
     const error = await ContasPagarServices.deletar(registroIdADeletar);
-
-    console.log("oi");
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
@@ -138,33 +124,44 @@ export function ContasPagarPage() {
     }
 
     toast.success("Registro apagado com sucesso!");
+
     carregarRegistros();
   };
 
-  const aoSalvar = async () => {
-    if (!registroEditando) return;
-
-    if (registroEditando.vr_liquido === 0) {
-      setMensagemAviso("Valor da Conta não pode ser zero.");
+  const aoSalvar = async (payload: ContaPagarPayloadType) => {
+    if (!registroEditando) {
+      setMensagemAviso("Erro inesperado ao salvar. Tente novamente.");
       setMostrarAviso(true);
       return;
     }
 
-    if (formaPagamento.forma_pagamento_id === 0) {
-      setMensagemAviso("Forma de Pagamento não pode estar vazia.");
+    const registroParaSalvar: ContaPagarType = {
+      ...registroEditando, // Mantém quaisquer outros campos de registroEditando
+      ...payload, // sobrescreve os campos definidos em payload
+    };
+
+    if (!registroParaSalvar.vr_liquido) {
+      setMensagemAviso("Valor da Conta não pode estar vazio.");
       setMostrarAviso(true);
       return;
     }
 
-    if (fornecedor.fornecedor_id === 0) {
+    if (!registroParaSalvar.forma_pagamento_id) {
       setMensagemAviso("Fornecedor não pode estar vazio.");
       setMostrarAviso(true);
       return;
     }
 
+    if (!registroParaSalvar.fornecedor_id) {
+      setMensagemAviso("Forma de Pagamento não pode estar vazia.");
+      setMostrarAviso(true);
+      return;
+    }
+
+    // // Verificação de duplicidade usando registroParaSalvar
     // const duplicado = await ContasPagarServices.verificaDuplicidade(
-    //   registroEditando.forma_pagamento_id,
-    //   registroEditando.dsc_forma_pagamento
+    //   registroParaSalvar.cliente_id,
+    //   registroParaSalvar.dsc_razao_social
     // );
     // if (duplicado) {
     //   setMensagemAviso("Descrição já cadastrada, verifique.");
@@ -172,15 +169,10 @@ export function ContasPagarPage() {
     //   return;
     // }
 
-    registroEditando.forma_pagamento_id = formaPagamento.forma_pagamento_id;
-    registroEditando.fornecedor_id = fornecedor.fornecedor_id;
-
-    if (registroEditando.conta_pagar_id === 0) {
-      const error = await ContasPagarServices.inserir(
-        registroEditando.fornecedor_id,
-        registroEditando.forma_pagamento_id,
-        Number(registroEditando.vr_liquido)
-      );
+    // Lógica de inserção ou atualização usando registroParaSalvar
+    if (registroParaSalvar.conta_pagar_id === 0) {
+      // Novo registro
+      const error = await ContasPagarServices.inserir(payload);
 
       if (error) {
         setMensagemAviso("Erro ao inserir registro: " + error);
@@ -188,11 +180,10 @@ export function ContasPagarPage() {
         return;
       }
     } else {
+      // Edição de registro existente
       const error = await ContasPagarServices.atualizar(
-        registroEditando.conta_pagar_id,
-        registroEditando.fornecedor_id,
-        registroEditando.forma_pagamento_id,
-        Number(registroEditando.vr_liquido)
+        payload,
+        registroEditando.conta_pagar_id
       );
 
       if (error) {
@@ -203,8 +194,6 @@ export function ContasPagarPage() {
     }
 
     toast.success("Registro salvo com sucesso!");
-
-    console.log("salvo");
     carregarRegistros();
     aoFecharFormulario();
   };
@@ -227,84 +216,20 @@ export function ContasPagarPage() {
     }
   };
 
-  const registrosFiltrados = registros.filter((registro) =>
-    registro.conta_pagar_id.toString().includes(textoPesquisa.toLowerCase())
-  );
-
-  function ListaRegistros() {
-    return (
-      <>
-        <h1 className="text-2xl font-bold">Contas a Pagar</h1>
-        <Input
-          type="text"
-          placeholder="Pesquisar registros..."
-          className="w-full my-4"
-          value={textoPesquisa}
-          onChange={(e) => setTextoPesquisa(e.target.value)}
-        />
-        <div className="flex items-center mb-4">
-          <div className="flex gap-2">
-            <Button onClick={aoInserir} className="cursor-pointer">
-              <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
-            </Button>
-            <Button onClick={carregarRegistros} className="cursor-pointer">
-              <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
-              <span className="max-[400px]:hidden">Atualizar</span>
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {registrosFiltrados.map((registro) => (
-            <Card
-              key={registro.conta_pagar_id}
-              className="p-4 flex flex-col justify-between"
-            >
-              <div>
-                <h2 className="font-semibold text-lg">
-                  CONTA #{registro.conta_pagar_id}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Data Emissão: {formatarData(registro.dt_inc)}
-                </p>
-
-                <p className="text-sm mt-1 ">
-                  Vr. Conta: {Number(registro.vr_liquido).toFixed(2)}
-                </p>
-
-                <p className="text-sm ">
-                  Forma de Pagamento: {registro.dsc_forma_pagamento}
-                </p>
-                <p className="text-sm ">
-                  Fornecedor: {registro.dsc_razao_social}
-                </p>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => aoEditar(registro)}
-                  className="cursor-pointer"
-                >
-                  <Pencil className="w-4 h-4 mr-1" /> Editar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => antesDeDeletar(registro.conta_pagar_id)}
-                  className="cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" /> Apagar
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </>
-    );
-  }
-
   function FormularioRegistro() {
+    // Estado locais
+    const [vr_liquido, setVrLiquido] = useState(
+      registroEditando?.vr_liquido ?? ""
+    );
+
+    // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
+    useEffect(() => {
+      setVrLiquido(registroEditando?.vr_liquido ?? "");
+      if (inputRef.current) {
+        inputRef.current.focus();        
+      }
+    }, [registroEditando]);
+
     return (
       <>
         {registroEditando ? (
@@ -317,7 +242,7 @@ export function ContasPagarPage() {
             </TabsList>
 
             <TabsContent value="geral">
-              <Card className="w-full h-full mx-auto">
+              <Card className=" w-full h-full mx-auto p-6">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
                     {registroEditando.conta_pagar_id === 0
@@ -350,8 +275,9 @@ export function ContasPagarPage() {
                       <Input
                         id="vr_liquido"
                         name="vr_liquido"
-                        value={registroEditando.vr_liquido ?? ""}
+                        value={vr_liquido}
                         onChange={aoEditarCampoNumerico}
+                        ref={inputRef}
                       />
                     </div>
                   </div>
@@ -393,6 +319,7 @@ export function ContasPagarPage() {
                       </div>
                     </div>
                   </Card>
+
                   <Card className="p-4 gap-3">
                     <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
                       Fornecedor
@@ -433,6 +360,7 @@ export function ContasPagarPage() {
                 </CardContent>
               </Card>
             </TabsContent>
+
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
@@ -441,7 +369,16 @@ export function ContasPagarPage() {
               >
                 Cancelar
               </Button>
-              <Button className="cursor-pointer" onClick={aoSalvar}>
+              <Button
+                className="cursor-pointer"
+                onClick={() => {
+                  aoSalvar({
+                    fornecedor_id: fornecedor.fornecedor_id,
+                    forma_pagamento_id: formaPagamento.forma_pagamento_id,
+                    vr_liquido: vr_liquido,
+                  });
+                }}
+              >
                 Salvar
               </Button>
             </div>
@@ -453,7 +390,28 @@ export function ContasPagarPage() {
 
   return (
     <div className="p-6">
-      {registroEditando ? FormularioRegistro() : ListaRegistros()}
+      <h1 className="text-2xl font-bold mb-4">Contas a Pagar</h1>
+      <div className="flex items-center mb-4">
+        <div className="flex gap-2">
+          <Button onClick={aoInserir} className="cursor-pointer">
+            <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
+          </Button>
+          <Button onClick={carregarRegistros} className="cursor-pointer">
+            <RefreshCcw className="w-4 h-4 mr-2 cursor-pointer" />
+            <span className="max-[400px]:hidden">Atualizar</span>
+          </Button>
+        </div>
+      </div>
+
+      {registroEditando ? (
+        <FormularioRegistro />
+      ) : (
+        <GridRegistros
+          registros={registros}
+          aoEditar={aoEditar}
+          antesDeDeletar={antesDeDeletar}
+        />
+      )}
       <ModalConfirmacao
         open={mostrarConfirmacao}
         onCancel={() => setMostrarConfirmacao(false)}
