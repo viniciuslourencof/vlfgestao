@@ -7,16 +7,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/subabase";
-
-interface Categoria {
-  categoria_id: number;
-  dsc_categoria: string;
-}
+import { CategoriaType } from "@/types/categoria";
 
 interface ModalBuscaCategoriaProps {
   open: boolean;
   onClose: (open: boolean) => void;
-  onSelect: (categoria: Categoria) => void;
+  onSelect: (categoria: CategoriaType) => void;
 }
 
 export default function ModalBuscaCategoria({
@@ -25,7 +21,7 @@ export default function ModalBuscaCategoria({
   onSelect,
 }: ModalBuscaCategoriaProps) {
   const [termo, setTermo] = useState("");
-  const [resultados, setResultados] = useState<Categoria[]>([]);
+  const [resultados, setResultados] = useState<CategoriaType[]>([]);
   const [focoIndex, setFocoIndex] = useState(0);
 
   useEffect(() => {

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
-const navItems = [
+const itensMenu = [
   { icon: Store, label: "PDV", path: "/" },
   {
     icon: Cuboid,
@@ -92,7 +92,7 @@ export function MenuLateral({
       </div>
 
       <nav className="space-y-2">
-        {navItems.map((item, index) => {
+        {itensMenu.map((item, index) => {
           const isActive = location.pathname === item.path;
           return (
             <Link to={item.path} key={index} onClick={onClose}>

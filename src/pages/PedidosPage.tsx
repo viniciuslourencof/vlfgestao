@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { PedidoType, PedidoPayloadType, PedidoItemType } from "../types/pedido";
 import { PedidoServices } from "../services/pedidoServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GridRegistros } from "../components/grid-pedidos";
+// import { GridRegistros } from "../components/grid-pedidos";
 import { GridRegistrosDetail } from "../components/grid-pedidos-itens";
 import { formatarData } from "@/lib/formatarData";
 import { FormaPagamentoType } from "../types/formaPagamento";
@@ -20,6 +20,8 @@ import { ClienteServices } from "@/services/clienteServices";
 import ModalBuscaCliente from "@/components/modal-busca-cliente";
 import { Search, Plus, RefreshCcw } from "lucide-react";
 import { PedidoItemServices } from "@/services/pedidoItemServices";
+import GridRegistros from "@/components/grid-registros";
+import type { ColDef } from "ag-grid-community";
 
 export function PedidosPage() {
   const [registros, setRegistros] = useState<PedidoType[]>([]);
@@ -227,6 +229,30 @@ export function PedidosPage() {
     }
   };
 
+  const colunasGrid: ColDef[] = [
+    { field: "pedido_id", headerName: "Código" },
+    {
+      field: "dt_inc",
+      headerName: "Data",
+      valueFormatter: (params) => {
+        return new Date(params.value).toLocaleDateString("pt-BR");
+      },
+    },
+    {
+      field: "clientes.dsc_razao_social",
+      headerName: "Cliente",
+    },
+    {
+      field: "vr_liquido",
+      headerName: "Valor",
+      valueFormatter: (params) =>
+        params.value?.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        }),
+    },
+  ];
+
   function FormularioRegistro() {
     // Estado locais
     const [vr_liquido, setVrLiquido] = useState(
@@ -426,8 +452,15 @@ export function PedidosPage() {
       {registroEditando ? (
         <FormularioRegistro />
       ) : (
+        // <GridRegistros
+        //   registros={registros}
+        //   aoEditar={aoEditar}
+        //   antesDeDeletar={antesDeDeletar}
+        // />
         <GridRegistros
           registros={registros}
+          colunas={colunasGrid}
+          campoRodape="pedido_id"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

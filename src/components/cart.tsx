@@ -18,6 +18,7 @@ export function Cart({
   setCarrinhoMinimizado,
   limpaCarrinho: resetCarrinho,
 }: CartPropsType) {
+  const [efetuandoOperacao, setEfetuandoOperacao] = useState(false);
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
   const [formaPagamento, setformaPagamento] = useState<FormaPagamentoType>({
@@ -27,39 +28,45 @@ export function Cart({
   const [cliente] = useState<ClienteType>({
     cliente_id: 2,
     dsc_razao_social: "",
-    dsc_nome_fantasia: ""
+    dsc_nome_fantasia: "",
   });
 
   const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
     useState(false);
 
+  const aoFinalizar = async () => {
+    setEfetuandoOperacao(true);
+
+    try {
+      const resultado = await PedidoServices.efetivarPedido(carrinho, {
+        vr_liquido: 0.0,
+        cliente_id: cliente.cliente_id,
+        forma_pagamento_id: formaPagamento.forma_pagamento_id,
+      });
+
+      if (resultado.erro) {
+        setMensagemAviso(resultado.erro);
+        setMostrarAviso(true);
+        return;
+      }
+
+      setMensagemAviso("Pedido finalizado com sucesso!");
+      setMostrarAviso(true);
+      resetCarrinho();
+      setformaPagamento({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
+    } finally {
+      setEfetuandoOperacao(false);
+    }
+  };
+
   if (!carrinho) return;
 
   const subtotal = carrinho.reduce(
-    (acc, item) => acc + item.vr_unit * item.quantidade,
+    (acumulado, item) => acumulado + item.vr_unit * item.quantidade,
     0
   );
 
   const total = subtotal;
-
-  const aoFinalizar = async () => {
-    const resultado = await PedidoServices.efetivarPedido(carrinho, {
-      vr_liquido: 0.0,
-      cliente_id: cliente.cliente_id,
-      forma_pagamento_id: formaPagamento.forma_pagamento_id,
-    });
-
-    if (resultado.erro) {
-      setMensagemAviso(resultado.erro);
-      setMostrarAviso(true);
-      return;
-    }
-
-    setMensagemAviso("Pedido finalizado com sucesso!");
-    setMostrarAviso(true);
-    resetCarrinho();
-    setformaPagamento({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
-  };
 
   return (
     <div
@@ -187,8 +194,9 @@ export function Cart({
             <Button
               className="w-full bg-gray-600 hover:bg-gray-700 text-white h-12 cursor-pointer"
               onClick={aoFinalizar}
+              disabled={efetuandoOperacao}
             >
-              Finalizar Pedido
+              {efetuandoOperacao ? "Finalizando..." : "Finalizar Pedido"}
             </Button>
           </div>
         </>
