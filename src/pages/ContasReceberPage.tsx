@@ -11,7 +11,7 @@ import {
   ContaReceberPayloadType,
 } from "../types/contaReceber";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GridRegistros } from "../components/grid-contas-receber"; // caminho correto do arquivo
+import GridRegistros from "../components/grid-registros"; 
 import { formatarData } from "@/lib/formatarData";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
@@ -21,6 +21,7 @@ import { ClienteServices } from "@/services/clienteServices";
 import ModalBuscaCliente from "@/components/modal-busca-cliente";
 import { Search, Plus, RefreshCcw } from "lucide-react";
 import { ContasReceberServices } from "@/services/contaReceberServices";
+import type { ColDef } from "ag-grid-community";
 
 export function ContasReceberPage() {
   const [registros, setRegistros] = useState<ContaReceberType[]>([]);
@@ -218,6 +219,60 @@ export function ContasReceberPage() {
     }
   };
 
+  const colunasGrid: ColDef[] = [
+    {
+      field: "conta_receber_id",
+      headerName: "Código",
+      editable: false,
+      filter: "agNumberColumnFilter",
+    },
+
+    {
+      field: "dt_inc",
+      headerName: "Dt. Inclusão",
+      editable: false,
+      filter: "agTextColumnFilter",
+      valueFormatter: (params) => {
+        if (!params.value) return "";
+        const date = new Date(params.value);
+        return date.toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      },
+    },
+
+    {
+      field: "formas_pagamento.dsc_forma_pagamento",
+      headerName: "Forma de Pagamento",
+      editable: false,
+      filter: "agTextColumnFilter",
+    },
+    {
+      field: "clientes.dsc_razao_social",
+      headerName: "Clientes",
+      editable: false,
+      filter: "agTextColumnFilter",
+    },
+    {
+      field: "vr_liquido",
+      headerName: "Vr. Liquido",
+      editable: false,
+      filter: "agNumberColumnFilter",
+      valueFormatter: (params) => {
+        if (params.value == null) return "";
+        return params.value.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+      },
+    },
+  ];
+
   function FormularioRegistro() {
     // Estado locais
     const [vr_liquido, setVrLiquido] = useState(
@@ -228,7 +283,7 @@ export function ContasReceberPage() {
     useEffect(() => {
       setVrLiquido(registroEditando?.vr_liquido ?? "");
       if (inputRef.current) {
-        inputRef.current.focus();        
+        inputRef.current.focus();
       }
     }, [registroEditando]);
 
@@ -391,7 +446,7 @@ export function ContasReceberPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Contas a Receber</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
@@ -410,6 +465,8 @@ export function ContasReceberPage() {
       ) : (
         <GridRegistros
           registros={registros}
+          colunas={colunasGrid}
+          campoRodape="dsc_razao_social"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

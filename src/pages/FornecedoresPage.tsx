@@ -9,8 +9,9 @@ import { toast } from "sonner";
 import { FornecedorPayloadType, FornecedorType } from "../types/fornecedor";
 import { FornecedorServices } from "../services/fornecedorServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GridRegistros } from "../components/grid-fornecedores";
+import GridRegistros from "../components/grid-registros";
 import { Plus, RefreshCcw } from "lucide-react";
+import type { ColDef } from "ag-grid-community";
 
 export function FornecedoresPage() {
   const [registros, setRegistros] = useState<FornecedorType[]>([]);
@@ -141,6 +142,29 @@ export function FornecedoresPage() {
     aoFecharFormulario(); // Fecha o formulário e limpa registroEditando
   };
 
+  const colunasGrid: ColDef[] = [
+    {
+      field: "fornecedor_id",
+      headerName: "Código",
+      editable: false,
+      filter: "agNumberColumnFilter",
+    },
+    {
+      field: "dsc_razao_social",
+      headerName: "Razão Social",
+      editable: false,
+      filter: "agTextColumnFilter",
+      flex: 1,
+    },
+    {
+      field: "dsc_nome_fantasia",
+      headerName: "Nome Fantasia",
+      editable: false,
+      filter: "agTextColumnFilter",
+      flex: 1,
+    },
+  ];
+
   function FormularioRegistro() {
     // Estados locais
     const [dsc_razao_social, setDscRazaoSocial] = useState(
@@ -224,7 +248,7 @@ export function FornecedoresPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Fornecedores</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
@@ -242,6 +266,8 @@ export function FornecedoresPage() {
       ) : (
         <GridRegistros
           registros={registros}
+          colunas={colunasGrid}
+          campoRodape="dsc_razao_social"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

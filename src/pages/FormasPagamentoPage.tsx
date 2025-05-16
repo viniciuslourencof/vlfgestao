@@ -12,8 +12,9 @@ import {
 } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "../services/formaPagamentoServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GridRegistros } from "../components/grid-formas-pagamento";
+import GridRegistros from "../components/grid-registros";
 import { Plus, RefreshCcw } from "lucide-react";
+import type { ColDef } from "ag-grid-community";
 
 export function FormasPagamentoPage() {
   const [registros, setRegistros] = useState<FormaPagamentoType[]>([]);
@@ -92,7 +93,7 @@ export function FormasPagamentoPage() {
       ...registroEditando,
       ...payload,
     };
-    
+
     if (!registroParaSalvar.dsc_forma_pagamento) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
@@ -108,7 +109,7 @@ export function FormasPagamentoPage() {
       setMostrarAviso(true);
       return;
     }
-    
+
     if (registroParaSalvar.forma_pagamento_id === 0) {
       // Novo registro
       const error = await FormaPagamentoServices.inserir(payload);
@@ -136,6 +137,22 @@ export function FormasPagamentoPage() {
     carregarRegistros(); // Recarrega a lista de registros
     aoFecharFormulario(); // Fecha o formulário e limpa registroEditando
   };
+
+  const colunasGrid: ColDef[] = [
+    {
+      field: "forma_pagamento_id",
+      headerName: "Código",
+      editable: false,
+      filter: "agNumberColumnFilter",
+    },
+    {
+      field: "dsc_forma_pagamento",
+      headerName: "Descrição",
+      editable: false,
+      filter: "agTextColumnFilter",
+      flex: 1,
+    },
+  ];
 
   function FormularioRegistro() {
     // Estado local só para o campo descrição
@@ -212,7 +229,7 @@ export function FormasPagamentoPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Formas de Pagamento</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
@@ -230,6 +247,8 @@ export function FormasPagamentoPage() {
       ) : (
         <GridRegistros
           registros={registros}
+          colunas={colunasGrid}
+          campoRodape="dsc_forma_pagamento"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

@@ -3,8 +3,53 @@ import { supabase } from "../lib/subabase";
 import { PedidoItemType, PedidoItemPayloadType } from "@/types/pedido";
 
 export class PedidoItemServices {
-  static async inserir(payload: PedidoItemPayloadType[]): Promise<string | null> {
+  static async buscarRegistros(p_pedido_id: number): Promise<PedidoItemType[]> {
+    const { data, error } = await supabase
+      .from("pedidos_itens")
+      .select("*, produtos(dsc_produto)")
+      .eq("pedido_id", p_pedido_id);
+
+    if (error) {
+      console.error("Erro ao buscar itens do pedido:", error.message);
+      return [];
+    }
+
+    return data as PedidoItemType[];
+  }
+
+  static async inserir(
+    payload: PedidoItemPayloadType | PedidoItemPayloadType[]
+  ): Promise<string | null> {
     const { error } = await supabase.from("pedidos_itens").insert(payload);
+
+    if (error) {
+      return error.message;
+    }
+
+    return null;
+  }
+
+  static async deletar(p_id: number): Promise<string | null> {
+    const { error } = await supabase
+      .from("pedidos")
+      .delete()
+      .eq("pedido_id", p_id);
+
+    if (error) {
+      return error.message;
+    }
+
+    return null;
+  }
+
+  static async atualizar(
+    payload: PedidoItemPayloadType,
+    pedido_item_id: number
+  ): Promise<string | null> {
+    const { error } = await supabase
+      .from("pedidos_itens")
+      .update(payload)
+      .eq("pedido_item_id", pedido_item_id);
 
     if (error) {
       return error.message;
@@ -46,19 +91,5 @@ export class PedidoItemServices {
 
       return [...p_carrinhoAtual, novoItem];
     }
-  }
-
-  static async buscarRegistros(p_pedido_id: number): Promise<PedidoItemType[]> {
-    const { data, error } = await supabase
-      .from("pedidos_itens")
-      .select("*, produtos(dsc_produto)")
-      .eq("pedido_id", p_pedido_id);
-
-    if (error) {
-      console.error("Erro ao buscar itens do pedido:", error.message);
-      return [];
-    }
-
-    return data as PedidoItemType[];
   }
 }

@@ -104,7 +104,7 @@ export function ResumoFinanceiroPage() {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Resumo Financeiro</h1>
       <Card>
         <ChartContainer

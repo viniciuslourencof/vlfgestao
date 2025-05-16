@@ -9,8 +9,9 @@ import { toast } from "sonner";
 import { CategoriaPayloadType, CategoriaType } from "../types/categoria";
 import { CategoriaServices } from "../services/categoriaServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GridRegistros } from "../components/grid-categorias"; 
+import GridRegistros from "../components/grid-registros";
 import { Plus, RefreshCcw } from "lucide-react";
+import type { ColDef } from "ag-grid-community";
 
 export function CategoriasPage() {
   const [registros, setRegistros] = useState<CategoriaType[]>([]);
@@ -87,13 +88,13 @@ export function CategoriasPage() {
       ...registroEditando, // Mantém categoria_id e quaisquer outros campos de registroEditando
       ...payload,
     };
-    
+
     if (!registroParaSalvar.dsc_categoria) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
-    
+
     const duplicado = await CategoriaServices.verificaDuplicidade(
       registroParaSalvar.categoria_id,
       registroParaSalvar.dsc_categoria
@@ -103,7 +104,7 @@ export function CategoriasPage() {
       setMostrarAviso(true);
       return;
     }
-    
+
     if (registroParaSalvar.categoria_id === 0) {
       // Novo registro
       const error = await CategoriaServices.inserir(payload);
@@ -131,6 +132,22 @@ export function CategoriasPage() {
     carregarRegistros(); // Recarrega a lista de registros
     aoFecharFormulario(); // Fecha o formulário e limpa registroEditando
   };
+
+  const colunasGrid: ColDef[] = [
+    {
+      field: "categoria_id",
+      headerName: "Código",
+      editable: false,
+      filter: "agNumberColumnFilter",
+    },
+    {
+      field: "dsc_categoria",
+      headerName: "Descrição",
+      editable: false,
+      filter: "agTextColumnFilter",
+      flex: 1,
+    },
+  ];
 
   function FormularioRegistro() {
     // Estado local só para o campo descrição
@@ -205,7 +222,7 @@ export function CategoriasPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Categorias</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
@@ -222,7 +239,9 @@ export function CategoriasPage() {
         <FormularioRegistro />
       ) : (
         <GridRegistros
-          registros={registros}                    
+          registros={registros}
+          colunas={colunasGrid}
+          campoRodape="dsc_categoria"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

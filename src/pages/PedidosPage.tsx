@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
+import { PedidosItensPage } from "@/pages/PedidosItensPage";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
 import { PedidoType, PedidoPayloadType, PedidoItemType } from "../types/pedido";
 import { PedidoServices } from "../services/pedidoServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { GridRegistros } from "../components/grid-pedidos";
-import { GridRegistrosDetail } from "../components/grid-pedidos-itens";
+import GridRegistros from "../components/grid-registros";
 import { formatarData } from "@/lib/formatarData";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
@@ -19,16 +19,16 @@ import { ClienteType } from "@/types/cliente";
 import { ClienteServices } from "@/services/clienteServices";
 import ModalBuscaCliente from "@/components/modal-busca-cliente";
 import { Search, Plus, RefreshCcw } from "lucide-react";
-import { PedidoItemServices } from "@/services/pedidoItemServices";
-import GridRegistros from "@/components/grid-registros";
+
 import type { ColDef } from "ag-grid-community";
+import { PedidoItemServices } from "@/services/pedidoItemServices";
 
 export function PedidosPage() {
   const [registros, setRegistros] = useState<PedidoType[]>([]);
   const [registroEditando, setRegistroEditando] = useState<PedidoType | null>(
     null
   );
-  const [itensPedido, setitensPedido] = useState<PedidoItemType[]>([]);
+  const [itensPedido, setItensPedido] = useState<PedidoItemType[]>([]);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -52,7 +52,7 @@ export function PedidosPage() {
   const carregarRegistros = useCallback(async () => {
     const resultado = await PedidoServices.buscarRegistros();
     setRegistros(resultado);
-  }, []);
+  }, []); 
 
   useEffect(() => {
     carregarRegistros();
@@ -100,8 +100,7 @@ export function PedidosPage() {
       const itens = await PedidoItemServices.buscarRegistros(
         p_registro?.pedido_id
       );
-
-      setitensPedido(itens);
+      setItensPedido(itens);
     }
   };
 
@@ -400,11 +399,21 @@ export function PedidosPage() {
               </Card>
             </TabsContent>
             <TabsContent value="itens">
-              <GridRegistrosDetail
-                registros={itensPedido}
-                // aoEditar={aoEditar}
-                // antesDeDeletar={antesDeDeletar}
-              ></GridRegistrosDetail>
+              <Card className=" w-full h-full mx-auto p-6">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">
+                    {registroEditando.pedido_id === 0
+                      ? "Novo Registro"
+                      : "Editar Registro"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <PedidosItensPage
+                    p_id={registroEditando.pedido_id}
+                    registros={itensPedido}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <div className="flex justify-end gap-2">
@@ -435,7 +444,7 @@ export function PedidosPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Pedidos</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
@@ -452,15 +461,10 @@ export function PedidosPage() {
       {registroEditando ? (
         <FormularioRegistro />
       ) : (
-        // <GridRegistros
-        //   registros={registros}
-        //   aoEditar={aoEditar}
-        //   antesDeDeletar={antesDeDeletar}
-        // />
         <GridRegistros
           registros={registros}
           colunas={colunasGrid}
-          campoRodape="pedido_id"
+          campoRodape="dt_inc"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

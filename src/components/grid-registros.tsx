@@ -42,7 +42,12 @@ function ActionButtonsCellRenderer<T>({
       <Button size="sm" onClick={() => onEdit(data)} className="cursor-pointer">
         Editar
       </Button>
-      <Button size="sm" variant="destructive" onClick={() => onDelete(data)} className="cursor-pointer">
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => onDelete(data)}
+        className="cursor-pointer"
+      >
         Excluir
       </Button>
     </div>
@@ -53,7 +58,7 @@ function ActionButtonsCellRenderer<T>({
 export default function GridRegistros<T>({
   registros,
   colunas,
-  campoRodape = "descricao", // usado no footer
+  campoRodape = "", // usado no footer
   aoEditar,
   antesDeDeletar,
 }: GridProps<T>) {
@@ -94,18 +99,18 @@ export default function GridRegistros<T>({
 
   const rodape = {
     [campoRodape]: `Quantidade de Registros: ${totalCount}`,
-  } as Partial<T>; 
+  } as Partial<T>;
 
   return (
-    <div style={{ height: 500 }}>
+    <div className="flex-1 overflow-auto">      
       <AgGridReact
         rowData={registros}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
         rowSelection={rowSelection}
         pagination={true}
-        paginationPageSize={10}
-        paginationPageSizeSelector={[10, 25, 50]}
+        paginationPageSize={50}
+        paginationPageSizeSelector={[50, 100, 500]}
         localeText={AG_GRID_LOCALE_BR}
         pinnedBottomRowData={[rodape]}
       />

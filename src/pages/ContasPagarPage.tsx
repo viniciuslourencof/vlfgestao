@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { ContaPagarType, ContaPagarPayloadType } from "../types/contasPagar";
 import { ContasPagarServices } from "../services/contasPagarServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GridRegistros } from "../components/grid-contas-pagar"; // caminho correto do arquivo
+import GridRegistros from "../components/grid-registros"; // caminho correto do arquivo
 import { formatarData } from "@/lib/formatarData";
 import { FormaPagamentoType } from "../types/formaPagamento";
 import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
@@ -18,6 +18,7 @@ import { FornecedorType } from "@/types/fornecedor";
 import { FornecedorServices } from "@/services/fornecedorServices";
 import ModalBuscaFornecedor from "@/components/modal-busca-fornecedor";
 import { Search, Plus, RefreshCcw } from "lucide-react";
+import type { ColDef } from "ag-grid-community";
 
 export function ContasPagarPage() {
   const [registros, setRegistros] = useState<ContaPagarType[]>([]);
@@ -216,6 +217,60 @@ export function ContasPagarPage() {
     }
   };
 
+  const colunasGrid: ColDef[] = [
+    {
+      field: "conta_pagar_id",
+      headerName: "Código",
+      editable: false,
+      filter: "agNumberColumnFilter",
+    },
+
+    {
+      field: "dt_inc",
+      headerName: "Dt. Inclusão",
+      editable: false,
+      filter: "agTextColumnFilter",
+      valueFormatter: (params) => {
+        if (!params.value) return "";
+        const date = new Date(params.value);
+        return date.toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      },
+    },
+
+    {
+      field: "formas_pagamento.dsc_forma_pagamento",
+      headerName: "Forma de Pagamento",
+      editable: false,
+      filter: "agTextColumnFilter",
+    },
+    {
+      field: "fornecedores.dsc_razao_social",
+      headerName: "Fornecedor",
+      editable: false,
+      filter: "agTextColumnFilter",
+    },
+    {
+      field: "vr_liquido",
+      headerName: "Vr. Liquido",
+      editable: false,
+      filter: "agNumberColumnFilter",
+      valueFormatter: (params) => {
+        if (params.value == null) return "";
+        return params.value.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+      },
+    },
+  ];
+
   function FormularioRegistro() {
     // Estado locais
     const [vr_liquido, setVrLiquido] = useState(
@@ -226,7 +281,7 @@ export function ContasPagarPage() {
     useEffect(() => {
       setVrLiquido(registroEditando?.vr_liquido ?? "");
       if (inputRef.current) {
-        inputRef.current.focus();        
+        inputRef.current.focus();
       }
     }, [registroEditando]);
 
@@ -389,7 +444,7 @@ export function ContasPagarPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Contas a Pagar</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
@@ -408,6 +463,8 @@ export function ContasPagarPage() {
       ) : (
         <GridRegistros
           registros={registros}
+          colunas={colunasGrid}
+          campoRodape="dsc_razao_social"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />
