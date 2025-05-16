@@ -50,16 +50,6 @@ export function PedidosPage() {
   const carregarRegistros = useCallback(async () => {
     const resultado = await PedidoServices.buscarRegistros();
     setRegistros(resultado);
-
-    if (registroEditando) {
-      const resultadoItens = await PedidoItemServices.buscarRegistros(
-        registroEditando?.pedido_id
-      );
-
-      console.log(resultadoItens)
-
-      setitensPedido(resultadoItens);
-    }
   }, []);
 
   useEffect(() => {
@@ -103,6 +93,14 @@ export function PedidosPage() {
       );
       setCliente(cliente);
     }
+
+    if (p_registro.pedido_id !== 0) {
+      const itens = await PedidoItemServices.buscarRegistros(
+        p_registro?.pedido_id
+      );
+
+      setitensPedido(itens);
+    }
   };
 
   const aoFecharFormulario = () => {
@@ -119,14 +117,14 @@ export function PedidosPage() {
 
     setMostrarConfirmacao(false);
 
-    // const emUso = await PedidoServices.registroEmUso(registroIdADeletar);
-    // if (emUso) {
-    //   setMensagemAviso(
-    //     "Registro em uso dentro de Contas a Receber, verifique!"
-    //   );
-    //   setMostrarAviso(true);
-    //   return;
-    // }
+    const emUso = await PedidoServices.registroEmUso(registroIdADeletar);
+    if (emUso) {
+      setMensagemAviso(
+        "Existem Contas a Receber vinculadas a esse pedido, verifique!"
+      );
+      setMostrarAviso(true);
+      return;
+    }
 
     const error = await PedidoServices.deletar(registroIdADeletar);
 

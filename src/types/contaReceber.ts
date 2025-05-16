@@ -6,6 +6,7 @@ export type ContaReceberType = {
   dt_inc: string;
   dsc_forma_pagamento?: string;
   dsc_razao_social?: string;
+  pedido_id?: number;
 };
 
 export type ContaReceberComRelacionamentoType = {
@@ -20,9 +21,10 @@ export type ContaReceberComRelacionamentoType = {
   clientes?: {
     dsc_razao_social: string;
   };
+  pedido_id?: number;
 };
 
 export type ContaReceberPayloadType = Pick<
   ContaReceberType,
-  'cliente_id' | 'forma_pagamento_id' | 'vr_liquido' 
+  'cliente_id' | 'forma_pagamento_id' | 'vr_liquido' | 'pedido_id'
 >;
