@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"; // ou outro componente de input q
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Search } from "lucide-react";
 
 type PedidosItensPageProps = {
   p_id: number;
@@ -159,7 +160,7 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
         params.value?.toLocaleString("pt-BR", {
           style: "currency",
           currency: "BRL",
-        }) || "",      
+        }) || "",
     },
     {
       field: "quantidade",
@@ -185,64 +186,95 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
 
   return (
     <>
-      {registroEditando && (
-        <Card className="mb-6 p-6">
-          <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
-            Item do Pedido
-          </h3>
+      <div className="h-full flex flex-col px-6">
+        {registroEditando && (
+          <Card className="mb-6 p-6">
+            <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
+              Item do Pedido
+            </h3>
 
-          <div className="grid grid-cols-5 gap-4 ">
-            <div className="space-y-2">
-              <Label htmlFor="produto_id">Código do Produto</Label>
-              <Input
-                placeholder=""
-                value={registroEditando.produto_id}
-                onChange={(e) =>
-                  setRegistroEditando((prev) =>
-                    prev
-                      ? { ...prev, produto_id: Number(e.target.value) }
-                      : null
-                  )
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="vr_unit">Valor Unitário</Label>
-              <Input
-                placeholder=""
-                value={registroEditando.vr_unit}
-                onChange={(e) =>
-                  setRegistroEditando((prev) =>
-                    prev ? { ...prev, vr_unit: Number(e.target.value) } : null
-                  )
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantidade">Quantidade</Label>
-              <Input
-                placeholder=""
-                value={registroEditando.quantidade}
-                onChange={(e) =>
-                  setRegistroEditando((prev) =>
-                    prev
-                      ? { ...prev, quantidade: Number(e.target.value) }
-                      : null
-                  )
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="vr_item">Valor Item</Label>
-              <Input
-                placeholder=""
-                value={registroEditando.vr_item}
-                onChange={(e) =>
-                  setRegistroEditando((prev) =>
-                    prev ? { ...prev, vr_unit: Number(e.target.value) } : null
-                  )
-                }
-              />
+            <div className="flex w-full">
+              <div className="w-1/2 grid grid-cols-[auto_auto_1fr_auto_auto_auto] gap-2 items-end">
+                <div className="space-y-2 w-32">
+                  <Label htmlFor="produto_id">Código do Produto</Label>
+                  <Input
+                    placeholder=""
+                    value={registroEditando.produto_id}
+                    onChange={(e) =>
+                      setRegistroEditando((prev) =>
+                        prev
+                          ? { ...prev, produto_id: Number(e.target.value) }
+                          : null
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-2 w-10">
+                  <Label className="invisible">Buscar</Label>
+                  <button
+                    // onClick={() => setAbrirModalBusca(true)}
+                    type="button"
+                    className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
+                  >
+                    <Search className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dsc_produto">Descrição</Label>
+                  <Input
+                    id="dsc_produto"
+                    name="dsc_produto"
+                    // value={formComposicao.dsc_produto}
+                    // onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="w-1/2 grid grid-cols-3 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="vr_unit">Valor Unitário</Label>
+                  <Input
+                    placeholder=""
+                    value={registroEditando.vr_unit}
+                    onChange={(e) =>
+                      setRegistroEditando((prev) =>
+                        prev
+                          ? { ...prev, vr_unit: Number(e.target.value) }
+                          : null
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantidade">Quantidade</Label>
+                  <Input
+                    placeholder=""
+                    value={registroEditando.quantidade}
+                    onChange={(e) =>
+                      setRegistroEditando((prev) =>
+                        prev
+                          ? { ...prev, quantidade: Number(e.target.value) }
+                          : null
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vr_item">Valor Item</Label>
+                  <Input
+                    placeholder=""
+                    value={registroEditando.vr_item}
+                    onChange={(e) =>
+                      setRegistroEditando((prev) =>
+                        prev
+                          ? { ...prev, vr_unit: Number(e.target.value) }
+                          : null
+                      )
+                    }
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="space-x-2">
@@ -258,7 +290,7 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
                 className="cursor-pointer"
                 onClick={() =>
                   aoSalvar({
-                    pedido_id: p_id, // supondo que você tenha esse estado
+                    pedido_id: p_id,
                     produto_id: registroEditando?.produto_id ?? 0,
                     quantidade: registroEditando?.quantidade ?? 0,
                     vr_unit: registroEditando?.vr_unit ?? 0,
@@ -269,27 +301,26 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
                 Salvar
               </Button>
             </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
 
-      <ModalConfirmacao
-        open={mostrarConfirmacao}
-        onCancel={() => setMostrarConfirmacao(false)}
-        onConfirm={aoDeletar}
-      />
-      <ModalAviso
-        open={mostrarAviso}
-        onClose={setMostrarAviso}
-        mensagem={mensagemAviso}
-      />
-      <div className="flex flex-col h-screen">
         <GridRegistros
           registros={registros}
           colunas={colunasGridItens}
-          campoRodape="dt_inc"
+          campoRodape=""
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
+        />
+
+        <ModalConfirmacao
+          open={mostrarConfirmacao}
+          onCancel={() => setMostrarConfirmacao(false)}
+          onConfirm={aoDeletar}
+        />
+        <ModalAviso
+          open={mostrarAviso}
+          onClose={setMostrarAviso}
+          mensagem={mensagemAviso}
         />
       </div>
     </>

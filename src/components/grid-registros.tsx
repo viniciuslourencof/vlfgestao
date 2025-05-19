@@ -9,6 +9,7 @@ import type {
 } from "ag-grid-community";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import { AG_GRID_LOCALE_BR } from "../lib/locale";
+import { SquarePen, Trash2 } from "lucide-react";
 
 // Registro dos módulos (necessário para AG Grid funcionar)
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -39,8 +40,8 @@ function ActionButtonsCellRenderer<T>({
 
   return (
     <div className="flex gap-2 justify-center items-center h-full">
-      <Button size="sm" onClick={() => onEdit(data)} className="cursor-pointer">
-        Editar
+      <Button size="sm" onClick={() => onEdit(data)} className="cursor-pointer"> 
+        <SquarePen/ >
       </Button>
       <Button
         size="sm"
@@ -48,7 +49,7 @@ function ActionButtonsCellRenderer<T>({
         onClick={() => onDelete(data)}
         className="cursor-pointer"
       >
-        Excluir
+        <Trash2/>
       </Button>
     </div>
   );
@@ -58,7 +59,7 @@ function ActionButtonsCellRenderer<T>({
 export default function GridRegistros<T>({
   registros,
   colunas,
-  campoRodape = "", // usado no footer
+  // campoRodape = "", // usado no footer
   aoEditar,
   antesDeDeletar,
 }: GridProps<T>) {
@@ -90,30 +91,28 @@ export default function GridRegistros<T>({
     []
   );
 
-  const totalCount = registros.length;
-
   const rowSelection: RowSelectionOptions = {
     mode: "multiRow",
     headerCheckbox: false,
   };
 
-  const rodape = {
-    [campoRodape]: `Quantidade de Registros: ${totalCount}`,
-  } as Partial<T>;
+  // const totalCount = registros.length;
+
+  // const rodape = {
+  //   [campoRodape]: `Quantidade de Registros: ${totalCount}`,
+  // } as Partial<T>;
 
   return (
-    <div className="flex-1 overflow-auto">      
-      <AgGridReact
-        rowData={registros}
-        columnDefs={columnDefs}
-        defaultColDef={defaultColDef}
-        rowSelection={rowSelection}
-        pagination={true}
-        paginationPageSize={50}
-        paginationPageSizeSelector={[50, 100, 500]}
-        localeText={AG_GRID_LOCALE_BR}
-        pinnedBottomRowData={[rodape]}
-      />
-    </div>
+    <AgGridReact
+      rowData={registros}
+      columnDefs={columnDefs}
+      defaultColDef={defaultColDef}
+      rowSelection={rowSelection}
+      pagination={true}
+      paginationPageSize={50}
+      paginationPageSizeSelector={[50, 100, 500]}
+      localeText={AG_GRID_LOCALE_BR}
+      // pinnedBottomRowData={[rodape]}
+    />
   );
 }

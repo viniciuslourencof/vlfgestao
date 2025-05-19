@@ -13,6 +13,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { ContasReceberPage } from "./pages/ContasReceberPage";
 import { ClientesPage } from "./pages/ClientesPage";
 import { ResumoFinanceiroPage } from "./pages/ResumoFinanceiroPage";
+import { TipoMovimentoPage } from "./pages/TiposMovimentoPage";
 // import { Footer } from "./components/footer";
 
 // App.tsx
@@ -57,9 +58,19 @@ export function App() {
                   <Route path="/pedidos" element={<PedidosPage />} />
                   <Route path="/fornecedores" element={<FornecedoresPage />} />
                   <Route path="/contasPagar" element={<ContasPagarPage />} />
-                  <Route path="/contasReceber" element={<ContasReceberPage />} />
+                  <Route
+                    path="/contasReceber"
+                    element={<ContasReceberPage />}
+                  />
                   <Route path="/clientes" element={<ClientesPage />} />
-                  <Route path="/resumoFinanceiro" element={<ResumoFinanceiroPage />} />
+                  <Route
+                    path="/tiposMovimento"
+                    element={<TipoMovimentoPage />}
+                  />
+                  <Route
+                    path="/resumoFinanceiro"
+                    element={<ResumoFinanceiroPage />}
+                  />
                 </Routes>
               </main>
             </div>

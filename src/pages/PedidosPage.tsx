@@ -52,7 +52,7 @@ export function PedidosPage() {
   const carregarRegistros = useCallback(async () => {
     const resultado = await PedidoServices.buscarRegistros();
     setRegistros(resultado);
-  }, []); 
+  }, []);
 
   useEffect(() => {
     carregarRegistros();
@@ -407,12 +407,11 @@ export function PedidosPage() {
                       : "Editar Registro"}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <PedidosItensPage
-                    p_id={registroEditando.pedido_id}
-                    registros={itensPedido}
-                  />
-                </CardContent>
+
+                <PedidosItensPage
+                  p_id={registroEditando.pedido_id}
+                  registros={itensPedido}
+                />
               </Card>
             </TabsContent>
 

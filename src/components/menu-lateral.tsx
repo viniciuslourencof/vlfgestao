@@ -7,9 +7,10 @@ import {
   ShoppingCartIcon,
   ContactRound,
   BanknoteArrowDown,
-  BanknoteArrowUp,  
+  BanknoteArrowUp,
   Handshake,
-  ChartColumn
+  ChartColumn,
+  Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -57,7 +58,12 @@ const itensMenu = [
     label: "Contas a Receber",
     path: "/contasReceber",
   },
-    {
+  {
+    icon: Navigation,
+    label: "Tipos de Movimento",
+    path: "/tiposMovimento",
+  },
+  {
     icon: ChartColumn,
     label: "Resumo Financeiro",
     path: "/resumoFinanceiro",

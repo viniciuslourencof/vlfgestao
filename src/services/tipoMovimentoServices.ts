@@ -1,36 +1,36 @@
 import { supabase } from "../lib/subabase";
-import { CategoriaPayloadType, CategoriaType } from "@/types/categoria";
+import { TipoMovimentoPayloadType, TipoMovimentoType } from "@/types/tiposMovimento";
 
-export class CategoriaServices {
+export class TipoMovimentoServices {
   static async buscarRegistro(p_id: number) {
     if (p_id <= 0) {
       return {
-        categoria_id: 0,
-        dsc_categoria: "",
+        tipo_movimento_id: 0,
+        dsc_tipo_movimento: "",
       };
     }
 
     const { data, error } = await supabase
-      .from("categorias")
+      .from("tipos_movimento")
       .select("*")
-      .eq("categoria_id", p_id)
+      .eq("tipo_movimento_id", p_id)
       .single();
 
     if (error || !data) {
       return {
-        categoria_id: 0,
-        dsc_categoria: "",
+        tipo_movimento_id: 0,
+        dsc_tipo_movimento: "",
       };
     }
 
     return data;
   }
 
-  static async buscarRegistros(): Promise<CategoriaType[]> {
+  static async buscarRegistros(): Promise<TipoMovimentoType[]> {
     const { data, error } = await supabase
-      .from("categorias")
+      .from("tipos_movimento")
       .select("*")
-      .order("dsc_categoria", { ascending: true });
+      .order("dsc_tipo_movimento", { ascending: true });
 
     if (error || !data) {
       return [];
@@ -44,10 +44,10 @@ export class CategoriaServices {
     p_dsc: string
   ): Promise<boolean> {
     const { data, error } = await supabase
-      .from("categorias")
-      .select("categoria_id")
-      .eq("dsc_categoria", p_dsc)
-      .neq("categoria_id", p_id);
+      .from("tipos_movimento")
+      .select("tipo_movimento_id")
+      .eq("dsc_tipo_movimento", p_dsc)
+      .neq("tipo_movimento_id", p_id);
 
     if (error) {
       return false;
@@ -58,9 +58,9 @@ export class CategoriaServices {
 
   static async registroEmUso(p_id: number): Promise<boolean> {
     const { data, error } = await supabase
-      .from("produtos")
-      .select("produto_id")
-      .eq("categoria_id", p_id)
+      .from("pedidos")
+      .select("pedido_id")
+      .eq("tipo_movimento_id", p_id)
       .limit(1); // Só precisamos saber se existe pelo menos um
 
     if (error) {
@@ -70,8 +70,8 @@ export class CategoriaServices {
     return data.length > 0;
   }
 
-  static async inserir(payload: CategoriaPayloadType): Promise<string | null> {
-    const { error } = await supabase.from("categorias").insert(payload);
+  static async inserir(payload: TipoMovimentoPayloadType): Promise<string | null> {
+    const { error } = await supabase.from("tipos_movimento").insert(payload);
 
     if (error) {
       return error.message;
@@ -82,9 +82,9 @@ export class CategoriaServices {
 
   static async deletar(p_id: number): Promise<string | null> {
     const { error } = await supabase
-      .from("categorias")
+      .from("tipos_movimento")
       .delete()
-      .eq("categoria_id", p_id);
+      .eq("tipo_movimento_id", p_id);
 
     if (error) {
       return error.message;
@@ -94,13 +94,13 @@ export class CategoriaServices {
   }
 
   static async atualizar(
-    p_categoria_id: number,
-    payload: CategoriaPayloadType
+    tipo_movimento_id: number,
+    payload: TipoMovimentoPayloadType
   ): Promise<string | null> {
     const { error } = await supabase
-      .from("categorias")
+      .from("tipos_movimento")
       .update(payload)
-      .eq("categoria_id", p_categoria_id);
+      .eq("tipo_movimento_id", tipo_movimento_id);
 
     if (error) {
       return error.message;

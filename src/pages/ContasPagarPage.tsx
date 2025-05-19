@@ -59,7 +59,7 @@ export function ContasPagarPage() {
       conta_pagar_id: 0,
       fornecedor_id: 0,
       forma_pagamento_id: 0,
-      vr_liquido: 0.0,
+      vr_liquido: "0.00",
       dt_inc: new Date().toISOString(),
     });
 
