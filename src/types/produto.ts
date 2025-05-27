@@ -20,3 +20,9 @@ export type ProdutoType = {
   valor_dose: number;
   vr_desconto: number;
 };
+
+export type ModalBuscaProdutoPropsType = {
+  open: boolean;
+  onClose: (open: boolean) => void;
+  onSelect: (produto: ProdutoType) => void;
+}

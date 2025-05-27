@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PedidoItemPayloadType, PedidoItemType } from "@/types/pedido";
 import GridRegistros from "../components/grid-registros";
-import type { ColDef } from "ag-grid-community";
+import { type ColDef } from "ag-grid-community";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import { toast } from "sonner";
 import { PedidoItemServices } from "@/services/pedidoItemServices";
@@ -11,24 +11,60 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
+import ModalBuscaProduto from "@/components/modal-busca-produto";
+import { ProdutoType } from "@/types/produto";
+import { ProdutoServices } from "@/services/produtoServices";
 
 type PedidosItensPageProps = {
   p_id: number;
   registros: PedidoItemType[];
+  setRegistros: React.Dispatch<React.SetStateAction<PedidoItemType[]>>;
 };
 
-export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
+export function PedidosItensPage({
+  p_id,
+  registros,
+  setRegistros,
+}: PedidosItensPageProps) {
   const [registroEditando, setRegistroEditando] =
     useState<PedidoItemType | null>(null);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
   );
+
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+  const [abrirModalBuscaProduto, setAbrirModalBuscaProduto] = useState(false);
+  const [produto, setProduto] = useState<ProdutoType>({
+    produto_id: 0,
+    dsc_produto: "",
+    estoque: 0,
+    preco_venda1: 0,
+    preco_custo1: 0,
+    desconto: 0,
+    categoria_id: 0,
+    unidade_fardo: 0,
+    mililitros: 0,
+    doses: 0,
+    margem1: 0,
+    valor_dose: 0,
+    vr_desconto: 0,
+  });
 
   const aoEditar = async (p_registro: PedidoItemType) => {
     setRegistroEditando(p_registro);
+
+    if (p_registro.produto_id !== 0) {
+      const produto = await ProdutoServices.buscarRegistro(
+        Number(p_registro.produto_id)
+      );
+      setProduto(produto);
+    }
+
+    setVrItem(p_registro.vr_item);
+    setVrUnit(p_registro.vr_unit);
+    setQuantidade(p_registro.quantidade);
   };
 
   const aoDeletar = async () => {
@@ -59,9 +95,13 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
       return;
     }
 
-    const registroParaSalvar: PedidoItemType = {
+    const registroParaSalvar = {
       ...registroEditando,
       ...payload,
+      produtos: {
+        ...registroEditando.produtos,
+        dsc_produto: produto.dsc_produto ?? "",
+      },
     };
 
     // Validações básicas
@@ -94,30 +134,22 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
     //   return;
     // }
 
-    // Inserção ou atualização
     if (registroParaSalvar.pedido_item_id === 0) {
-      const error = await PedidoItemServices.inserir(payload);
-
-      if (error) {
-        setMensagemAviso("Erro ao inserir item do pedido: " + error);
-        setMostrarAviso(true);
-        return;
-      }
+      // Novo item: adiciona ao array
+      setRegistros((prev) => [...prev, { ...registroParaSalvar }]); // Coloque o ID real se o backend retornar
     } else {
-      const error = await PedidoItemServices.atualizar(
-        payload,
-        registroEditando.pedido_item_id
-      );
+      // Item existente: atualiza no array
 
-      if (error) {
-        setMensagemAviso("Erro ao atualizar item do pedido: " + error);
-        setMostrarAviso(true);
-        return;
-      }
+      setRegistros((prev) =>
+        prev.map((item) =>
+          item.pedido_item_id === registroParaSalvar.pedido_item_id
+            ? registroParaSalvar
+            : item
+        )
+      );
     }
 
     toast.success("Item salvo com sucesso!");
-    // aoFecharFormulario(); // Fecha o formulário/modal
   };
 
   const colunasGridItens: ColDef[] = [
@@ -184,6 +216,37 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
     },
   ];
 
+  const aoEditarCampoNumerico = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    let novoValor = value.replace(/[^0-9.,]/g, "").replace(",", ".");
+
+    if (novoValor.includes(".")) {
+      const [inteiro, decimal] = novoValor.split(".");
+      novoValor = inteiro + "." + decimal.slice(0, 2);
+    }
+
+    if (name === "vr_unit") {
+      setVrUnit(novoValor);
+      const novoVrItem = Number(Number(quantidade) * Number(novoValor)).toFixed(
+        2
+      );
+      setVrItem(Number(novoVrItem));
+    } else if (name === "quantidade") {
+      setQuantidade(novoValor);
+      const novoVrItem = Number(Number(vr_unit) * Number(novoValor)).toFixed(2);
+      setVrItem(Number(novoVrItem));
+    }
+  };
+
+  const [vr_item, setVrItem] = useState(registroEditando?.vr_item ?? "");
+
+  const [vr_unit, setVrUnit] = useState(registroEditando?.vr_unit ?? "");
+
+  const [quantidade, setQuantidade] = useState(
+    registroEditando?.quantidade ?? ""
+  );
+
   return (
     <>
       <div className="h-full flex flex-col px-6">
@@ -197,22 +260,12 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
               <div className="w-1/2 grid grid-cols-[auto_auto_1fr_auto_auto_auto] gap-2 items-end">
                 <div className="space-y-2 w-32">
                   <Label htmlFor="produto_id">Código do Produto</Label>
-                  <Input
-                    placeholder=""
-                    value={registroEditando.produto_id}
-                    onChange={(e) =>
-                      setRegistroEditando((prev) =>
-                        prev
-                          ? { ...prev, produto_id: Number(e.target.value) }
-                          : null
-                      )
-                    }
-                  />
+                  <Input placeholder="" value={produto.produto_id || ""} />
                 </div>
                 <div className="space-y-2 w-10">
                   <Label className="invisible">Buscar</Label>
                   <button
-                    // onClick={() => setAbrirModalBusca(true)}
+                    onClick={() => setAbrirModalBuscaProduto(true)}
                     type="button"
                     className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
                   >
@@ -225,8 +278,7 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
                   <Input
                     id="dsc_produto"
                     name="dsc_produto"
-                    // value={formComposicao.dsc_produto}
-                    // onChange={handleChange}
+                    value={produto.dsc_produto || ""}
                   />
                 </div>
               </div>
@@ -235,49 +287,33 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
                 <div className="space-y-2">
                   <Label htmlFor="vr_unit">Valor Unitário</Label>
                   <Input
+                    name="vr_unit"
                     placeholder=""
-                    value={registroEditando.vr_unit}
-                    onChange={(e) =>
-                      setRegistroEditando((prev) =>
-                        prev
-                          ? { ...prev, vr_unit: Number(e.target.value) }
-                          : null
-                      )
-                    }
+                    value={vr_unit}
+                    onChange={aoEditarCampoNumerico}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="quantidade">Quantidade</Label>
                   <Input
+                    name="quantidade"
                     placeholder=""
-                    value={registroEditando.quantidade}
-                    onChange={(e) =>
-                      setRegistroEditando((prev) =>
-                        prev
-                          ? { ...prev, quantidade: Number(e.target.value) }
-                          : null
-                      )
-                    }
+                    value={quantidade}
+                    onChange={aoEditarCampoNumerico}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="vr_item">Valor Item</Label>
                   <Input
                     placeholder=""
-                    value={registroEditando.vr_item}
-                    onChange={(e) =>
-                      setRegistroEditando((prev) =>
-                        prev
-                          ? { ...prev, vr_unit: Number(e.target.value) }
-                          : null
-                      )
-                    }
+                    value={vr_item}
+                    onChange={aoEditarCampoNumerico}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-x-2">
+            <div className="flex justify-end gap-2">
               <Button
                 className="cursor-pointer"
                 variant="outline"
@@ -291,10 +327,10 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
                 onClick={() =>
                   aoSalvar({
                     pedido_id: p_id,
-                    produto_id: registroEditando?.produto_id ?? 0,
-                    quantidade: registroEditando?.quantidade ?? 0,
-                    vr_unit: registroEditando?.vr_unit ?? 0,
-                    vr_item: registroEditando?.vr_item ?? 0,
+                    produto_id: produto.produto_id ?? 0,
+                    quantidade: Number(quantidade),
+                    vr_unit: Number(vr_unit),
+                    vr_item: Number(vr_item),
                   })
                 }
               >
@@ -321,6 +357,31 @@ export function PedidosItensPage({ p_id, registros }: PedidosItensPageProps) {
           open={mostrarAviso}
           onClose={setMostrarAviso}
           mensagem={mensagemAviso}
+        />
+        <ModalBuscaProduto
+          open={abrirModalBuscaProduto}
+          onClose={() => setAbrirModalBuscaProduto(false)}
+          onSelect={(produto) => {
+            setProduto((prev) => ({
+              ...prev,
+              produto_id: produto.produto_id,
+              dsc_produto: produto.dsc_produto,
+              estoque: produto.estoque,
+              preco_venda1: produto.preco_venda1,
+              preco_custo1: produto.preco_custo1,
+              desconto: produto.desconto,
+              categoria_id: produto.categoria_id,
+              unidade_fardo: produto.unidade_fardo,
+              mililitros: produto.mililitros,
+              doses: produto.doses,
+              margem1: produto.margem1,
+              valor_dose: produto.valor_dose,
+              vr_desconto: produto.vr_desconto,
+            }));
+
+            setVrUnit(produto.preco_venda1);
+            setVrItem(produto.preco_venda1 * Number(quantidade));
+          }}
         />
       </div>
     </>

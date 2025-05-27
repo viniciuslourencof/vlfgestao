@@ -28,7 +28,7 @@ export function PedidosPage() {
   const [registroEditando, setRegistroEditando] = useState<PedidoType | null>(
     null
   );
-  const [itensPedido, setItensPedido] = useState<PedidoItemType[]>([]);
+  const [registrosItens, setRegistrosItens] = useState<PedidoItemType[]>([]);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -56,7 +56,13 @@ export function PedidosPage() {
 
   useEffect(() => {
     carregarRegistros();
-  }, [carregarRegistros]);
+
+    const novoTotal = registrosItens.reduce((soma, item) => {
+      return soma + Number(item.vr_unit) * Number(item.quantidade);
+    }, 0);
+
+    setVrLiquido(Number(novoTotal.toFixed(2)));
+  }, [carregarRegistros, registrosItens]);
 
   const aoInserir = () => {
     setRegistroEditando({
@@ -100,7 +106,7 @@ export function PedidosPage() {
       const itens = await PedidoItemServices.buscarRegistros(
         p_registro?.pedido_id
       );
-      setItensPedido(itens);
+      setRegistrosItens(itens);
     }
   };
 
@@ -205,6 +211,33 @@ export function PedidosPage() {
       }
     }
 
+    for (const item of registrosItens) {
+      const payload = {
+        pedido_id: registroEditando.pedido_id,
+        produto_id: item.produto_id ?? 0,
+        quantidade: Number(item.quantidade),
+        vr_unit: Number(item.vr_unit),
+        vr_item: Number(item.vr_item),
+      };
+
+      let error: string | null = null;
+
+      if (!item.pedido_item_id || item.pedido_item_id === 0) {
+        error = await PedidoItemServices.inserir(payload);
+      } else {
+        error = await PedidoItemServices.atualizar(
+          payload,
+          item.pedido_item_id
+        );
+      }
+
+      if (error) {
+        setMensagemAviso("Erro ao salvar item do pedido: " + error);
+        setMostrarAviso(true);
+        break; // para a execução ao encontrar erro
+      }
+    }
+
     toast.success("Registro salvo com sucesso!");
     carregarRegistros();
     aoFecharFormulario();
@@ -252,15 +285,13 @@ export function PedidosPage() {
     },
   ];
 
-  function FormularioRegistro() {
-    // Estado locais
-    const [vr_liquido, setVrLiquido] = useState(
-      registroEditando?.vr_liquido ?? ""
-    );
+  const [vr_liquido, setVrLiquido] = useState(
+    registroEditando?.vr_liquido ?? ""
+  );
 
+  function FormularioRegistro() {
     // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
     useEffect(() => {
-      setVrLiquido(registroEditando?.vr_liquido ?? "");
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -410,7 +441,8 @@ export function PedidosPage() {
 
                 <PedidosItensPage
                   p_id={registroEditando.pedido_id}
-                  registros={itensPedido}
+                  registros={registrosItens}
+                  setRegistros={setRegistrosItens}
                 />
               </Card>
             </TabsContent>

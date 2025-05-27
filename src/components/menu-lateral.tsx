@@ -35,7 +35,7 @@ const itensMenu = [
   },
   {
     icon: ShoppingCartIcon,
-    label: "Pedidos(EM MANUTENÇÃO)",
+    label: "Pedidos",
     path: "/pedidos",
   },
   {

@@ -7,34 +7,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/subabase";
-
-interface Produto {
-  produto_id: number;
-  dsc_produto: string;
-  preco_custo1: number;
-  valor_dose: number;
-}
-
-interface ModalBuscaProdutoProps {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  onSelect: (produto: Produto) => void;
-}
+import { ProdutoType, ModalBuscaProdutoPropsType } from "@/types/produto";
 
 export default function ModalBuscaProduto({
   open,
   onClose,
   onSelect,
-}: ModalBuscaProdutoProps) {
+}: ModalBuscaProdutoPropsType) {
   const [termo, setTermo] = useState("");
-  const [resultados, setResultados] = useState<Produto[]>([]);
+  const [resultados, setResultados] = useState<ProdutoType[]>([]);
   const [focoIndex, setFocoIndex] = useState(0);
 
   useEffect(() => {
     const fetchProdutos = async (termo: string) => {
       const query = supabase
         .from("produtos")
-        .select("produto_id, dsc_produto, preco_custo1, valor_dose")        
+        .select("*")        
         .order("dsc_produto", { ascending: true });
 
       if (termo) {

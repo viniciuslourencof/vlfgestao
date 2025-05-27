@@ -2,6 +2,30 @@ import { supabase } from "../lib/subabase";
 import { ProdutoInterface } from "@/types/produto";
 
 export class ProdutoServices {
+  static async buscarRegistro(p_id: number) {
+    if (p_id <= 0) {
+      return {
+        produto_id: 0,
+        dsc_produto: "",
+      };
+    }
+
+    const { data, error } = await supabase
+      .from("produtos")
+      .select("*")
+      .eq("produto_id", p_id)
+      .single();
+
+    if (error || !data) {
+      return {
+        produto_id: 0,
+        dsc_produto: "",
+      };
+    }
+
+    return data;
+  }
+
   static async buscaProdutosPorCategoria(
     p_categoria_id: number | null
   ): Promise<ProdutoInterface[]> {

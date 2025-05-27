@@ -130,6 +130,7 @@ export function ContasPagarPage() {
   };
 
   const aoSalvar = async (payload: ContaPagarPayloadType) => {
+
     if (!registroEditando) {
       setMensagemAviso("Erro inesperado ao salvar. Tente novamente.");
       setMostrarAviso(true);
