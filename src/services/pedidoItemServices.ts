@@ -31,9 +31,9 @@ export class PedidoItemServices {
 
   static async deletar(p_id: number): Promise<string | null> {
     const { error } = await supabase
-      .from("pedidos")
+      .from("pedidos_itens")
       .delete()
-      .eq("pedido_id", p_id);
+      .eq("pedido_item_id", p_id);
 
     if (error) {
       return error.message;

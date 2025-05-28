@@ -19,12 +19,14 @@ type PedidosItensPageProps = {
   p_id: number;
   registros: PedidoItemType[];
   setRegistros: React.Dispatch<React.SetStateAction<PedidoItemType[]>>;
+  registrarExclusao: (id: number) => void;
 };
 
 export function PedidosItensPage({
   p_id,
   registros,
   setRegistros,
+  registrarExclusao,
 }: PedidosItensPageProps) {
   const [registroEditando, setRegistroEditando] =
     useState<PedidoItemType | null>(null);
@@ -78,6 +80,15 @@ export function PedidosItensPage({
       setMensagemAviso("Erro ao apagar registro: " + error);
       setMostrarAviso(true);
       return;
+    }
+
+    // Remove o item da lista de registros
+    setRegistros((prev) =>
+      prev.filter((item) => item.pedido_item_id !== registroIdADeletar)
+    );
+
+    if (registroIdADeletar !== 0) {
+      registrarExclusao(registroIdADeletar);
     }
 
     toast.success("Registro apagado com sucesso!");
@@ -147,9 +158,7 @@ export function PedidosItensPage({
             : item
         )
       );
-    }
-
-    toast.success("Item salvo com sucesso!");
+    }    
   };
 
   const colunasGridItens: ColDef[] = [

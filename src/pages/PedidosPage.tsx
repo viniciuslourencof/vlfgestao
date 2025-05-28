@@ -57,11 +57,11 @@ export function PedidosPage() {
   useEffect(() => {
     carregarRegistros();
 
-    const novoTotal = registrosItens.reduce((soma, item) => {
+    const vrLiquidoPedido = registrosItens.reduce((soma, item) => {
       return soma + Number(item.vr_unit) * Number(item.quantidade);
     }, 0);
 
-    setVrLiquido(Number(novoTotal.toFixed(2)));
+    setVrLiquido(Number(vrLiquidoPedido.toFixed(2)));
   }, [carregarRegistros, registrosItens]);
 
   const aoInserir = () => {
@@ -238,9 +238,21 @@ export function PedidosPage() {
       }
     }
 
+    // deleta os que o usuário removeu
+    for (const id of pedidoItemIdsParaDeletar) {
+      const error = await PedidoItemServices.deletar(id);
+
+      if (error) {
+        setMensagemAviso("Erro ao deletar item do pedido: " + error);
+        setMostrarAviso(true);
+        return;
+      }
+    }
+
     toast.success("Registro salvo com sucesso!");
     carregarRegistros();
     aoFecharFormulario();
+    setPedidoItemIdsParaDeletar([]);
   };
 
   const aoEditarCampoNumerico = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -288,6 +300,10 @@ export function PedidosPage() {
   const [vr_liquido, setVrLiquido] = useState(
     registroEditando?.vr_liquido ?? ""
   );
+
+  const [pedidoItemIdsParaDeletar, setPedidoItemIdsParaDeletar] = useState<
+    number[]
+  >([]);
 
   function FormularioRegistro() {
     // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
@@ -443,6 +459,9 @@ export function PedidosPage() {
                   p_id={registroEditando.pedido_id}
                   registros={registrosItens}
                   setRegistros={setRegistrosItens}
+                  registrarExclusao={(id: number) => {
+                    setPedidoItemIdsParaDeletar((prev) => [...prev, id]);
+                  }}
                 />
               </Card>
             </TabsContent>
