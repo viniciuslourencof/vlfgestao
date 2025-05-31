@@ -45,6 +45,14 @@ export type PedidoItemPayloadType = Pick<
   'pedido_id' | 'produto_id' | 'quantidade' | 'vr_unit' | 'vr_item'
 >;
 
+
+export type PedidosItensPageProps = {
+  p_id: number;
+  registros: PedidoItemType[];
+  setRegistros: React.Dispatch<React.SetStateAction<PedidoItemType[]>>;
+  registrarExclusao: (id: number) => void;
+};
+
 export type CartPropsType = {  
   carrinho: PedidoItemType[];
   onRemoveItem: (produtoId: number) => void;

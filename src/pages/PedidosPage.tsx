@@ -87,6 +87,7 @@ export function PedidosPage() {
 
   const aoEditar = async (p_registro: PedidoType) => {
     setRegistroEditando(p_registro);
+    setPedidoItemIdsParaDeletar([]);
 
     if (p_registro.forma_pagamento_id !== 0) {
       const formaPagamento = await FormaPagamentoServices.buscarRegistro(
@@ -159,7 +160,7 @@ export function PedidosPage() {
     };
 
     if (!registroParaSalvar.vr_liquido) {
-      setMensagemAviso("Valor da Conta não pode estar vazio.");
+      setMensagemAviso("Valor do Pedido não pode estar zerado ou vazio.");
       setMostrarAviso(true);
       return;
     }
@@ -240,7 +241,7 @@ export function PedidosPage() {
 
     // deleta os que o usuário removeu
     for (const id of pedidoItemIdsParaDeletar) {
-      const error = await PedidoItemServices.deletar(id);
+      const error = await PedidoItemServices.deletar(id);      
 
       if (error) {
         setMensagemAviso("Erro ao deletar item do pedido: " + error);
@@ -311,7 +312,7 @@ export function PedidosPage() {
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, [registroEditando]);
+    }, []);
 
     return (
       <>

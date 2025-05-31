@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { PedidoItemPayloadType, PedidoItemType } from "@/types/pedido";
+import { PedidoItemPayloadType, PedidoItemType, PedidosItensPageProps } from "@/types/pedido";
 import GridRegistros from "../components/grid-registros";
 import { type ColDef } from "ag-grid-community";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import { toast } from "sonner";
-import { PedidoItemServices } from "@/services/pedidoItemServices";
 import ModalAviso from "@/components/modal-aviso";
 import { Input } from "@/components/ui/input"; // ou outro componente de input que esteja usando
 import { Button } from "@/components/ui/button";
@@ -15,12 +14,6 @@ import ModalBuscaProduto from "@/components/modal-busca-produto";
 import { ProdutoType } from "@/types/produto";
 import { ProdutoServices } from "@/services/produtoServices";
 
-type PedidosItensPageProps = {
-  p_id: number;
-  registros: PedidoItemType[];
-  setRegistros: React.Dispatch<React.SetStateAction<PedidoItemType[]>>;
-  registrarExclusao: (id: number) => void;
-};
 
 export function PedidosItensPage({
   p_id,
@@ -73,14 +66,6 @@ export function PedidosItensPage({
     if (!registroIdADeletar) return;
 
     setMostrarConfirmacao(false);
-
-    const error = await PedidoItemServices.deletar(registroIdADeletar);
-
-    if (error) {
-      setMensagemAviso("Erro ao apagar registro: " + error);
-      setMostrarAviso(true);
-      return;
-    }
 
     // Remove o item da lista de registros
     setRegistros((prev) =>
