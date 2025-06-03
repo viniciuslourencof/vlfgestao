@@ -16,34 +16,35 @@ import { ResumoFinanceiroPage } from "./pages/ResumoFinanceiroPage";
 import { TipoMovimentoPage } from "./pages/TiposMovimentoPage";
 // import { Footer } from "./components/footer";
 
-// App.tsx
 export function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [UsuarioLogado, setUsuarioLogado] = useState<boolean>(false);
+  const [MenuLateralAberto, setMenuLateralAberto] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const usuarioId = localStorage.getItem("usuario_id");
     if (usuarioId) {
-      setIsLoggedIn(true);
+      setUsuarioLogado(true);
     } else {
-      setIsLoggedIn(false);
+      setUsuarioLogado(false);
       navigate("/login");
     }
   }, [navigate]);
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
-      {isLoggedIn ? (
+      {UsuarioLogado ? (
         <>
           <MenuLateral
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
+            menuLateralAberto={MenuLateralAberto}
+            aoFechar={() => setMenuLateralAberto(false)}
           />
 
           <div className="flex-1 flex flex-col overflow-hidden">
-            <Cabecalho onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <Cabecalho
+              onToggleSidebar={() => setMenuLateralAberto(!MenuLateralAberto)}
+            />
 
             <div className="flex-1 flex overflow-hidden">
               <main className="flex-1 overflow-auto p-4">

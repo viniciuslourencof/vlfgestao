@@ -63,7 +63,7 @@ export class FornecedorServices {
       .from("contas_pagar")
       .select("conta_pagar_id")
       .eq("fornecedor_id", p_id)
-      .limit(1); // Só precisamos saber se existe pelo menos um
+      .limit(1); 
 
     if (error) {
       return false;

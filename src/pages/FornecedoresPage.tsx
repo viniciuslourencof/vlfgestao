@@ -64,7 +64,7 @@ export function FornecedoresPage() {
     const emUso = await FornecedorServices.registroEmUso(registroIdADeletar);
     if (emUso) {
       setMensagemAviso(
-        "Registro em uso dentro de Contas a Receber, verifique!"
+        "Registro em uso dentro de Contas a Pagar, verifique!"
       );
       setMostrarAviso(true);
       return;

@@ -16,7 +16,7 @@ export function Cart({
   onRemoveItem,
   carrinhoMinimizado,
   setCarrinhoMinimizado,
-  limpaCarrinho: resetCarrinho,
+  limpaCarrinho: limpaCarrinho,
 }: CartPropsType) {
   const [efetuandoOperacao, setEfetuandoOperacao] = useState(false);
   const [mostrarAviso, setMostrarAviso] = useState(false);
@@ -52,7 +52,7 @@ export function Cart({
 
       setMensagemAviso("Pedido finalizado com sucesso!");
       setMostrarAviso(true);
-      resetCarrinho();
+      limpaCarrinho();
       setformaPagamento({ forma_pagamento_id: 0, dsc_forma_pagamento: "" });
     } finally {
       setEfetuandoOperacao(false);

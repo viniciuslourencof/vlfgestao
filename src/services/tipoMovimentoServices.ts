@@ -61,7 +61,7 @@ export class TipoMovimentoServices {
       .from("pedidos")
       .select("pedido_id")
       .eq("tipo_movimento_id", p_id)
-      .limit(1); // Só precisamos saber se existe pelo menos um
+      .limit(1);
 
     if (error) {
       return false;

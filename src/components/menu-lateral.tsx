@@ -71,11 +71,11 @@ const itensMenu = [
 ];
 
 export function MenuLateral({
-  isOpen,
-  onClose,
+  menuLateralAberto,
+  aoFechar: aoFechar,
 }: {
-  isOpen: boolean;
-  onClose: () => void;
+  menuLateralAberto: boolean;
+  aoFechar: () => void;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ export function MenuLateral({
     <div
       className={`fixed z-40 top-0 left-0 h-full bg-white border-r w-64 p-4 transform transition-transform duration-300 ease-in-out
       ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
+        menuLateralAberto ? "translate-x-0" : "-translate-x-full"
       } md:translate-x-0 md:static md:block`}
     >
       <div className="flex items-center gap-2 mb-8">
@@ -101,7 +101,7 @@ export function MenuLateral({
         {itensMenu.map((item, index) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link to={item.path} key={index} onClick={onClose}>
+            <Link to={item.path} key={index} onClick={aoFechar}>
               <Button
                 variant="ghost"
                 className={`w-full justify-start cursor-pointer ${
@@ -122,7 +122,7 @@ export function MenuLateral({
         variant="ghost"
         className="justify-start mt-auto text-muted-foreground absolute bottom-4 cursor-pointer w-56 "
         onClick={() => {
-          onClose();
+          aoFechar();
           handleLogout();
         }}
       >

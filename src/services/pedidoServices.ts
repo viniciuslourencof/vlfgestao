@@ -54,7 +54,7 @@ export class PedidoServices {
     const { data, error } = await supabase
       .from("pedidos")
       .insert(payload)
-      .select("*") // ou selecione campos específicos se preferir
+      .select("*") 
       .single();
 
     if (error || !data) {

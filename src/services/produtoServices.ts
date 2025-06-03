@@ -32,7 +32,7 @@ export class ProdutoServices {
     let query = supabase
       .from("produtos")
       .select("*")
-      .order("dsc_produto", { ascending: true }); // ou false para ordem decrescente
+      .order("dsc_produto", { ascending: true }); 
 
     if (p_categoria_id) {
       query = query.eq("categoria_id", p_categoria_id);

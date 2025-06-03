@@ -1,39 +1,38 @@
 import { supabase } from "../lib/subabase";
-import {
-  FormaPagamentoPayloadType,
-  FormaPagamentoType,
-} from "@/types/formaPagamento";
+import { UsuarioType } from "@/types/usuario";
 
-export class FormaPagamentoServices {
+export class UsuarioServices {
   static async buscarRegistro(p_id: number) {
     if (p_id <= 0) {
       return {
-        forma_pagamento_id: 0,
-        dsc_forma_pagamento: "",
+        usuario_id: 0,
+        login: "",
+        dsc_usuario: "",
       };
     }
 
     const { data, error } = await supabase
-      .from("formas_pagamento")
-      .select("forma_pagamento_id, dsc_forma_pagamento")
-      .eq("forma_pagamento_id", p_id)
+      .from("usuarios")
+      .select("usuario_id, login, dsc_usuario")
+      .eq("usuario_id", p_id)
       .single();
 
     if (error || !data) {
       return {
-        forma_pagamento_id: 0,
-        dsc_forma_pagamento: "",
+        usuario_id: 0,
+        login: "",
+        dsc_usuario: "",
       };
     }
 
     return data;
   }
 
-  static async buscarRegistros(): Promise<FormaPagamentoType[]> {
+  static async buscarRegistros(): Promise<UsuarioType[]> {
     const { data, error } = await supabase
-      .from("formas_pagamento")
+      .from("usuarios")
       .select("*")
-      .order("dsc_forma_pagamento", { ascending: true });
+      .order("dsc_usuario", { ascending: true });
 
     if (error || !data) {
       return [];
@@ -44,13 +43,13 @@ export class FormaPagamentoServices {
 
   static async verificaDuplicidade(
     p_id: number,
-    p_dsc: string
+    p_login: string
   ): Promise<boolean> {
     const { data, error } = await supabase
-      .from("formas_pagamento")
-      .select("forma_pagamento_id")
-      .eq("dsc_forma_pagamento", p_dsc)
-      .neq("forma_pagamento_id", p_id);
+      .from("usuarios")
+      .select("usuario_id")
+      .eq("login", p_login)
+      .neq("usuario_id", p_id);
 
     if (error) {
       return false;
@@ -60,11 +59,12 @@ export class FormaPagamentoServices {
   }
 
   static async registroEmUso(p_id: number): Promise<boolean> {
+    // Exemplo genérico — ajuste se o usuário estiver relacionado a outra tabela (ex: pedidos)
     const { data, error } = await supabase
       .from("pedidos")
       .select("pedido_id")
-      .eq("forma_pagamento_id", p_id)
-      .limit(1); 
+      .eq("usuario_id", p_id)
+      .limit(1);
 
     if (error) {
       return false;
@@ -74,9 +74,9 @@ export class FormaPagamentoServices {
   }
 
   static async inserir(
-    payload: FormaPagamentoPayloadType
+    payload: Omit<UsuarioType, "usuario_id">
   ): Promise<string | null> {
-    const { error } = await supabase.from("formas_pagamento").insert(payload);
+    const { error } = await supabase.from("usuarios").insert(payload);
 
     if (error) {
       return error.message;
@@ -87,9 +87,9 @@ export class FormaPagamentoServices {
 
   static async deletar(p_id: number): Promise<string | null> {
     const { error } = await supabase
-      .from("formas_pagamento")
+      .from("usuarios")
       .delete()
-      .eq("forma_pagamento_id", p_id);
+      .eq("usuario_id", p_id);
 
     if (error) {
       return error.message;
@@ -99,18 +99,32 @@ export class FormaPagamentoServices {
   }
 
   static async atualizar(
-    p_forma_pagamento_id: number,
-    payload: FormaPagamentoPayloadType
+    payload: Omit<UsuarioType, "usuario_id">,
+    p_usuario_id: number
   ): Promise<string | null> {
     const { error } = await supabase
-      .from("formas_pagamento")
+      .from("usuarios")
       .update(payload)
-      .eq("forma_pagamento_id", p_forma_pagamento_id);
+      .eq("usuario_id", p_usuario_id);
 
     if (error) {
       return error.message;
     }
 
     return null;
+  }
+
+  static async buscarPorLogin(p_login: string): Promise<UsuarioType | null> {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("login", p_login)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data;
   }
 }

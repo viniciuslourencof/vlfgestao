@@ -63,7 +63,7 @@ export class ClienteServices {
       .from("contas_receber")
       .select("conta_receber_id")
       .eq("cliente_id", p_id)
-      .limit(1); // Só precisamos saber se existe pelo menos um
+      .limit(1); 
 
     if (error) {
       return false;
