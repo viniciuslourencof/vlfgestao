@@ -14,6 +14,7 @@ import { ContasReceberPage } from "./pages/ContasReceberPage";
 import { ClientesPage } from "./pages/ClientesPage";
 import { ResumoFinanceiroPage } from "./pages/ResumoFinanceiroPage";
 import { TipoMovimentoPage } from "./pages/TiposMovimentoPage";
+import { UsuariosPage } from "./pages/UsuariosPage";
 // import { Footer } from "./components/footer";
 
 export function App() {
@@ -71,6 +72,10 @@ export function App() {
                   <Route
                     path="/resumoFinanceiro"
                     element={<ResumoFinanceiroPage />}
+                  />
+                  <Route
+                    path="/usuarios"
+                    element={<UsuariosPage />}
                   />
                 </Routes>
               </main>

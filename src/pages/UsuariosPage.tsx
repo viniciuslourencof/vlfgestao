@@ -6,17 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { FornecedorPayloadType, FornecedorType } from "../types/fornecedor";
-import { FornecedorServices } from "../services/fornecedorServices";
+import { UsuarioPayloadType, UsuarioType } from "../types/usuario";
+import { UsuarioServices } from "../services/usuarioServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GridRegistros from "../components/grid-registros";
 import { Plus, RefreshCcw } from "lucide-react";
 import type { ColDef } from "ag-grid-community";
 
-export function FornecedoresPage() {
-  const [registros, setRegistros] = useState<FornecedorType[]>([]);
-  const [registroEditando, setRegistroEditando] =
-    useState<FornecedorType | null>(null);
+export function UsuariosPage() {
+  const [registros, setRegistros] = useState<UsuarioType[]>([]);
+  const [registroEditando, setRegistroEditando] = useState<UsuarioType | null>(
+    null
+  );
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -27,7 +28,7 @@ export function FornecedoresPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const carregarRegistros = useCallback(async () => {
-    const resultado = await FornecedorServices.buscarRegistros();
+    const resultado = await UsuarioServices.buscarRegistros();
     setRegistros(resultado);
   }, []);
 
@@ -37,13 +38,14 @@ export function FornecedoresPage() {
 
   const aoInserir = () => {
     setRegistroEditando({
-      fornecedor_id: 0,
-      dsc_razao_social: "",
-      dsc_nome_fantasia: "",
+      usuario_id: 0,
+      dsc_usuario: "",
+      login: "",
+      senha: "",
     });
   };
 
-  const aoEditar = (p_registro: FornecedorType) => {
+  const aoEditar = (p_registro: UsuarioType) => {
     setRegistroEditando(p_registro);
   };
 
@@ -51,8 +53,8 @@ export function FornecedoresPage() {
     setRegistroEditando(null);
   };
 
-  const antesDeDeletar = (p_registro: FornecedorType) => {
-    setRegistroIdADeletar(p_registro.fornecedor_id);
+  const antesDeDeletar = (p_registro: UsuarioType) => {
+    setRegistroIdADeletar(p_registro.usuario_id);
     setMostrarConfirmacao(true);
   };
 
@@ -61,14 +63,14 @@ export function FornecedoresPage() {
 
     setMostrarConfirmacao(false);
 
-    const emUso = await FornecedorServices.registroEmUso(registroIdADeletar);
-    if (emUso) {
-      setMensagemAviso("Registro em uso dentro de Contas a Pagar, verifique!");
-      setMostrarAviso(true);
-      return;
-    }
+    // const emUso = await UsuarioServices.registroEmUso(registroIdADeletar);
+    // if (emUso) {
+    //   setMensagemAviso("Registro em uso dentro de Contas a Pagar, verifique!");
+    //   setMostrarAviso(true);
+    //   return;
+    // }
 
-    const error = await FornecedorServices.deletar(registroIdADeletar);
+    const error = await UsuarioServices.deletar(registroIdADeletar);
 
     if (error) {
       setMensagemAviso("Erro ao apagar registro: " + error);
@@ -81,29 +83,29 @@ export function FornecedoresPage() {
     carregarRegistros();
   };
 
-  const aoSalvar = async (payload: FornecedorPayloadType) => {
+  const aoSalvar = async (payload: UsuarioPayloadType) => {
     if (!registroEditando) {
       setMensagemAviso("Erro inesperado ao salvar. Tente novamente.");
       setMostrarAviso(true);
       return;
     }
 
-    const registroParaSalvar: FornecedorType = {
+    const registroParaSalvar: UsuarioType = {
       ...registroEditando, // Mantém quaisquer outros campos de registroEditando
       ...payload, // sobrescreve os campos definidos em payload
     };
 
     // Validação usando o registroParaSalvar que contém a descrição correta
-    if (!registroParaSalvar.dsc_razao_social) {
+    if (!registroParaSalvar.dsc_usuario) {
       setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
 
     // Verificação de duplicidade usando registroParaSalvar
-    const duplicado = await FornecedorServices.verificaDuplicidade(
-      registroParaSalvar.fornecedor_id,
-      registroParaSalvar.dsc_razao_social
+    const duplicado = await UsuarioServices.verificaDuplicidade(
+      registroParaSalvar.usuario_id,
+      registroParaSalvar.dsc_usuario
     );
     if (duplicado) {
       setMensagemAviso("Descrição já cadastrada, verifique.");
@@ -112,9 +114,9 @@ export function FornecedoresPage() {
     }
 
     // Lógica de inserção ou atualização usando registroParaSalvar
-    if (registroParaSalvar.fornecedor_id === 0) {
+    if (registroParaSalvar.usuario_id === 0) {
       // Novo registro
-      const error = await FornecedorServices.inserir(payload);
+      const error = await UsuarioServices.inserir(payload);
 
       if (error) {
         setMensagemAviso("Erro ao inserir registro: " + error);
@@ -123,9 +125,9 @@ export function FornecedoresPage() {
       }
     } else {
       // Edição de registro existente
-      const error = await FornecedorServices.atualizar(
+      const error = await UsuarioServices.atualizar(
         payload,
-        registroParaSalvar.fornecedor_id
+        registroParaSalvar.usuario_id
       );
 
       if (error) {
@@ -142,21 +144,14 @@ export function FornecedoresPage() {
 
   const colunasGrid: ColDef[] = [
     {
-      field: "fornecedor_id",
+      field: "usuario_id",
       headerName: "Código",
       editable: false,
       filter: "agNumberColumnFilter",
     },
     {
-      field: "dsc_razao_social",
+      field: "dsc_usuario",
       headerName: "Razão Social",
-      editable: false,
-      filter: "agTextColumnFilter",
-      flex: 1,
-    },
-    {
-      field: "dsc_nome_fantasia",
-      headerName: "Nome Fantasia",
       editable: false,
       filter: "agTextColumnFilter",
       flex: 1,
@@ -165,18 +160,19 @@ export function FornecedoresPage() {
 
   function FormularioRegistro() {
     // Estados locais
-    const [dsc_razao_social, setDscRazaoSocial] = useState(
-      registroEditando?.dsc_razao_social ?? ""
+    const [dsc_usuario, setDscUsuario] = useState(
+      registroEditando?.dsc_usuario ?? ""
     );
 
-    const [dsc_nome_fantasia, setDscNomeFantasia] = useState(
-      registroEditando?.dsc_nome_fantasia ?? ""
-    );
+    const [login, setLogin] = useState(registroEditando?.login ?? "");
+
+    const [senha, setSenha] = useState(registroEditando?.senha ?? "");
 
     // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
     useEffect(() => {
-      setDscRazaoSocial(registroEditando?.dsc_razao_social ?? "");
-      setDscNomeFantasia(registroEditando?.dsc_nome_fantasia ?? "");
+      setDscUsuario(registroEditando?.dsc_usuario ?? "");
+      setLogin(registroEditando?.login ?? "");
+      setSenha(registroEditando?.senha ?? "");
       inputRef.current?.focus(); // foca no campo ao montar
     }, [registroEditando]);
 
@@ -195,27 +191,19 @@ export function FornecedoresPage() {
               <Card className=" w-full h-full mx-auto p-6">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold">
-                    {registroEditando.fornecedor_id === 0
+                    {registroEditando.usuario_id === 0
                       ? "Novo Registro"
                       : "Editar Registro"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="dsc_razao_social">Razão Social</Label>
+                    <Label htmlFor="dsc_usuario">Nome do Usuário</Label>
                     <Input
-                      id="dsc_razao_social"
-                      value={dsc_razao_social}
-                      onChange={(e) => setDscRazaoSocial(e.target.value)}
+                      id="dsc_usuario"
+                      value={dsc_usuario}
+                      onChange={(e) => setDscUsuario(e.target.value)}
                       ref={inputRef}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dsc_nome_fantasia">Nome Fantasia</Label>
-                    <Input
-                      id="dsc_nome_fantasia"
-                      value={dsc_nome_fantasia}
-                      onChange={(e) => setDscNomeFantasia(e.target.value)}
                     />
                   </div>
                 </CardContent>
@@ -233,7 +221,7 @@ export function FornecedoresPage() {
               <Button
                 className="cursor-pointer"
                 onClick={() => {
-                  aoSalvar({ dsc_razao_social, dsc_nome_fantasia });
+                  aoSalvar({ login, senha, dsc_usuario });
                 }}
               >
                 Salvar
@@ -247,7 +235,7 @@ export function FornecedoresPage() {
 
   return (
     <div className="p-6 h-full flex flex-col">
-      <h1 className="text-2xl font-bold mb-4">Fornecedores</h1>
+      <h1 className="text-2xl font-bold mb-4">Usuários</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
           <Button onClick={aoInserir} className="cursor-pointer">
@@ -265,7 +253,6 @@ export function FornecedoresPage() {
         <GridRegistros
           registros={registros}
           colunas={colunasGrid}
-          campoRodape="dsc_razao_social"
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

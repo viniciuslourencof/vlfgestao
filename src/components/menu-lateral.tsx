@@ -11,6 +11,7 @@ import {
   Handshake,
   ChartColumn,
   Navigation,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -67,6 +68,11 @@ const itensMenu = [
     icon: ChartColumn,
     label: "Resumo Financeiro",
     path: "/resumoFinanceiro",
+  },
+  {
+    icon: Users,
+    label: "Usuários",
+    path: "/usuarios",
   },
 ];
 

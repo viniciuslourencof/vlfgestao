@@ -4,3 +4,9 @@ export type UsuarioType = {
   senha: string;
   dsc_usuario: string;
 };
+
+
+export type UsuarioPayloadType = Pick<
+  UsuarioType,
+  'login' | 'senha' | 'dsc_usuario'
+>; 

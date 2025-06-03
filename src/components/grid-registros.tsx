@@ -16,8 +16,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface GridProps<T> {
   registros: T[];
-  colunas: ColDef[];
-  campoRodape?: string; // Campo usado para mostrar total de registros
+  colunas: ColDef[];  
   aoEditar: (registro: T) => void;
   antesDeDeletar: (registro: T) => void;
 }
@@ -40,8 +39,8 @@ function ActionButtonsCellRenderer<T>({
 
   return (
     <div className="flex gap-2 justify-center items-center h-full">
-      <Button size="sm" onClick={() => onEdit(data)} className="cursor-pointer"> 
-        <SquarePen/ >
+      <Button size="sm" onClick={() => onEdit(data)} className="cursor-pointer">
+        <SquarePen />
       </Button>
       <Button
         size="sm"
@@ -49,7 +48,7 @@ function ActionButtonsCellRenderer<T>({
         onClick={() => onDelete(data)}
         className="cursor-pointer"
       >
-        <Trash2/>
+        <Trash2 />
       </Button>
     </div>
   );
@@ -59,7 +58,6 @@ function ActionButtonsCellRenderer<T>({
 export default function GridRegistros<T>({
   registros,
   colunas,
-  // campoRodape = "", // usado no footer
   aoEditar,
   antesDeDeletar,
 }: GridProps<T>) {
@@ -69,7 +67,8 @@ export default function GridRegistros<T>({
     {
       headerName: "Ações",
       field: "acoes",
-      width: 180,
+      minWidth: 80,
+      maxWidth: 120,
       cellRenderer: (params: ICellRendererParams) => (
         <ActionButtonsCellRenderer
           data={params.data}
@@ -80,6 +79,7 @@ export default function GridRegistros<T>({
       ),
       sortable: false,
       filter: false,
+      suppressSizeToFit: true, // impede que o grid tente esticar essa coluna
     },
   ]);
 
@@ -96,12 +96,6 @@ export default function GridRegistros<T>({
     headerCheckbox: false,
   };
 
-  // const totalCount = registros.length;
-
-  // const rodape = {
-  //   [campoRodape]: `Quantidade de Registros: ${totalCount}`,
-  // } as Partial<T>;
-
   return (
     <AgGridReact
       rowData={registros}
@@ -112,7 +106,6 @@ export default function GridRegistros<T>({
       paginationPageSize={50}
       paginationPageSizeSelector={[50, 100, 500]}
       localeText={AG_GRID_LOCALE_BR}
-      // pinnedBottomRowData={[rodape]}
     />
   );
 }
