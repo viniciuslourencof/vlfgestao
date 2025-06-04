@@ -400,8 +400,7 @@ export function TipoMovimentoPage() {
       ) : (
         <GridRegistros
           registros={registros}
-          colunas={colunasGrid}
-          campoRodape="dsc_tipo_movimento"
+          colunas={colunasGrid}          
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

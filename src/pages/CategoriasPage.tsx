@@ -240,8 +240,7 @@ export function CategoriasPage() {
       ) : (
         <GridRegistros
           registros={registros}
-          colunas={colunasGrid}
-          campoRodape="dsc_categoria"
+          colunas={colunasGrid}          
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

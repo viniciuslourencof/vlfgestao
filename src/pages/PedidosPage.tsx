@@ -514,8 +514,7 @@ export function PedidosPage() {
       ) : (
         <GridRegistros
           registros={registros}
-          colunas={colunasGrid}
-          campoRodape="dt_inc"
+          colunas={colunasGrid}          
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

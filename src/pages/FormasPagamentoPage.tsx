@@ -247,8 +247,7 @@ export function FormasPagamentoPage() {
       ) : (
         <GridRegistros
           registros={registros}
-          colunas={colunasGrid}
-          campoRodape="dsc_forma_pagamento"
+          colunas={colunasGrid}          
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

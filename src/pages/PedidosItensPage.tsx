@@ -336,8 +336,7 @@ export function PedidosItensPage({
 
         <GridRegistros
           registros={registros}
-          colunas={colunasGridItens}
-          campoRodape=""
+          colunas={colunasGridItens}          
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

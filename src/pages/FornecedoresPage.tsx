@@ -264,8 +264,7 @@ export function FornecedoresPage() {
       ) : (
         <GridRegistros
           registros={registros}
-          colunas={colunasGrid}
-          campoRodape="dsc_razao_social"
+          colunas={colunasGrid}          
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />
