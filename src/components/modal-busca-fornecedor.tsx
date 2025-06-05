@@ -6,67 +6,59 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/subabase";
-import { FornecedorType, ModalBuscaFornecedorPropsType } from "../types/fornecedor";
+import {
+  FornecedorType,
+  ModalBuscaFornecedorPropsType,
+} from "../types/fornecedor";
+import { FornecedorServices } from "@/services/fornecedorServices";
 
 export default function ModalBuscaFornecedor({
-  open,
-  onClose,
-  onSelect,
+  abrir,
+  aoFechar,
+  aoSelecionar,
 }: ModalBuscaFornecedorPropsType) {
   const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState<FornecedorType[]>([]);
   const [focoIndex, setFocoIndex] = useState(0);
 
   useEffect(() => {
-    const fetchFornecedores = async (termo: string) => {
-      const query = supabase
-        .from("fornecedores")
-        .select("*")
-        .order("dsc_razao_social", { ascending: true });
+    const carregaRegistros = async (termo: string) => {
+      const resultados = await FornecedorServices.buscarRegistrosPorNome(termo);
 
-      if (termo) {
-        query.ilike("dsc_razao_social", `%${termo}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (!error) {
-        setResultados(data);
-        setFocoIndex(0);
-      }
+      setResultados(resultados);
+      setFocoIndex(0);
     };
 
-    if (open) {
-      fetchFornecedores("");
+    if (abrir) {
+      carregaRegistros("");
     }
 
-    const delayDebounce = setTimeout(() => {
+    const atrasoBusca = setTimeout(() => {
       if (termo.length > 1) {
-        fetchFornecedores(termo);
+        carregaRegistros(termo);
       } else {
-        fetchFornecedores("");
+        carregaRegistros("");
       }
     }, 400);
 
-    return () => clearTimeout(delayDebounce);
-  }, [termo, open]);
+    return () => clearTimeout(atrasoBusca);
+  }, [termo, abrir]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const aoPressionarTecla = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       setFocoIndex((prev) => Math.min(prev + 1, resultados.length - 1));
     } else if (e.key === "ArrowUp") {
       setFocoIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === "Enter") {
       if (resultados[focoIndex]) {
-        onSelect(resultados[focoIndex]);
-        onClose(false);
+        aoSelecionar(resultados[focoIndex]);
+        aoFechar(false);
       }
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={abrir} onOpenChange={aoFechar}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Buscar Fornecedor</DialogTitle>
@@ -76,7 +68,7 @@ export default function ModalBuscaFornecedor({
           placeholder="Digite o nome do fornecedor"
           value={termo}
           onChange={(e) => setTermo(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onKeyDown={aoPressionarTecla}
         />
 
         <div className="space-y-2 mt-4 max-h-[420px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-rounded-md scrollbar-thumb-gray-400 scrollbar-track-gray-200">
@@ -85,8 +77,8 @@ export default function ModalBuscaFornecedor({
               <div
                 key={fornecedor.fornecedor_id}
                 onDoubleClick={() => {
-                  onSelect(fornecedor);
-                  onClose(false);
+                  aoSelecionar(fornecedor);
+                  aoFechar(false);
                 }}
                 className={`p-3 rounded-md border cursor-pointer hover:bg-accent transition ${
                   index === focoIndex ? "bg-accent/50 border-primary" : ""
@@ -94,7 +86,9 @@ export default function ModalBuscaFornecedor({
                 onMouseEnter={() => setFocoIndex(index)}
                 onClick={() => setFocoIndex(index)}
               >
-                <div className="font-semibold">{fornecedor.dsc_razao_social}</div>
+                <div className="font-semibold">
+                  {fornecedor.dsc_razao_social}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   Código: {fornecedor.fornecedor_id}
                 </div>

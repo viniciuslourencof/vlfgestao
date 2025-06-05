@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
@@ -188,14 +188,7 @@ export function UsuariosPage() {
             </TabsList>
 
             <TabsContent value="geral">
-              <Card className=" w-full h-full mx-auto p-6">
-                <CardHeader>
-                  <CardTitle className="text-xl font-semibold">
-                    {registroEditando.usuario_id === 0
-                      ? "Novo Registro"
-                      : "Editar Registro"}
-                  </CardTitle>
-                </CardHeader>
+              <Card className=" w-full h-full mx-auto p-6">                
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="dsc_usuario">Nome do Usuário</Label>

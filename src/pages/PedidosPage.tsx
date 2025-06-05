@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import { PedidosItensPage } from "@/pages/PedidosItensPage";
 import ModalAviso from "@/components/modal-aviso";
@@ -56,12 +56,6 @@ export function PedidosPage() {
 
   useEffect(() => {
     carregarRegistros();
-
-    const vrLiquidoPedido = registrosItens.reduce((soma, item) => {
-      return soma + Number(item.vr_unit) * Number(item.quantidade);
-    }, 0);
-
-    setVrLiquido(Number(vrLiquidoPedido.toFixed(2)));
   }, [carregarRegistros, registrosItens]);
 
   const aoInserir = () => {
@@ -69,9 +63,11 @@ export function PedidosPage() {
       pedido_id: 0,
       cliente_id: 0,
       forma_pagamento_id: 0,
-      vr_liquido: 0.0,
+      vr_liquido: "0.00",
       dt_inc: new Date().toISOString(),
     });
+
+    setRegistrosItens([]);
 
     setCliente({
       cliente_id: 0,
@@ -241,7 +237,7 @@ export function PedidosPage() {
 
     // deleta os que o usuário removeu
     for (const id of pedidoItemIdsParaDeletar) {
-      const error = await PedidoItemServices.deletar(id);      
+      const error = await PedidoItemServices.deletar(id);
 
       if (error) {
         setMensagemAviso("Erro ao deletar item do pedido: " + error);
@@ -298,21 +294,27 @@ export function PedidosPage() {
     },
   ];
 
-  const [vr_liquido, setVrLiquido] = useState(
-    registroEditando?.vr_liquido ?? ""
-  );
-
   const [pedidoItemIdsParaDeletar, setPedidoItemIdsParaDeletar] = useState<
     number[]
   >([]);
 
   function FormularioRegistro() {
+    const [vr_liquido, setVrLiquido] = useState(
+      registroEditando?.vr_liquido ?? ""
+    );
+
     // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
     useEffect(() => {
+      const vrLiquidoItens = registrosItens.reduce((soma, item) => {
+        return soma + Number(item.vr_unit) * Number(item.quantidade);
+      }, 0);
+
+      setVrLiquido(vrLiquidoItens ? Number(vrLiquidoItens.toFixed(2)) : "0.00");
+
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, []);
+    }, [registroEditando]);
 
     return (
       <>
@@ -328,13 +330,6 @@ export function PedidosPage() {
 
             <TabsContent value="geral">
               <Card className=" w-full h-full mx-auto p-6">
-                <CardHeader>
-                  <CardTitle className="text-xl font-semibold">
-                    {registroEditando.pedido_id === 0
-                      ? "Novo Registro"
-                      : "Editar Registro"}
-                  </CardTitle>
-                </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-3 gap-2 items-end">
                     <div className="space-y-2">
@@ -363,7 +358,7 @@ export function PedidosPage() {
                         value={vr_liquido}
                         onChange={aoEditarCampoNumerico}
                         ref={inputRef}
-                        readOnly
+                        // readOnly
                       />
                     </div>
                   </div>
@@ -378,7 +373,9 @@ export function PedidosPage() {
                         <Input
                           id="forma_pagamento_id"
                           name="forma_pagamento_id"
-                          value={formaPagamento.forma_pagamento_id}
+                          value={
+                            formaPagamento.forma_pagamento_id === 0 ? "" : formaPagamento.forma_pagamento_id
+                          }
                           readOnly
                         />
                       </div>
@@ -416,7 +413,9 @@ export function PedidosPage() {
                         <Input
                           id="cliente_id"
                           name="cliente_id"
-                          value={cliente.cliente_id}
+                          value={
+                            cliente.cliente_id === 0 ? "" : cliente.cliente_id
+                          }
                           readOnly
                         />
                       </div>
@@ -448,14 +447,6 @@ export function PedidosPage() {
             </TabsContent>
             <TabsContent value="itens">
               <Card className=" w-full h-full mx-auto p-6">
-                <CardHeader>
-                  <CardTitle className="text-xl font-semibold">
-                    {registroEditando.pedido_id === 0
-                      ? "Novo Registro"
-                      : "Editar Registro"}
-                  </CardTitle>
-                </CardHeader>
-
                 <PedidosItensPage
                   p_id={registroEditando.pedido_id}
                   registros={registrosItens}
@@ -499,7 +490,7 @@ export function PedidosPage() {
       <h1 className="text-2xl font-bold mb-4">Pedidos</h1>
       <div className="flex items-center mb-4">
         <div className="flex gap-2">
-          <Button onClick={aoInserir} className="cursor-pointer hidden">
+          <Button onClick={aoInserir} className="cursor-pointer">
             <Plus className="w-4 h-4 mr-2 cursor-pointer" /> Novo
           </Button>
           <Button onClick={carregarRegistros} className="cursor-pointer">
@@ -514,7 +505,7 @@ export function PedidosPage() {
       ) : (
         <GridRegistros
           registros={registros}
-          colunas={colunasGrid}          
+          colunas={colunasGrid}
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />

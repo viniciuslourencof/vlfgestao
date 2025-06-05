@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { PedidoItemPayloadType, PedidoItemType, PedidosItensPageProps } from "@/types/pedido";
+import {
+  PedidoItemPayloadType,
+  PedidoItemType,
+  PedidosItensPageProps,
+} from "@/types/pedido";
 import GridRegistros from "../components/grid-registros";
 import { type ColDef } from "ag-grid-community";
 import { ModalConfirmacao } from "@/components/modal-confirmacao";
@@ -13,7 +17,7 @@ import { Search } from "lucide-react";
 import ModalBuscaProduto from "@/components/modal-busca-produto";
 import { ProdutoType } from "@/types/produto";
 import { ProdutoServices } from "@/services/produtoServices";
-
+import { Plus } from "lucide-react";
 
 export function PedidosItensPage({
   p_id,
@@ -46,6 +50,33 @@ export function PedidosItensPage({
     valor_dose: 0,
     vr_desconto: 0,
   });
+
+  const aoInserir = () => {
+    setRegistroEditando({
+      pedido_item_id: 0,
+      pedido_id: p_id,
+      produto_id: 0,
+      vr_item: 0,
+      vr_unit: 0,
+      quantidade: 0,
+    });
+
+    setProduto({
+      produto_id: 0,
+      dsc_produto: "",
+      estoque: 0,
+      preco_venda1: 0,
+      preco_custo1: 0,
+      desconto: 0,
+      categoria_id: 0,
+      unidade_fardo: 0,
+      mililitros: 0,
+      doses: 0,
+      margem1: 0,
+      valor_dose: 0,
+      vr_desconto: 0,
+    });
+  };
 
   const aoEditar = async (p_registro: PedidoItemType) => {
     setRegistroEditando(p_registro);
@@ -118,24 +149,40 @@ export function PedidosItensPage({
       setMostrarAviso(true);
       return;
     }
+    const itemDuplicado = registros.find(
+      (item) =>
+        item.produto_id === registroParaSalvar.produto_id &&
+        item.pedido_item_id !== registroParaSalvar.pedido_item_id
+    );
 
-    // // Exemplo de verificação de duplicidade (descomente se necessário)
-    // const duplicado = await PedidoItensService.verificaDuplicidade(
-    //   registroParaSalvar.pedido_id,
-    //   registroParaSalvar.produto_id
-    // );
-    // if (duplicado) {
-    //   setMensagemAviso("Este produto já foi adicionado ao pedido.");
-    //   setMostrarAviso(true);
-    //   return;
-    // }
+    if (itemDuplicado) {
+      // Soma a quantidade e atualiza vr_item
+      const novaQuantidade =
+        Number(itemDuplicado.quantidade) +
+        Number(registroParaSalvar.quantidade);
 
+      const novoVrItem = novaQuantidade * Number(itemDuplicado.vr_unit);
+
+      const registrosAtualizados = registros.map((item) =>
+        item.pedido_item_id === itemDuplicado.pedido_item_id
+          ? {
+              ...item,
+              quantidade: novaQuantidade,
+              vr_item: Number(novoVrItem.toFixed(2)),
+            }
+          : item
+      );
+
+      setRegistros(registrosAtualizados);
+      setRegistroEditando(null);
+      return;
+    }
+
+    // Se for um novo item
     if (registroParaSalvar.pedido_item_id === 0) {
-      // Novo item: adiciona ao array
-      setRegistros((prev) => [...prev, { ...registroParaSalvar }]); // Coloque o ID real se o backend retornar
+      setRegistros((prev) => [...prev, { ...registroParaSalvar }]);
     } else {
-      // Item existente: atualiza no array
-
+      // Atualiza item existente normalmente
       setRegistros((prev) =>
         prev.map((item) =>
           item.pedido_item_id === registroParaSalvar.pedido_item_id
@@ -143,7 +190,9 @@ export function PedidosItensPage({
             : item
         )
       );
-    }    
+    }
+
+    setRegistroEditando(null);
   };
 
   const colunasGridItens: ColDef[] = [
@@ -334,9 +383,17 @@ export function PedidosItensPage({
           </Card>
         )}
 
+        {!registroEditando && (
+          <div className="flex justify-start mb-4">
+            <Button onClick={aoInserir} className="cursor-pointer">
+              <Plus className="w-4 h-4 mr-2" /> Novo
+            </Button>
+          </div>
+        )}
+
         <GridRegistros
           registros={registros}
-          colunas={colunasGridItens}          
+          colunas={colunasGridItens}
           aoEditar={aoEditar}
           antesDeDeletar={antesDeDeletar}
         />
@@ -373,6 +430,7 @@ export function PedidosItensPage({
             }));
 
             setVrUnit(produto.preco_venda1);
+            setQuantidade(quantidade ? quantidade : 1);
             setVrItem(produto.preco_venda1 * Number(quantidade));
           }}
         />

@@ -13,7 +13,7 @@ export class FornecedorServices {
 
     const { data, error } = await supabase
       .from("fornecedores")
-      .select("fornecedor_id, dsc_razao_social, dsc_nome_fantasia")
+      .select("*")
       .eq("fornecedor_id", p_id)
       .single();
 
@@ -23,6 +23,22 @@ export class FornecedorServices {
         dsc_razao_social: "",
         dsc_nome_fantasia: "",
       };
+    }
+
+    return data;
+  }
+
+  static async buscarRegistrosPorNome(
+    termo: string
+  ): Promise<FornecedorType[]> {
+    const { data, error } = await supabase
+      .from("fornecedores")
+      .select("*")
+      .ilike("dsc_razao_social", `%${termo}%`)
+      .order("dsc_razao_social", { ascending: true });
+
+    if (error || !data) {
+      return [];
     }
 
     return data;
@@ -63,7 +79,7 @@ export class FornecedorServices {
       .from("contas_pagar")
       .select("conta_pagar_id")
       .eq("fornecedor_id", p_id)
-      .limit(1); 
+      .limit(1);
 
     if (error) {
       return false;

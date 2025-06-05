@@ -10,7 +10,7 @@ export type FornecedorPayloadType = Pick<
 >;
 
 export type ModalBuscaFornecedorPropsType = {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  onSelect: (fornecedor: FornecedorType) => void;
+  abrir: boolean;
+  aoFechar: (open: boolean) => void;
+  aoSelecionar: (fornecedor: FornecedorType) => void;
 };
