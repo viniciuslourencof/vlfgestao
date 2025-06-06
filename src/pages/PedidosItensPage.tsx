@@ -30,11 +30,10 @@ export function PedidosItensPage({
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
   );
-
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
-  const [abrirModalBuscaProduto, setAbrirModalBuscaProduto] = useState(false);
+  const [abrirModalBuscaProduto, setAbrirModalBuscaProduto] = useState(false);  
   const [produto, setProduto] = useState<ProdutoType>({
     produto_id: 0,
     dsc_produto: "",
@@ -76,6 +75,10 @@ export function PedidosItensPage({
       valor_dose: 0,
       vr_desconto: 0,
     });
+
+    setVrUnit(0.0);
+    setVrItem(0.0);
+    setQuantidade(1.0);
   };
 
   const aoEditar = async (p_registro: PedidoItemType) => {
@@ -303,7 +306,11 @@ export function PedidosItensPage({
               <div className="w-1/2 grid grid-cols-[auto_auto_1fr_auto_auto_auto] gap-2 items-end">
                 <div className="space-y-2 w-32">
                   <Label htmlFor="produto_id">Código do Produto</Label>
-                  <Input placeholder="" value={produto.produto_id || ""} />
+                  <Input
+                    placeholder=""
+                    value={produto.produto_id || ""}
+                    readOnly
+                  />
                 </div>
                 <div className="space-y-2 w-10">
                   <Label className="invisible">Buscar</Label>
@@ -322,6 +329,7 @@ export function PedidosItensPage({
                     id="dsc_produto"
                     name="dsc_produto"
                     value={produto.dsc_produto || ""}
+                    readOnly
                   />
                 </div>
               </div>
@@ -351,6 +359,7 @@ export function PedidosItensPage({
                     placeholder=""
                     value={vr_item}
                     onChange={aoEditarCampoNumerico}
+                    readOnly
                   />
                 </div>
               </div>

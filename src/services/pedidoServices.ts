@@ -29,7 +29,7 @@ export class PedidoServices {
       .from("contas_receber")
       .select("conta_receber_id")
       .eq("pedido_id", p_id)
-      .limit(1); // 
+      .limit(1); //
 
     if (error) {
       return false;
@@ -50,18 +50,18 @@ export class PedidoServices {
 
   static async inserirComRetorno(
     payload: PedidoPayloadType
-  ): Promise<{ pedido?: PedidoType; erro?: string | null }> {
+  ): Promise<{ registro?: PedidoType; error?: string | null }> {
     const { data, error } = await supabase
       .from("pedidos")
       .insert(payload)
-      .select("*") 
+      .select("*")
       .single();
 
     if (error || !data) {
-      return { erro: error?.message ?? "Erro ao inserir pedido" };
+      return { error: error?.message ?? "Erro ao inserir pedido" };
     }
 
-    return { pedido: data, erro: null };
+    return { registro: data, error: null };
   }
 
   static async atualizar(
@@ -115,17 +115,17 @@ export class PedidoServices {
 
     payload_pedidos.vr_liquido = subtotal;
 
-    const { pedido, erro } = await PedidoServices.inserirComRetorno(
+    const { registro, error } = await PedidoServices.inserirComRetorno(
       payload_pedidos
     );
 
-    if (erro || !pedido) {
-      return { erro: "Erro ao inserir pedido: " + erro };
+    if (error || !registro) {
+      return { erro: "Erro ao inserir pedido: " + error };
     }
 
     const itens: PedidoItemPayloadType[] = payload_itens.map(
       (item): PedidoItemPayloadType => ({
-        pedido_id: pedido.pedido_id,
+        pedido_id: registro.pedido_id,
         produto_id: item.produto_id,
         quantidade: item.quantidade,
         vr_unit: item.vr_unit,
@@ -144,10 +144,10 @@ export class PedidoServices {
         cliente_id: payload_pedidos.cliente_id,
         forma_pagamento_id: payload_pedidos.forma_pagamento_id,
         vr_liquido: payload_pedidos.vr_liquido,
-        pedido_id: pedido.pedido_id,
+        pedido_id: registro.pedido_id,
       });
     }
 
-    return { erro: null, pedido_id: pedido.pedido_id };
+    return { erro: null, pedido_id: registro.pedido_id };
   }
 }

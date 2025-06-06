@@ -36,6 +36,7 @@ export function PedidosPage() {
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [abaAtiva, setAbaAtiva] = useState("geral");
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamentoType>({
     forma_pagamento_id: 0,
     dsc_forma_pagamento: "",
@@ -59,6 +60,8 @@ export function PedidosPage() {
   }, [carregarRegistros, registrosItens]);
 
   const aoInserir = () => {
+    setAbaAtiva("geral");
+
     setRegistroEditando({
       pedido_id: 0,
       cliente_id: 0,
@@ -82,6 +85,7 @@ export function PedidosPage() {
   };
 
   const aoEditar = async (p_registro: PedidoType) => {
+    setAbaAtiva("geral");
     setRegistroEditando(p_registro);
     setPedidoItemIdsParaDeletar([]);
 
@@ -150,7 +154,7 @@ export function PedidosPage() {
       return;
     }
 
-    const registroParaSalvar: PedidoType = {
+    let registroParaSalvar: PedidoType = {
       ...registroEditando, // Mantém quaisquer outros campos de registroEditando
       ...payload, // sobrescreve os campos definidos em payload
     };
@@ -173,32 +177,27 @@ export function PedidosPage() {
       return;
     }
 
-    // // Verificação de duplicidade usando registroParaSalvar
-    // const duplicado = await PedidoServices.verificaDuplicidade(
-    //   registroParaSalvar.cliente_id,
-    //   registroParaSalvar.dsc_razao_social
-    // );
-    // if (duplicado) {
-    //   setMensagemAviso("Descrição já cadastrada, verifique.");
-    //   setMostrarAviso(true);
-    //   return;
-    // }
-
     // Lógica de inserção ou atualização usando registroParaSalvar
     if (registroParaSalvar.pedido_id === 0) {
       // Novo registro
-      const error = await PedidoServices.inserir(payload);
+      const { registro: registroInserido, error } =
+        await PedidoServices.inserirComRetorno(payload);
 
-      if (error) {
+      if (error || !registroInserido) {
         setMensagemAviso("Erro ao inserir registro: " + error);
         setMostrarAviso(true);
         return;
       }
+
+      registroParaSalvar = {
+        ...registroInserido,
+        ...payload,
+      };
     } else {
       // Edição de registro existente
       const error = await PedidoServices.atualizar(
         payload,
-        registroEditando.pedido_id
+        registroParaSalvar.pedido_id
       );
 
       if (error) {
@@ -210,7 +209,7 @@ export function PedidosPage() {
 
     for (const item of registrosItens) {
       const payload = {
-        pedido_id: registroEditando.pedido_id,
+        pedido_id: registroParaSalvar.pedido_id,
         produto_id: item.produto_id ?? 0,
         quantidade: Number(item.quantidade),
         vr_unit: Number(item.vr_unit),
@@ -320,7 +319,8 @@ export function PedidosPage() {
       <>
         {registroEditando ? (
           <Tabs
-            defaultValue="geral"
+            value={abaAtiva}
+            onValueChange={setAbaAtiva}
             className="w-full h-full max-w-none mx-auto"
           >
             <TabsList className="flex space-x-2 bg-muted p-1 rounded-xl shadow-inner border">
@@ -374,7 +374,9 @@ export function PedidosPage() {
                           id="forma_pagamento_id"
                           name="forma_pagamento_id"
                           value={
-                            formaPagamento.forma_pagamento_id === 0 ? "" : formaPagamento.forma_pagamento_id
+                            formaPagamento.forma_pagamento_id === 0
+                              ? ""
+                              : formaPagamento.forma_pagamento_id
                           }
                           readOnly
                         />
