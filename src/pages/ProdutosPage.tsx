@@ -947,9 +947,9 @@ export function ProdutosPage({
         </div>
       </TabsContent>
       <ModalBuscaProduto
-        open={abrirModalBusca}
-        onClose={() => setAbrirModalBusca(false)}
-        onSelect={selecionarProdutoComposicao}
+        abrir={abrirModalBusca}
+        aoFechar={() => setAbrirModalBusca(false)}
+        aoSelecionar={selecionarProdutoComposicao}
       />
       <ModalBuscaCategoria
         open={abrirModalBuscaCategoria}

@@ -65,7 +65,7 @@ export default function ModalBuscaFornecedor({
         </DialogHeader>
 
         <Input
-          placeholder="Digite o nome do fornecedor"
+          placeholder="Digite a razão social do fornecedor"
           value={termo}
           onChange={(e) => setTermo(e.target.value)}
           onKeyDown={aoPressionarTecla}

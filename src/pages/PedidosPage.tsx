@@ -313,7 +313,7 @@ export function PedidosPage() {
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, [registroEditando]);
+    }, []);
 
     return (
       <>

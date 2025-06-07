@@ -27,7 +27,7 @@ export function PDVPage() {
   }
 
   const FiltrarProdutos = async () => {
-    const resultado = await ProdutoServices.buscaProdutosPorCategoria(
+    const resultado = await ProdutoServices.buscarRegistrosPorCategoria(
       categoriaSelecionadaID
     );
     setProdutos(resultado);

@@ -22,7 +22,7 @@ export type ProdutoType = {
 };
 
 export type ModalBuscaProdutoPropsType = {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  onSelect: (produto: ProdutoType) => void;
+  abrir: boolean;
+  aoFechar: (open: boolean) => void;
+  aoSelecionar: (produto: ProdutoType) => void;
 }

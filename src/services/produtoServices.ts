@@ -1,5 +1,5 @@
 import { supabase } from "../lib/subabase";
-import { ProdutoInterface } from "@/types/produto";
+import { ProdutoInterface, ProdutoType } from "@/types/produto";
 
 export class ProdutoServices {
   static async buscarRegistro(p_id: number) {
@@ -26,13 +26,29 @@ export class ProdutoServices {
     return data;
   }
 
-  static async buscaProdutosPorCategoria(
+  static async buscarRegistrosPorNome(
+    termo: string
+  ): Promise<ProdutoType[]> {
+    const { data, error } = await supabase
+      .from("produtos")
+      .select("*")
+      .ilike("dsc_produto", `%${termo}%`)
+      .order("dsc_produto", { ascending: true });
+
+    if (error || !data) {
+      return [];
+    }
+
+    return data;
+  }
+
+  static async buscarRegistrosPorCategoria(
     p_categoria_id: number | null
   ): Promise<ProdutoInterface[]> {
     let query = supabase
       .from("produtos")
       .select("*")
-      .order("dsc_produto", { ascending: true }); 
+      .order("dsc_produto", { ascending: true });
 
     if (p_categoria_id) {
       query = query.eq("categoria_id", p_categoria_id);

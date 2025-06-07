@@ -284,7 +284,7 @@ export function ContasPagarPage() {
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    }, [registroEditando]);
+    }, []);
 
     return (
       <>

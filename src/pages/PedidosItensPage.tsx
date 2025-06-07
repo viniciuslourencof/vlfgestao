@@ -418,9 +418,9 @@ export function PedidosItensPage({
           mensagem={mensagemAviso}
         />
         <ModalBuscaProduto
-          open={abrirModalBuscaProduto}
-          onClose={() => setAbrirModalBuscaProduto(false)}
-          onSelect={(produto) => {
+          abrir={abrirModalBuscaProduto}
+          aoFechar={() => setAbrirModalBuscaProduto(false)}
+          aoSelecionar={(produto) => {
             setProduto((prev) => ({
               ...prev,
               produto_id: produto.produto_id,
