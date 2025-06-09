@@ -33,7 +33,7 @@ export function PedidosItensPage({
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState("");
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
-  const [abrirModalBuscaProduto, setAbrirModalBuscaProduto] = useState(false);  
+  const [abrirModalBuscaProduto, setAbrirModalBuscaProduto] = useState(false);
   const [produto, setProduto] = useState<ProdutoType>({
     produto_id: 0,
     dsc_produto: "",
@@ -262,6 +262,14 @@ export function PedidosItensPage({
     },
   ];
 
+  const [vr_item, setVrItem] = useState(registroEditando?.vr_item ?? "");
+
+  const [vr_unit, setVrUnit] = useState(registroEditando?.vr_unit ?? "");
+
+  const [quantidade, setQuantidade] = useState(
+    registroEditando?.quantidade ?? ""
+  );
+
   const aoEditarCampoNumerico = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -284,14 +292,6 @@ export function PedidosItensPage({
       setVrItem(Number(novoVrItem));
     }
   };
-
-  const [vr_item, setVrItem] = useState(registroEditando?.vr_item ?? "");
-
-  const [vr_unit, setVrUnit] = useState(registroEditando?.vr_unit ?? "");
-
-  const [quantidade, setQuantidade] = useState(
-    registroEditando?.quantidade ?? ""
-  );
 
   return (
     <>

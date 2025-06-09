@@ -1,4 +1,5 @@
-import { ProdutoInterface } from "@/types/produto";
+
+import { ProdutoType } from "@/types/produto";
 import { supabase } from "../lib/subabase";
 import { PedidoItemType, PedidoItemPayloadType } from "@/types/pedido";
 
@@ -60,7 +61,7 @@ export class PedidoItemServices {
 
   static inserirNoCarrinho(
     p_carrinhoAtual: PedidoItemType[],
-    p_produto: ProdutoInterface
+    p_produto: ProdutoType
   ): PedidoItemType[] {
     const produtoExistente = p_carrinhoAtual.find(
       (item) => item.produto_id === p_produto.produto_id

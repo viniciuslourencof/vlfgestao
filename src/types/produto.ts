@@ -1,10 +1,3 @@
-export interface ProdutoInterface {
-  produto_id: number;
-  dsc_produto: string;
-  preco_venda1: number;
-  desconto: number;
-}
-
 export type ProdutoType = {
   produto_id: number;
   dsc_produto: string;
@@ -21,8 +14,42 @@ export type ProdutoType = {
   vr_desconto: number;
 };
 
+export type ProdutoPayloadType = Pick<
+  ProdutoType,  
+  | "dsc_produto"
+  | "estoque"
+  | "preco_venda1"
+  | "preco_custo1"
+  | "desconto"
+  | "categoria_id"
+  | "unidade_fardo"
+  | "mililitros"
+  | "doses"
+  | "margem1"
+  | "valor_dose"
+  | "vr_desconto"
+>;
+
+export type ProdutoComposicaoType = {
+  produto_composicao_id: number;
+  produtofilho_id: number;
+  produtopai_id: number;
+  produtos: {
+    valor_dose: number;
+    dsc_produto: string;
+  };
+  vr_custo: number;
+  quantidade: number;
+};
+
+export type ProdutoComposicaoPayloadType = Pick<
+  ProdutoComposicaoType,
+  'produtofilho_id' | 'produtopai_id' | 'vr_custo' | 'quantidade'
+>;
+
+
 export type ModalBuscaProdutoPropsType = {
   abrir: boolean;
   aoFechar: (open: boolean) => void;
   aoSelecionar: (produto: ProdutoType) => void;
-}
+};

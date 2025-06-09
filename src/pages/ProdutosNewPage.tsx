@@ -7,28 +7,33 @@ import { ModalConfirmacao } from "@/components/modal-confirmacao";
 import { PedidosItensPage } from "@/pages/PedidosItensPage";
 import ModalAviso from "@/components/modal-aviso";
 import { toast } from "sonner";
-import { PedidoType, PedidoPayloadType, PedidoItemType } from "../types/pedido";
+import {
+  ProdutoType,
+  ProdutoPayloadType,
+  ProdutoComposicaoType,
+} from "../types/produto";
 import { PedidoServices } from "../services/pedidoServices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GridRegistros from "../components/grid-registros";
 import { formatarData } from "@/lib/formatarData";
-import { FormaPagamentoType } from "../types/formaPagamento";
-import { FormaPagamentoServices } from "@/services/formaPagamentoServices";
-import ModalBuscaFormaPagamento from "@/components/modal-busca-forma-pagamento";
-import { ClienteType } from "@/types/cliente";
-import { ClienteServices } from "@/services/clienteServices";
-import ModalBuscaCliente from "@/components/modal-busca-cliente";
+import { CategoriaType } from "../types/categoria";
+import { CategoriaServices } from "@/services/categoriaServices";
+import ModalBuscaCategoria from "@/components/modal-busca-categoria";
 import { Search, Plus, RefreshCcw } from "lucide-react";
 
 import type { ColDef } from "ag-grid-community";
 import { PedidoItemServices } from "@/services/pedidoItemServices";
+import { ProdutoServices } from "@/services/produtoServices";
+import { ProdutoComposicaoServices } from "@/services/produtoComposicaoServices";
 
 export function PedidosPage() {
-  const [registros, setRegistros] = useState<PedidoType[]>([]);
-  const [registroEditando, setRegistroEditando] = useState<PedidoType | null>(
+  const [registros, setRegistros] = useState<ProdutoType[]>([]);
+  const [registroEditando, setRegistroEditando] = useState<ProdutoType | null>(
     null
   );
-  const [registrosItens, setRegistrosItens] = useState<PedidoItemType[]>([]);
+  const [registrosComp, setRegistrosComp] = useState<ProdutoComposicaoType[]>(
+    []
+  );
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [registroIdADeletar, setRegistroIdADeletar] = useState<number | null>(
     null
@@ -37,77 +42,66 @@ export function PedidosPage() {
   const [mensagemAviso, setMensagemAviso] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [abaAtiva, setAbaAtiva] = useState("geral");
-  const [formaPagamento, setFormaPagamento] = useState<FormaPagamentoType>({
-    forma_pagamento_id: 0,
-    dsc_forma_pagamento: "",
+  const [categoria, setCategoria] = useState<CategoriaType>({
+    categoria_id: 0,
+    dsc_categoria: "",
   });
-  const [cliente, setCliente] = useState<ClienteType>({
-    cliente_id: 0,
-    dsc_razao_social: "",
-    dsc_nome_fantasia: "",
-  });
-  const [abrirModalBuscaFormaPagamento, setAbrirModalBuscaFormaPagamento] =
+  const [abrirModalBuscaCategoria, setAbrirModalBuscaCategoria] =
     useState(false);
-  const [abrirModalBuscaCliente, setAbrirModalBuscaCliente] = useState(false);
 
   const carregarRegistros = useCallback(async () => {
-    const resultado = await PedidoServices.buscarRegistros();
+    const resultado = await ProdutoServices.buscarRegistros();
     setRegistros(resultado);
   }, []);
 
   useEffect(() => {
     carregarRegistros();
-  }, [carregarRegistros, registrosItens]);
+  }, [carregarRegistros, registrosComp]);
 
   const aoInserir = () => {
     setAbaAtiva("geral");
 
     setRegistroEditando({
-      pedido_id: 0,
-      cliente_id: 0,
-      forma_pagamento_id: 0,
-      vr_liquido: "0.00",
-      dt_inc: new Date().toISOString(),
+      produto_id: 0,
+      dsc_produto: "",
+      estoque: 0,
+      preco_venda1: 0,
+      preco_custo1: 0,
+      desconto: 0,
+      categoria_id: 0,
+      unidade_fardo: 0,
+      mililitros: 0,
+      doses: 0,
+      margem1: 0,
+      valor_dose: 0,
+      vr_desconto: 0,
     });
 
-    setRegistrosItens([]);
+    setRegistrosComp([]);
 
-    setCliente({
-      cliente_id: 0,
-      dsc_razao_social: "",
-      dsc_nome_fantasia: "",
-    });
-
-    setFormaPagamento({
-      forma_pagamento_id: 0,
-      dsc_forma_pagamento: "",
+    setCategoria({
+      categoria_id: 0,
+      dsc_categoria: "",
     });
   };
 
-  const aoEditar = async (p_registro: PedidoType) => {
+  const aoEditar = async (p_registro: ProdutoType) => {
     setAbaAtiva("geral");
     setRegistroEditando(p_registro);
-    setPedidoItemIdsParaDeletar([]);
+    setCompIdsParaDeletar([]);
 
-    if (p_registro.forma_pagamento_id !== 0) {
-      const formaPagamento = await FormaPagamentoServices.buscarRegistro(
-        Number(p_registro.forma_pagamento_id)
+    if (p_registro.categoria_id !== 0) {
+      const formaPagamento = await CategoriaServices.buscarRegistro(
+        Number(p_registro.categoria_id)
       );
-      setFormaPagamento(formaPagamento);
+      setCategoria(formaPagamento);
     }
 
-    if (p_registro.cliente_id !== 0) {
-      const cliente = await ClienteServices.buscarRegistro(
-        Number(p_registro.cliente_id)
+    if (p_registro.produto_id !== 0) {
+      const composicao = await ProdutoComposicaoServices.buscarRegistros(
+        p_registro?.produto_id
       );
-      setCliente(cliente);
-    }
-
-    if (p_registro.pedido_id !== 0) {
-      const itens = await PedidoItemServices.buscarRegistros(
-        p_registro?.pedido_id
-      );
-      setRegistrosItens(itens);
+      setRegistrosComp(composicao);
     }
   };
 
@@ -115,8 +109,8 @@ export function PedidosPage() {
     setRegistroEditando(null);
   };
 
-  const antesDeDeletar = (p_registro: PedidoType) => {
-    setRegistroIdADeletar(p_registro.pedido_id);
+  const antesDeDeletar = (p_registro: ProdutoType) => {
+    setRegistroIdADeletar(p_registro.produto_id);
     setMostrarConfirmacao(true);
   };
 
@@ -147,41 +141,29 @@ export function PedidosPage() {
     carregarRegistros();
   };
 
-  const aoSalvar = async (payload: PedidoPayloadType) => {
+  const aoSalvar = async (payload: ProdutoPayloadType) => {
     if (!registroEditando) {
       setMensagemAviso("Erro inesperado ao salvar. Tente novamente.");
       setMostrarAviso(true);
       return;
     }
 
-    let registroParaSalvar: PedidoType = {
+    let registroParaSalvar: ProdutoType = {
       ...registroEditando, // Mantém quaisquer outros campos de registroEditando
       ...payload, // sobrescreve os campos definidos em payload
     };
 
-    if (!registroParaSalvar.vr_liquido) {
-      setMensagemAviso("Valor do Pedido não pode estar zerado ou vazio.");
-      setMostrarAviso(true);
-      return;
-    }
-
-    if (!registroParaSalvar.forma_pagamento_id) {
-      setMensagemAviso("Forma de Pagamento não pode estar vazia.");
-      setMostrarAviso(true);
-      return;
-    }
-
-    if (!registroParaSalvar.cliente_id) {
-      setMensagemAviso("Cliente não pode estar vazio.");
+    if (!registroParaSalvar.dsc_produto) {
+      setMensagemAviso("Descrição não pode estar vazia.");
       setMostrarAviso(true);
       return;
     }
 
     // Lógica de inserção ou atualização usando registroParaSalvar
-    if (registroParaSalvar.pedido_id === 0) {
+    if (registroParaSalvar.produto_id === 0) {
       // Novo registro
       const { registro: registroInserido, error } =
-        await PedidoServices.inserirComRetorno(payload);
+        await ProdutoServices.inserirComRetorno(payload);
 
       if (error || !registroInserido) {
         setMensagemAviso("Erro ao inserir registro: " + error);
@@ -195,9 +177,9 @@ export function PedidosPage() {
       };
     } else {
       // Edição de registro existente
-      const error = await PedidoServices.atualizar(
+      const error = await ProdutoServices.atualizar(
         payload,
-        registroParaSalvar.pedido_id
+        registroParaSalvar.produto_id
       );
 
       if (error) {
@@ -207,23 +189,22 @@ export function PedidosPage() {
       }
     }
 
-    for (const item of registrosItens) {
+    for (const item of registrosComp) {
       const payload = {
-        pedido_id: registroParaSalvar.pedido_id,
-        produto_id: item.produto_id ?? 0,
+        produtopai_id: registroParaSalvar.produto_id,
+        produtofilho_id: item.produtofilho_id ?? 0,
+        vr_custo: Number(item.vr_custo),
         quantidade: Number(item.quantidade),
-        vr_unit: Number(item.vr_unit),
-        vr_item: Number(item.vr_item),
       };
 
       let error: string | null = null;
 
-      if (!item.pedido_item_id || item.pedido_item_id === 0) {
-        error = await PedidoItemServices.inserir(payload);
+      if (!item.produto_composicao_id || item.produto_composicao_id === 0) {
+        error = await ProdutoComposicaoServices.inserir(payload);
       } else {
-        error = await PedidoItemServices.atualizar(
+        error = await ProdutoComposicaoServices.atualizar(
           payload,
-          item.pedido_item_id
+          item.produto_composicao_id
         );
       }
 
@@ -235,7 +216,7 @@ export function PedidosPage() {
     }
 
     // deleta os que o usuário removeu
-    for (const id of pedidoItemIdsParaDeletar) {
+    for (const id of CompIdsParaDeletar) {
       const error = await PedidoItemServices.deletar(id);
 
       if (error) {
@@ -248,7 +229,7 @@ export function PedidosPage() {
     toast.success("Registro salvo com sucesso!");
     carregarRegistros();
     aoFecharFormulario();
-    setPedidoItemIdsParaDeletar([]);
+    setCompIdsParaDeletar([]);
   };
 
   const colunasGrid: ColDef[] = [
@@ -275,41 +256,78 @@ export function PedidosPage() {
     },
   ];
 
-  const [pedidoItemIdsParaDeletar, setPedidoItemIdsParaDeletar] = useState<
-    number[]
-  >([]);
+  const [CompIdsParaDeletar, setCompIdsParaDeletar] = useState<number[]>([]);
 
   function FormularioRegistro() {
-    const [vr_liquido, setVrLiquido] = useState(
-      registroEditando?.vr_liquido ?? ""
+    const [produtoId, setProdutoId] = useState(
+      registroEditando?.produto_id ?? 0
+    );
+    const [dscProduto, setDscProduto] = useState(
+      registroEditando?.dsc_produto ?? ""
+    );
+    const [estoque, setEstoque] = useState(registroEditando?.estoque ?? 0);
+    const [precoVenda1, setPrecoVenda1] = useState(
+      registroEditando?.preco_venda1 ?? 0
+    );
+    const [precoCusto1, setPrecoCusto1] = useState(
+      registroEditando?.preco_custo1 ?? 0
+    );
+    const [desconto, setDesconto] = useState(registroEditando?.desconto ?? 0);
+    const [categoriaId, setCategoriaId] = useState(
+      registroEditando?.categoria_id ?? 0
+    );
+    const [unidadeFardo, setUnidadeFardo] = useState(
+      registroEditando?.unidade_fardo ?? 0
+    );
+    const [mililitros, setMililitros] = useState(
+      registroEditando?.mililitros ?? 0
+    );
+    const [doses, setDoses] = useState(registroEditando?.doses ?? 0);
+    const [margem1, setMargem1] = useState(registroEditando?.margem1 ?? 0);
+    const [valorDose, setValorDose] = useState(
+      registroEditando?.valor_dose ?? 0
+    );
+    const [vrDesconto, setVrDesconto] = useState(
+      registroEditando?.vr_desconto ?? 0
     );
 
     const aoEditarCampoNumerico = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let novoValor = e.target.value
-        .replace(/[^0-9.,]/g, "") // Remove letras e símbolos inválidos
-        .replace(",", "."); // Converte vírgula para ponto
+      const { name, value } = e.target;
+
+      let novoValor = value.replace(/[^0-9.,]/g, "").replace(",", ".");
 
       if (novoValor.includes(".")) {
         const [inteiro, decimal] = novoValor.split(".");
-        novoValor = inteiro + "." + decimal.slice(0, 2); // Limita a 2 casas decimais
+        novoValor = inteiro + "." + decimal.slice(0, 2);
       }
 
-      if (registroEditando) {
-        setRegistroEditando({
-          ...registroEditando,
-          vr_liquido: novoValor,
-        });
+      if (name === "preco_venda1") {
+        setPrecoVenda1(novoValor);
+      } else if (name === "preco_custo1") {
+        setPrecoCusto1(novoValor);
+      } else if (name === "desconto") {
+        setDesconto(novoValor);
+      } else if (name === "estoque") {
+        setEstoque(novoValor);
+      } else if (name === "categoria_id") {
+        setCategoriaId(novoValor);
+      } else if (name === "unidade_fardo") {
+        setUnidadeFardo(novoValor);
+      } else if (name === "mililitros") {
+        setMililitros(novoValor);
+      } else if (name === "doses") {
+        setDoses(novoValor);
+      } else if (name === "margem1") {
+        setMargem1(novoValor);
+      } else if (name === "valor_dose") {
+        setValorDose(novoValor);
+      } else if (name === "vr_desconto") {
+        setVrDesconto(novoValor);
       }
     };
 
     // Atualiza o estado local toda vez que o registroEditando mudar (ex: abrir edição)
     useEffect(() => {
-      const vrLiquidoItens = registrosItens.reduce((soma, item) => {
-        return soma + Number(item.vr_unit) * Number(item.quantidade);
-      }, 0);
-
-      setVrLiquido(vrLiquidoItens ? Number(vrLiquidoItens.toFixed(2)) : "0.00");
-
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -404,46 +422,6 @@ export function PedidosPage() {
                       </div>
                     </div>
                   </Card>
-
-                  <Card className="p-4 gap-3">
-                    <h3 className="text-sm font-semibold border-b pb-1 text-black-700 tracking-wide">
-                      Cliente
-                    </h3>
-                    <div className="grid grid-cols-[auto_auto_1fr] gap-2 items-end">
-                      <div className="space-y-2 w-32">
-                        <Label htmlFor="cliente_id">Código</Label>
-                        <Input
-                          id="cliente_id"
-                          name="cliente_id"
-                          value={
-                            cliente.cliente_id === 0 ? "" : cliente.cliente_id
-                          }
-                          readOnly
-                        />
-                      </div>
-
-                      <div className="space-y-2 w-10">
-                        <Label className="invisible">Buscar</Label>
-                        <button
-                          onClick={() => setAbrirModalBuscaCliente(true)}
-                          type="button"
-                          className="w-10 h-9 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent cursor-pointer"
-                        >
-                          <Search className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="dsc_forma_pagamento">Descrição</Label>
-                        <Input
-                          id="dsc_forma_pagamento"
-                          name="dsc_forma_pagamento"
-                          value={cliente.dsc_razao_social || ""}
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                  </Card>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -451,10 +429,10 @@ export function PedidosPage() {
               <Card className=" w-full h-full mx-auto p-6">
                 <PedidosItensPage
                   p_id={registroEditando.pedido_id}
-                  registros={registrosItens}
-                  setRegistros={setRegistrosItens}
+                  registros={registrosComp}
+                  setRegistros={setRegistrosComp}
                   registrarExclusao={(id: number) => {
-                    setPedidoItemIdsParaDeletar((prev) => [...prev, id]);
+                    setCompIdsParaDeletar((prev) => [...prev, id]);
                   }}
                 />
               </Card>
@@ -522,26 +500,14 @@ export function PedidosPage() {
         onClose={setMostrarAviso}
         mensagem={mensagemAviso}
       />
-      <ModalBuscaFormaPagamento
-        open={abrirModalBuscaFormaPagamento}
-        onClose={() => setAbrirModalBuscaFormaPagamento(false)}
-        onSelect={(forma_pagamento) => {
-          setFormaPagamento((prev) => ({
+      <ModalBuscaCategoria
+        open={abrirModalBuscaCategoria}
+        onClose={() => setAbrirModalBuscaCategoria(false)}
+        onSelect={(categoria) => {
+          setCategoria((prev) => ({
             ...prev,
-            forma_pagamento_id: forma_pagamento.forma_pagamento_id,
-            dsc_forma_pagamento: forma_pagamento.dsc_forma_pagamento,
-          }));
-        }}
-      />
-      <ModalBuscaCliente
-        open={abrirModalBuscaCliente}
-        onClose={() => setAbrirModalBuscaCliente(false)}
-        onSelect={(cliente) => {
-          setCliente((prev) => ({
-            ...prev,
-            cliente_id: cliente.cliente_id,
-            dsc_razao_social: cliente.dsc_razao_social,
-            dsc_nome_fantasia: cliente.dsc_nome_fantasia,
+            categoria_id: categoria.categoria_id,
+            dsc_categoria: categoria.dsc_categoria,
           }));
         }}
       />
